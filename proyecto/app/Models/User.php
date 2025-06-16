@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Enums\Rol;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -22,7 +24,8 @@ class User extends Authenticatable
         'email',
         'password',
         'telefono',
-        'rol'
+        'rol',
+        'activo'
     ];
 
     /**
@@ -45,6 +48,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'activo'=>'boolean',
+            'rool'=>Rol::class
         ];
+    }
+
+    public function getEstadoActivoAtribute(){
+        return $this->activo;
     }
 }
