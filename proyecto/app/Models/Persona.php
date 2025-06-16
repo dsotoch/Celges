@@ -25,4 +25,8 @@ class Persona extends Model
     {
         return $this->belongsTo(Tipo::class);
     }
+     public function pago()
+    {
+        return $this->hasMany(Pagos::class);
+    }
 }

@@ -17,4 +17,8 @@ class Operacion extends Model
     public function cuenta(){
         return $this->belongsTo(CuentaBancaria::class);
     }
+     public function pago()
+    {
+        return $this->hasMany(Pagos::class);
+    }
 }
