@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DetalleCompra;
 use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ServicioDetalleCompra
@@ -13,9 +14,9 @@ class ServicioDetalleCompra
         return DetalleCompra::with(['producto', 'compra'])->get();
     }
 
-    public function obtenerPorId(int $id): DetalleCompra
+    public function obtenerPorId(int $id): Collection
     {
-        return DetalleCompra::with(['producto', 'compra'])->findOrFail($id);
+        return DetalleCompra::with(['producto', 'compra'])->where("compra_id", $id)->get();
     }
 
     public function crear(array $data): DetalleCompra

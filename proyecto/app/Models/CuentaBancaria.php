@@ -13,6 +13,7 @@ class CuentaBancaria extends Model
         "cci",
         "moneda",
         "empresa",
+        "titular",
         "activo"
     ];
     public function operacion(){

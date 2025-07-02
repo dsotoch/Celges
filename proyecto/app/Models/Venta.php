@@ -17,6 +17,7 @@ class Venta extends Model
         'saldo_a_favor',
         'comision_facturacion',
         'nota',
+        'tipo'
     ];
 
     public function cliente()

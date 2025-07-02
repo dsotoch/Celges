@@ -50,4 +50,9 @@ class ServicioPersona
     {
         return Persona::all();
     }
+
+    public function obtenerCodigo(int $numeroActual): string
+    {
+        return str_pad((string) $numeroActual, 4, '0', STR_PAD_LEFT);
+    }
 }

@@ -1,0 +1,238 @@
+.btn.btn-primary,
+
+.btn.btn-primary:focus,
+.btn.btn-primary:active,
+.btn.btn-primary.disabled,
+.btn.btn-primary:disabled,
+.show>.btn.btn-primary.dropdown-toggle {
+    background-color: orangered !important;
+    border-color: orangered !important;
+    color: white !important;
+    box-shadow: none !important;
+    /* quita cualquier sombra activa */
+    outline: none !important;
+}
+
+.btn.btn-primary {
+    transform-origin: center center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.btn.btn-primary:hover {
+    transform: scale(1.15);
+}
+
+.obligatorio {
+    color: red;
+}
+
+.btn-secondary {
+    background-color: transparent !important;
+    border: 1px solid black !important;
+    color: black !important;
+}
+
+.btn.btn-secondary {
+    transform-origin: center center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.btn.btn-secondary:hover {
+    transform: scale(1.15);
+}
+
+.border {
+    padding: 15px;
+    border: 1px solid black;
+}
+
+.btn-border {
+    border: 1px solid black;
+}
+
+.btn-border:hover {
+    background-color: orangered;
+    color: white;
+    border: 1px solid orangered;
+}
+
+.bg-blue-pad {
+    background-color: orangered;
+    /* rgb(9, 93, 250);*/
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.bg-blue {
+    background-color: orangered;
+    /* rgb(9, 93, 250);*/
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    border-bottom: 1px solid white;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.d-flex {
+    justify-content: space-between;
+
+}
+
+.w-140px {
+    width: 140px;
+}
+
+
+
+.text-12 {
+    font-size: 12px !important;
+}
+
+
+
+.resaltado {
+    background-color: rgb(240, 184, 163);
+    font-weight: bold;
+}
+
+.bg-moke {
+    background-color: whitesmoke;
+    border-top: 1px solid white;
+
+}
+
+.table-full {
+    width: 100%;
+}
+
+.form-control.no-border {
+    border: none;
+    outline: none;
+    box-shadow: none;
+    width: 100%;
+    word-break: break-word;
+    text-align: left;
+    padding: 0px !important;
+    background-color: transparent;
+}
+
+
+.montos {
+    display: flex;
+    align-items: center;
+    width: 40px;
+}
+
+.montos input {
+    flex: 1;
+    margin-left: 4px;
+    /* pequeño espacio entre el texto "S/" y el input */
+}
+
+.text-12.bg-blue {
+    width: 170px;
+    max-width: 170px;
+}
+
+.flex {
+    display: flex;
+
+}
+
+.flex input {
+    flex: 1;
+    margin-left: 4px;
+    width: 60px;
+    /* pequeño espacio entre el texto "S/" y el input */
+}
+
+.cuerpo-coti {
+    padding: 10px;
+}
+
+.modal-dialog.modal-extra {
+    margin: 0;
+    max-width: 100%;
+    width: 100% !important;
+    height: 80% !important;
+    overflow-y: auto;
+}
+
+.modal-content {
+    height: 100%;
+    border-radius: 0;
+}
+
+#sidebar-coti {
+    color: black;
+}
+
+.btn.border:hover {
+    opacity: 50%;
+}
+
+.bgred {
+    color: red;
+}
+
+.bg-orange {
+    background-color: orangered;
+    color: white;
+}
+
+.thead-p tr th {
+    padding: 10px;
+    color: white;
+}
+
+.selectable-row {
+    cursor: pointer;
+}
+
+.selectable-row.selected {
+    background-color: #007bff !important;
+    color: white;
+}
+
+.text-center {
+    font-size: 12px;
+}
+
+@media (max-width: 767.98px) {
+    .modal-content.cuerpo-coti {
+        min-width: 768px;
+        /* evitar que se encoja en móviles */
+    }
+
+    .table,
+    .table td,
+    .table th {
+        white-space: normal !important;
+        /* permitir saltos de línea si es necesario */
+    }
+}
+
+.blink {
+    font-weight: bold;
+}
+
+.boton:hover {
+    transform: scale(1.1);
+}
+
+.text-white {
+    color: white;
+    font-weight: bold;
+}
+.gap-2{
+    gap: 2px;
+}
+.d-flex.center{
+    justify-content: center;
+}
+.bg-inactivo{
+    background-color: #bcdcff;
+}

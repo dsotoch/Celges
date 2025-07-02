@@ -21,7 +21,16 @@ class ServicioAlmacenInterno
     public function crear(array $data): AlmacenInterno
     {
         try {
-            return AlmacenInterno::create($data);
+            return AlmacenInterno::create([
+                "compra_id" => $data["compra_id"],
+                "producto_id" => $data["producto_id"],
+                "imei" => $data["imei"],
+                "color" => $data["color"],
+                "precio_compra" => $data["precio"],
+                "precio_venta" => "0.00",
+                "cantidad" => $data["cantidad"],
+                "registrado" => $data["registrado"]
+            ]);
         } catch (Exception $e) {
             Log::error("Error al crear registro en almacén interno: " . $e->getMessage());
             throw new Exception("No se pudo crear el registro en almacén interno.");
@@ -43,8 +52,12 @@ class ServicioAlmacenInterno
     public function eliminar(int $id): bool
     {
         try {
-            $almacen = AlmacenInterno::findOrFail($id);
-            $almacen->delete();
+            $almacenes = AlmacenInterno::where('compra_id', $id)->get();
+
+            foreach ($almacenes as $almacen) {
+                $almacen->delete();
+            }
+
             return true;
         } catch (Exception $e) {
             Log::error("Error al eliminar registro de almacén interno: " . $e->getMessage());
