@@ -20,7 +20,8 @@ class Cotizacion extends Model
         'favor',
         'pendiente',
         'persona_id',
-        'created_at'
+        'created_at',
+        'estado'
     ];
 
     public function cliente()

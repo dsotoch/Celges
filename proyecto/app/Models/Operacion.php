@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Operacion extends Model
 {
+    protected $table="operaciones";
     protected $fillable=[
         "numero",
         "tipo",

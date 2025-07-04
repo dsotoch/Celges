@@ -81,7 +81,7 @@ class ControllerCotizaciones extends Controller
      */
     public function show(string $id)
     {
-        $servicio = Cotizacion::with("productos","productos.producto")->findOr($id);
+        $servicio = Cotizacion::with("productos", "productos.producto")->findOr($id);
         return response()->json($servicio);
     }
 
@@ -96,10 +96,18 @@ class ControllerCotizaciones extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(string $id)
     {
-        //
+        try {
+            $cotizacion = Cotizacion::findOrFail($id);
+            $cotizacion->update(["estado" => "Anulado"]);
+
+            return redirect()->back()->with("success", "Se anuló la Cotizacion " . $cotizacion->codigo . " correctamente.");
+        } catch (\Throwable $th) {
+            return redirect()->back()->withErrors(['error' => $th->getMessage()]);
+        }
     }
+
 
     /**
      * Remove the specified resource from storage.

@@ -8,10 +8,16 @@ use Illuminate\Support\Facades\Log;
 
 class ServicioOperacion
 {
-   public function crear(array $data): Operacion
+    public function crear(array $data, string $tipo): Operacion
     {
         try {
-            return Operacion::create($data);
+            return Operacion::create([
+                "numero" => $data["numero"]??"0",
+                "tipo" => $tipo,
+                "monto" => $data["monto"],
+                "fecha" => $data["fecha"],
+                "cuenta_id" => $data["cuenta_id"],
+            ]);
         } catch (Exception $e) {
             Log::error("Error al crear operación: " . $e->getMessage());
             throw new Exception("No se pudo crear la operación.");

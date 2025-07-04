@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetalleVenta extends Model
 {
-     protected $fillable = [
+    protected $table = "detalle_ventas";
+    protected $fillable = [
         'venta_id',
         'producto_id',
         'imei',

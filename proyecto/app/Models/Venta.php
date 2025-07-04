@@ -11,13 +11,18 @@ class Venta extends Model
         'tipo_venta',
         'estado',
         'cliente_id',
+        'subtotal',
+        'gasto_envio',
         'total',
         'abono_inicial',
         'saldo_pendiente',
         'saldo_a_favor',
         'comision_facturacion',
         'nota',
-        'tipo'
+        'envio',
+        'destino',
+        'codigo',
+        'utilidad'
     ];
 
     public function cliente()

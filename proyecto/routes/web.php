@@ -4,6 +4,7 @@ use App\Http\Controllers\ControllerAlmacenInterno;
 use App\Http\Controllers\ControllerCompra;
 use App\Http\Controllers\ControllerCotizaciones;
 use App\Http\Controllers\ControllerCuentaBancaria;
+use App\Http\Controllers\ControllerPagos;
 use App\Http\Controllers\ControllerPersona;
 use App\Http\Controllers\ControllerProducto;
 use App\Http\Controllers\ControllerVentas;
@@ -24,6 +25,7 @@ Route::prefix('proveedores')
     ->group(function () {
         Route::get('/',             'index')->name('proveedores.index');
         Route::post('/guardar',     'store')->name('proveedores.store');
+        Route::post('/guardarcliente/{id}', 'create')->name('proveedores.create');
         Route::get('/{id}',         'show')->name('proveedores.show');
         Route::put('/edit/{id}',    'update')->name('proveedores.update');
         Route::delete('/{id}',      'destroy')->name('proveedores.destroy');
@@ -50,7 +52,9 @@ Route::prefix('ventas')
     ->group(function () {
         Route::get('/',             'index')->name('ventas.index');        // Mostrar lista
         Route::post('/guardar',     'store')->name('ventas.store');        // Guardar nuevo registro
+        Route::post('/crear',     'create')->name('ventas.create');        // Guardar nuevo registro
         Route::get('/{id}',         'show')->name('ventas.show');          // Ver detalle
+        Route::put('/editar/{id}',   'update')->name('ventas.update');    // Eliminar
         Route::delete('/{id}',      'destroy')->name('ventas.destroy');    // Eliminar
     });
 Route::prefix('cotizacion')
@@ -59,12 +63,22 @@ Route::prefix('cotizacion')
         Route::get('/',             'index')->name('cotizacion.index');        // Mostrar lista
         Route::post('/guardar',     'store')->name('cotizacion.store');        // Guardar nuevo registro
         Route::get('/{id}',         'show')->name('cotizacion.show');          // Ver detalle
+        Route::put('/editar/{id}',      'update')->name('cotizacion.update');    // Eliminar
+
     });
 Route::prefix('cuentasbancarias')
     ->controller(ControllerCuentaBancaria::class)
     ->group(function () {
         Route::get('/',             'index')->name('cuentasbancarias.index');        // Mostrar lista
         Route::post('/guardar',     'store')->name('cuentasbancarias.store');        // Guardar nuevo registro
-        Route::put('/editar/{id}','update')->name('cuentasbancarias.update');         
+        Route::put('/editar/{id}', 'update')->name('cuentasbancarias.update');
         Route::delete('/delete/{id}', 'destroy')->name('cuentasbancarias.destroy');    // Eliminar
+    });
+Route::prefix('pagos')
+    ->controller(ControllerPagos::class)
+    ->group(function () {
+        Route::get('/',             'index')->name('pagos.index');        // Mostrar lista
+        Route::post('/guardar',     'store')->name('pagos.store');        // Guardar nuevo registro
+        Route::put('/editar/{id}', 'update')->name('pagos.update');
+        Route::delete('/delete/{id}', 'destroy')->name('pagos.destroy');    // Eliminar
     });

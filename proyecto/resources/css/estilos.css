@@ -81,6 +81,7 @@
 
 }
 
+
 .w-140px {
     width: 140px;
 }
@@ -157,7 +158,7 @@
     margin: 0;
     max-width: 100%;
     width: 100% !important;
-    height: 80% !important;
+    height: 100% !important;
     overflow-y: auto;
 }
 
@@ -235,4 +236,7 @@
 }
 .bg-inactivo{
     background-color: #bcdcff;
+}
+.oculto{
+    display: none;
 }
