@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRequestCotizacion;
 use App\Models\AlmacenInterno;
 use App\Models\Cotizacion;
+use App\Models\Persona;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ControllerCotizaciones extends Controller
@@ -19,8 +19,14 @@ class ControllerCotizaciones extends Controller
         $maxId = Cotizacion::max("id") ?? 0;
         $codigo = "COT" . str_pad($maxId + 1, 4, "0", STR_PAD_LEFT);
         $cotizaciones = Cotizacion::all();
+        $clientes = Persona::with('tipo')
+            ->whereHas('tipo', function ($query) {
+                $query->whereIn('tipo', ['cliente', 'ambos']);
+            })
+            ->get();
+
         $almacen = AlmacenInterno::with("compra", "producto")->get();
-        return view("cotizacion.index", compact("cotizaciones", "codigo", "almacen"));
+        return view("cotizacion.index", compact("cotizaciones", "codigo", "almacen", "clientes"));
     }
 
 

@@ -119,7 +119,23 @@ class ControllerVentas extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+         try {
+            $servicio = new ServicioVenta();
+            $venta = $servicio->actualizar((int)$id,[
+                "estado"=>"Impreso"
+            ]); 
+
+            return response()->json([
+                'success' => true,
+                'data' => $venta
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener la venta',
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
 
     /**

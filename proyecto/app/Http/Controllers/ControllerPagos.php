@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+use function PHPUnit\Framework\isArray;
+
 class ControllerPagos extends Controller
 {
     /**
@@ -45,7 +47,7 @@ class ControllerPagos extends Controller
             $montos = $request->input('monto', []);
             $tipos = $request->input('tipo', []);
 
-            $total = array_sum($montos);
+            $total = is_array($montos) && !empty($montos) ? array_sum($montos) : 0.00;
 
             $venta = $servicioVenta->obtenerPorId($ventaId);
 
@@ -56,27 +58,28 @@ class ControllerPagos extends Controller
                 "saldo_a_favor" => max(0, $total - $venta->total),
                 "estado" => $total >= $venta->total ? "Pagado" : "Deuda",
             ]);
+            if ($tipoVenta != "Credito") {
+                foreach ($montos as $i => $monto) {
+                    if (empty($monto)) continue;
 
-            foreach ($montos as $i => $monto) {
-                if (empty($monto)) continue;
+                    $operacion = $servicioOperacion->crear([
+                        'numero' => $request->input("numero.$i"),
+                        'tipo' => $tipos[$i] ?? null,
+                        'fecha' => $request->input("fecha.$i"),
+                        'cuenta_id' => $request->input("cuenta_id.$i"),
+                        'monto' => $monto,
+                    ], "Venta");
 
-                $operacion = $servicioOperacion->crear([
-                    'numero' => $request->input("numero.$i"),
-                    'tipo' => $tipos[$i] ?? null,
-                    'fecha' => $request->input("fecha.$i"),
-                    'cuenta_id' => $request->input("cuenta_id.$i"),
-                    'monto' => $monto,
-                    // puedes agregar más campos si lo requiere el modelo
-                ], "Venta");
-
-                $servicio->crear([
-                    'venta_id' => $ventaId,
-                    'fecha' => now("America/Lima")->format("Y-m-d"),
-                    'monto' => $monto,
-                    'metodo_pago' => $tipos[$i] ?? null,
-                    'operacion_id' => $operacion->id,
-                ]);
+                    $servicio->crear([
+                        'venta_id' => $ventaId,
+                        'fecha' => now("America/Lima")->format("Y-m-d"),
+                        'monto' => $monto,
+                        'metodo_pago' => $tipos[$i] ?? null,
+                        'operacion_id' => $operacion->id,
+                    ]);
+                }
             }
+
 
             DB::commit();
             return redirect()->back()->with('success', 'Pagos registrados correctamente.');

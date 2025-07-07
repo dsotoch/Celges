@@ -43,11 +43,11 @@
 
 .border {
     padding: 15px;
-    border: 1px solid black;
+    border: 1px solid black!important;
 }
 
 .btn-border {
-    border: 1px solid black;
+    border: 1px solid black!important;
 }
 
 .btn-border:hover {

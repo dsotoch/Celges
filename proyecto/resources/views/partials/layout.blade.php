@@ -245,9 +245,12 @@
                         </button>
 
                         <!-- Clientes -->
-                        <button class="btn border w-100 mb-2 settings-heading">
+                        <button class="btn border w-100 mb-2 settings-heading"
+                            onclick="$('#right-sidebar,#theme-settings').removeClass('open');" data-toggle="modal"
+                            data-target="#modalCotizacionCliente">
                             <i class="fas fa-users"></i> Clientes
                         </button>
+
 
                         <!-- Separador -->
                         <hr class="bg-light w-100">

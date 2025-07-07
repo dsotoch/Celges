@@ -138,7 +138,8 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-black" data-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn border" data-dismiss="modal"><i class="fas fa-times-circle"></i>
+                            Cancelar</button>
                     </div>
 
                 </div>
@@ -268,9 +269,7 @@
                                         </div>
                                         <select name="tipo_id" id="tipo_id"
                                             class="form-control  @error('tipo_id') is-invalid @enderror">
-
-                                            <option value="2">CLIENTE</option>
-
+                                            <option value="2" selected>CLIENTE</option>
                                         </select>
 
                                     </div>
@@ -557,7 +556,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                     <option value="">Seleccione tipo de venta</option>
                                     <option value="Mixto">Mixta</option>
                                     <option value="Contado">Al Contado</option>
-                                    <option value="Cuenta">A Cuenta</option>
+                                    <option value="Credito">A Cuenta</option>
                                 </select>
                             </div>
                             <!-- Método de Pago -->
@@ -642,6 +641,35 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             {{ $ventas->links() }}
             <br>
             <hr>
+            <!-- Modal -->
+            <div class="modal fade" id="modalCambiarEstado" tabindex="-1" role="dialog"
+                aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <form id="formCambiarEstado">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estado de Venta <span
+                                        id="numeroestadoventa"></span></h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <label for="estadoVenta">Nuevo Estado:</label>
+                                <select class="form-control" id="estadoVenta" name="estado">
+                                    <option value="Empacado">Empacado</option>
+                                    <option value="Despachado">Despachado</option>
+                                </select>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">Guardar</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <h4 class="card-title">Lista de Ventas</h4>
             <div class="row">
                 <div class="col-12">
@@ -695,7 +723,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                     <td class="d-flex center gap-2">
 
                                                         <!-- Botón Pago -->
-                                                        @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado')
+                                                        @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado' && $vent->estado !='Deuda')
                                                             <button class="btn btn-success" data-toggle="modal"
                                                                 id="btnregistrarpago" data-target="#registroPagoModal"
                                                                 data-id={{ $vent->id }}
@@ -715,7 +743,13 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                                 </button>
                                                             </form>
                                                         @endif
-                                                        @if ($vent->estado == 'Pagado')
+                                                        @if ($vent->estado == 'Pagado' || $vent->estado=='Deuda')
+                                                            <button id="btnCambiarEstado" data-codigo={{ $vent->codigo }}
+                                                                data-toggle="modal" data-target="#modalCambiarEstado"
+                                                                class="btn btn-warning" title="Cambiar Estado">
+                                                                <i class="fas fa-exchange-alt"></i>
+                                                            </button>
+
                                                             <button class="btn btn-primary"
                                                                 onclick="obtenerVenta('{{ $vent->id }}')"
                                                                 title="Imprimir Venta">
@@ -745,6 +779,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
     <script>
         let cotizacionNumero = "";
         let totalventa = 0.00;
+        $(document).on('click', '#btnCambiarEstado', function() {
+            $("#numeroestadoventa").html('');
+            let codigo = this.dataset.codigo;
+            $("#numeroestadoventa").html(codigo);
+        });
+
         $("#btnregistrarpago").on("click", function() {
             let codigo = this.dataset.codigo;
             let total = this.dataset.total;
@@ -894,7 +934,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
         $("#btnguardarcliente").on("click", function() {
             let telefono = $("#telefono").val();
             let nombres = $("#nombres").val();
-            let tipo = $("#tipo").val();
+            let tipo = $("#tipo_id").val();
             let direccion = $("#direccion").val();
             let ruc = $("#ruc").val();
             let codigo = $("#codigopersona").val();
@@ -914,7 +954,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 data: {
                     telefono: telefono,
                     nombres: nombres,
-                    tipo: tipo,
+                    tipo_id: tipo,
                     direccion: direccion,
                     ruc: ruc,
                     codigo: codigo,
@@ -1003,7 +1043,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 }
             }
         });
-        $("#btnagregarPago").on("click", function() {
+        $(document).on('click', '#btnagregarPago', function() {
             const tipo_venta = $("#tipo_venta")?.val();
             const metodo_pago = $("#metodo_pago")?.val();
             const banco = $("#banco")?.val();
@@ -1187,6 +1227,48 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             $("#btngenerarventa").off("click");
             $("#btngenerarventa").on("click", function(e) {
                 e.preventDefault();
+                $(this).prop("disabled", true); // ✅ ahora sí está bien
+                const cargando = $("<div>")
+                    .attr("id", "mensaje-cargando")
+                    .text("🖼️ Generando imagen, por favor espera...")
+                    .css({
+                        position: "fixed",
+                        top: "20px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        background: "#333",
+                        color: "#fff",
+                        padding: "10px 20px",
+                        borderRadius: "8px",
+                        zIndex: 9999,
+                        fontSize: "16px",
+                    });
+
+                $("body").append(cargando);
+                const codigo = $("#codigo").text();
+                prepararParaCaptura();
+                html2canvas(document.getElementById('miDiv'), {
+                    scale: 3
+                }).then(function(canvas) {
+                    const imgData = canvas.toDataURL('image/png');
+
+                    const contenidoOriginal = document.body.innerHTML;
+
+                    document.body.innerHTML = `<img id="captura" src="${imgData}" style="width:100%;">`;
+
+                    const imagen = document.getElementById('captura');
+                    imagen.onload = function() {
+                        setTimeout(() => {
+                            window.print();
+
+                            // Opcional: restaurar contenido original después de imprimir
+                            setTimeout(() => {
+                                document.body.innerHTML = contenidoOriginal;
+                            }, 1000);
+                        }, 300);
+                    };
+                });
+
 
 
             });
@@ -1255,8 +1337,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         const filas = abonos.map(abono => `
   <tr>
     <td>${abono.fecha}</td>
-    <td>${abono.metodo_pago} – ${abono.operacion?.cuenta?.titular || 'NO APLICA'}</td>
-    <td>${abono.operacion.numero==0? "NO APLICA":abono.operacion.numero || ''}</td>
+<td>
+    ${abono.metodo_pago} ${abono.operacion?.cuenta?.banco? abono.operacion?.cuenta?.banco: ""} ${abono.operacion?.cuenta?.tipo_cuenta?abono.operacion?.cuenta?.tipo_cuenta :""}
+    **${abono.operacion?.cuenta?.cci ?? abono.operacion?.cuenta?.numero_cuenta? abono.operacion?.cuenta?.numero_cuenta:""}
+    **${abono.operacion?.cuenta?.titular || ''}
+  </td>    
+  <td>${abono.operacion.numero==0? "":abono.operacion.numero || ''}</td>
     <td class="text-right">${Number(abono.monto).toFixed(2)}</td>
   </tr>
 `).join("");
@@ -1284,10 +1370,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
   <table class="table table-sm table-bordered ">
     <thead>
       <tr>
-        <td class="bg-orange text-white">Fecha</td>
-        <td class="bg-orange text-white">Método Pago – Titular Cuenta</td>
-        <td class="bg-orange text-white">Nro Operación</td>
-        <td class="text-right bg-orange text-white">Monto</td>
+        <td class="bg-orange text-white p-2">Fecha</td>
+        <td class="bg-orange text-white p-2">Método Pago ** Numero ** Titular Cuenta</td>
+        <td class="bg-orange text-white p-2">Nro Operación</td>
+        <td class="text-right bg-orange p-2 text-white">Monto</td>
       </tr>
     </thead>
     <tbody>
@@ -1370,6 +1456,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             });
         });
 
+        function cambiarEstadoImpreso() {
+
+        }
+
         function calcularTotal() {
             let subtotal = parseFloat($("#subtotal").val()) || 0;
             let envio = parseFloat($("#envio").val()) || 0;
@@ -1403,7 +1493,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             let valor = $(this).val().toUpperCase();
             $(this).val(valor);
         });
+        window.onafterprint = () => {
+            location.reload();
 
+        };
         $("#generar-imagen").on("click", async function() {
 
             if (!confirm(

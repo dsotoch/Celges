@@ -21,7 +21,11 @@ class ControllerPersona extends Controller
     {
         $tipos = Tipo::all();
         $servicio = new ServicioPersona();
-        $personas = $servicio->listar();
+        $personas = $servicio->listar()
+            ->filter(function ($persona) {
+                return in_array($persona->tipo_id, [1, 3]);
+            });
+
         $codigo = $this->obtenerCodigo();
         return view('proveedores.index', compact('personas', 'codigo', 'tipos'));
     }
@@ -30,6 +34,13 @@ class ControllerPersona extends Controller
     {
         try {
             DB::beginTransaction();
+
+            // Validar si ya existe el cliente con el mismo nombre
+            $existe3 = Persona::whereRaw('LOWER(nombres) = ?', [strtolower($request->nombres)])->first();
+            if ($existe3) {
+                throw new Exception("💢 El Nombre ya está registrado.");
+            }
+
             // Validar si ya existe el teléfono
             $existe = Persona::where("telefono", $request->telefono)->first();
             if ($existe) {
@@ -47,6 +58,8 @@ class ControllerPersona extends Controller
             $persona = $servicio->crear($request->all());
             Cotizacion::where("id", $id)
                 ->update(["persona_id" => $persona->id, "cliente" => $persona->nombres]);
+
+                
             DB::commit();
             return response()->json([
                 'success' => true,

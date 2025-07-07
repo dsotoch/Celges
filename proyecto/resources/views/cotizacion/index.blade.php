@@ -308,6 +308,54 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             </div>
         </div>
     </div>
+    <!-- Modal  Clientes-->
+    <div class="modal fade" id="modalCotizacionCliente" tabindex="-1" role="dialog"
+        aria-labelledby="modalCotizacionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCotizacionLabel"><i class="fas fa-file-invoice"></i> Lista de
+                        Clientes</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body overflow-auto">
+                    <table class="table table-bordered table-sm">
+                        <thead class="thead-p bg-success">
+                            <tr>
+                                <th>Nombres</th>
+                                <th>Direccion</th>
+                                <th>Telefono</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+
+
+                        <tbody id="datos-clientess">
+                            @foreach ($clientes as $cl)
+                                <tr class="selectable-row">
+                                    <td>{{ $cl->nombres }}</td>
+                                    <td>{{ $cl->direccion??"-" }}</td>
+                                    <td>{{ $cl->telefono }}</td>
+                                    <td>{{ $cl->email }}</td>
+                                </tr>
+                            @endforeach
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="enviar"><i class="fas fa-paper-plane"></i>
+                        Enviar a
+                        Cotización</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -388,7 +436,9 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     $("#mensaje_productos").append(
                         `<p> Faltan ${dif} existencias en el Almacen para el Producto ${producto} </p>`
                     );
-                    $('html, body').animate({ scrollTop: 0 }, 'slow');
+                    $('html, body').animate({
+                        scrollTop: 0
+                    }, 'slow');
 
                 }
 
