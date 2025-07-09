@@ -1044,15 +1044,11 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             }
         });
         $(document).on('click', '#btnagregarPago', function() {
-            const tipo_venta = $("#tipo_venta")?.val();
             const metodo_pago = $("#metodo_pago")?.val();
             const banco = $("#banco")?.val();
-            const operacion = $("#numero_operacion")?.val();
+            let operacion = $("#numero_operacion")?.val();
             const monto = $("#monto")?.val();
-            if (tipo_venta == "") {
-                alert("💢 Seleccione el Tipo de Venta");
-                return;
-            }
+          
 
             if (metodo_pago == "Efectivo" && (monto == "" || monto <= 0)) {
                 alert("💢 Ingresa un monto valido");
@@ -1074,6 +1070,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             let bancoNombre = "---";
             if (metodo_pago == "Transferencia") {
                 bancoNombre = $("#banco option:selected").text();
+            }else{
+                operacion="0";
             }
             const fechaActual = new Date().toLocaleString('en-CA', {
                 timeZone: 'America/Lima',

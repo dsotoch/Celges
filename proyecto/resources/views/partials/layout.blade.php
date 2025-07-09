@@ -300,6 +300,12 @@
                             <span class="menu-title">Ventas</span>
                         </a>
                     </li>
+                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('cuentas.index') }}">
+                            <i class="fas fa-wallet menu-icon"></i>
+                            <span class="menu-title">Cuentas Clientes</span>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('compras.index') }}">
                             <i class="fas fa-credit-card menu-icon"></i>

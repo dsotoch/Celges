@@ -4,6 +4,7 @@ use App\Http\Controllers\ControllerAlmacenInterno;
 use App\Http\Controllers\ControllerCompra;
 use App\Http\Controllers\ControllerCotizaciones;
 use App\Http\Controllers\ControllerCuentaBancaria;
+use App\Http\Controllers\ControllerCuentas;
 use App\Http\Controllers\ControllerPagos;
 use App\Http\Controllers\ControllerPersona;
 use App\Http\Controllers\ControllerProducto;
@@ -81,4 +82,13 @@ Route::prefix('pagos')
         Route::post('/guardar',     'store')->name('pagos.store');        // Guardar nuevo registro
         Route::put('/editar/{id}', 'update')->name('pagos.update');
         Route::delete('/delete/{id}', 'destroy')->name('pagos.destroy');    // Eliminar
+    });
+Route::prefix('cuentas')
+    ->controller(ControllerCuentas::class)
+    ->group(function () {
+        Route::get('/',             'index')->name('cuentas.index');        // Mostrar lista
+        Route::get('/{id}',     'show')->name('cuentas.show');        // Guardar nuevo registro
+        Route::post('/guardar',     'store')->name('cuentas.store');        // Guardar nuevo registro
+        Route::put('/editar/{id}', 'update')->name('cuentas.update');
+        Route::delete('/delete/{id}', 'destroy')->name('cuentas.destroy');    // Eliminar
     });
