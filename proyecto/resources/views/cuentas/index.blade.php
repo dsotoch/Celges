@@ -431,7 +431,7 @@
         <div class="col-md-12 mb-3">
             <div class="card border-primary shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title">Venta #${cuenta.venta_id}</h5>
+                    <h5 class="card-title">#${cuenta.venta.codigo}</h5>
                     <p class="card-text">
                         <i class="fas fa-money-bill-wave text-success"></i> 
                         <strong>Total:</strong> <span class="text-dark">S/ ${parseFloat(cuenta.total).toFixed(2)}</span><br><br>

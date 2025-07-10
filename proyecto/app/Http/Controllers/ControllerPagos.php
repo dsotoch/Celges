@@ -78,6 +78,15 @@ class ControllerPagos extends Controller
                         ]);
                     }
                 }
+
+                $controladorCuentas = new ControllerCuentas();
+                $controladorCuentas->store([
+                    "venta_id" => $ventaId,
+                    "total" =>  $venta->total,
+                    "deuda" => max(0, $venta->total - $total),
+                    "saldo_a_favor" => max(0, $total - $venta->total),
+                    'cliente_id' => $venta->cliente_id
+                ]);
             } else {
                 $cliente_id = $request->input('cliente_id');
 
@@ -105,7 +114,7 @@ class ControllerPagos extends Controller
                             'numero' => $request->input("numero.$i"),
                             'tipo' => $tipos[$i] ?? null,
                             'fecha' => $request->input("fecha.$i"),
-                            'cuenta_id' => $cuenta->id,
+                            'cuenta_id' => $request->input("cuenta_id.$i"),
                             'monto' => $pagoAplicado,
                         ], "Venta");
 

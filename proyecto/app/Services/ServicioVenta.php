@@ -30,7 +30,7 @@ class ServicioVenta
                 'estado' => "Pendiente",
                 'codigo' => $codigo,
                 'cliente_id' => $data->persona_id,
-                'total' => $data->total,
+                'total' => $data->total-$data->pendiente,
                 'abono_inicial' => 0.00,
                 'saldo_pendiente' => $data->pendiente,
                 'saldo_a_favor' => $data->favor,

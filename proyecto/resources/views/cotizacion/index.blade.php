@@ -38,6 +38,7 @@
                         <tr>
                             <th class="bg-blue-pad text-12 w-140px text-white ">CLIENTE</th>
                             <td class="bg-moke"><input type="text" id="cliente" class="form-control no-border"></td>
+                            <input type="hidden" id="idcliente">
                             <th class="bg-blue-pad text-12 w-140px text-white">FECHA</th>
                             <td class="w-140px bg-moke">{{ now()->format('Y-m-d') }}</td>
                         </tr>
@@ -335,13 +336,15 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                         <tbody id="datos-clientess">
                             @foreach ($clientes as $cl)
-                                <tr class="selectable-row">
+                                <tr class="selectable-rowCliente" data-id="{{ $cl->id }}"
+                                    data-cliente="{{ e($cl->nombres) }}" data-direccion="{{ e($cl->direccion) }}">
                                     <td>{{ $cl->nombres }}</td>
-                                    <td>{{ $cl->direccion??"-" }}</td>
+                                    <td>{{ $cl->direccion ?? '-' }}</td>
                                     <td>{{ $cl->telefono }}</td>
                                     <td>{{ $cl->email }}</td>
                                 </tr>
                             @endforeach
+
 
                         </tbody>
                     </table>
@@ -349,7 +352,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" id="enviar"><i class="fas fa-paper-plane"></i>
+                    <button type="button" class="btn btn-success" id="enviarCliente"><i class="fas fa-paper-plane"></i>
                         Enviar a
                         Cotización</button>
                 </div>
@@ -376,7 +379,6 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             let registrado = '';
             let precio_compra = "";
             let total_utilidades = 0.00;
-            let cliente_id = "";
             // Selección de fila
             $('.selectable-row').on('click', function() {
                 $('.selectable-row').removeClass('selected');
@@ -388,6 +390,56 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
             });
 
+            let idClienteTabla = null;
+            let clienteTabla = null;
+            let direccionClienteTabla = null;
+            $('.selectable-rowCliente').on('click', function() {
+                $('.selectable-rowCliente').removeClass('selected');
+                $(this).addClass('selected');
+                idClienteTabla = $(this).data('id');
+                clienteTabla = $(this).data('cliente');
+                direccionClienteTabla = $(this).data('direccion');
+            });
+            $('#enviarCliente').on('click', function() {
+                enviarTablaCliente();
+            });
+
+            async function enviarTablaCliente() {
+                if (!clienteTabla) {
+                    alert("Seleccione un Cliente.");
+                    return;
+                }
+                document.getElementById("cliente").value = clienteTabla;
+                document.getElementById("idcliente").value = idClienteTabla;
+                document.getElementById("destino").value = direccionClienteTabla;
+                $("#modalCotizacionCliente").modal("hide");
+                await vercuentasCliente(idClienteTabla);
+            }
+            async function vercuentasCliente(clienteId) {
+                try {
+                    const response = await fetch(`cuentas/saldoPendiente/${clienteId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.saldo > 0) {
+                        alert("ℹ️ El cliente tiene un saldo pendiente.");
+                        $("#pendiente").val((data.saldo).toFixed(2));
+                        calcularTotal();
+                    }
+
+                } catch (error) {
+                    console.error("❌ Error al obtener las cuentas del cliente:", error);
+                }
+            }
+
             // Evento botón enviar
             $('#enviar').on('click', function() {
                 let existe = productos.some(p => p.id === id && p.registrado == registrado);
@@ -397,6 +449,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 }
                 enviarTabla();
             });
+
 
             function enviarTabla() {
                 if (!producto) {
@@ -506,7 +559,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 });
                 $("#subtotal").val(total.toFixed(2));
                 $("#total").val(total.toFixed(2));
-
+                calcularTotal();
             }
 
             function calcularTotal() {
@@ -647,9 +700,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     facturacion: $("#facturacion").val(),
                     total: $("#total").val(),
                     utilidad: $("#utilidades").text(),
-                    cliente_id: cliente_id,
+                    persona_id: document.getElementById("idcliente").value,
                     productos: productos // asegúrate que esto exista
                 };
+
 
                 try {
                     await $.ajax({

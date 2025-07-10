@@ -197,7 +197,14 @@
     background-color: #007bff !important;
     color: white;
 }
+.selectable-rowCliente {
+    cursor: pointer;
+}
 
+.selectable-rowCliente.selected {
+    background-color: #007bff !important;
+    color: white;
+}
 .text-center {
     font-size: 12px;
 }

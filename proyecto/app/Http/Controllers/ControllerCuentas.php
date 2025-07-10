@@ -16,7 +16,7 @@ class ControllerCuentas extends Controller
      */
     public function index()
     {
-        $servicio=new ServicioCuentas();
+        $servicio = new ServicioCuentas();
         $cuentas = $servicio->listar();
         $cuentasbancos = CuentaBancaria::all();
         return view("cuentas.index", compact("cuentas", "cuentasbancos"));
@@ -33,17 +33,23 @@ class ControllerCuentas extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(array $request)
     {
-        //
+        try {
+            $servicio = new ServicioCuentas();
+            $servicio->crear($request);
+            return true;
+        } catch (\Throwable $th) {
+            return $th;
+        }
     }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
-     {
-        $servicio=new ServicioCuentas();
+    {
+        $servicio = new ServicioCuentas();
         $cuentas = $servicio->detallesCuentas($id);
         return response()->json($cuentas);
     }
@@ -51,7 +57,12 @@ class ControllerCuentas extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id) {}
+    public function saldoPendienteCuentaCliente(string $id)
+    {
+        $servicio = new ServicioCuentas();
+        $saldoPendiente = $servicio->obtenerSaldoPendienteTotal($id);
+        return response()->json(["saldo" => $saldoPendiente]);
+    }
 
     /**
      * Update the specified resource in storage.

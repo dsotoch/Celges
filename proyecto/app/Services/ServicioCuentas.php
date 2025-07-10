@@ -42,10 +42,19 @@ class ServicioCuentas
         }
     }
 
+
     public function obtenerPorId(int $id)
     {
         return Cuentas::with("venta")->whereRelation("venta", "cliente_id", "=", $id)->get();
     }
+
+    public function obtenerSaldoPendienteTotal(int $clienteId)
+    {
+        return Cuentas::whereRelation("venta", "cliente_id", $clienteId)
+            ->where("deuda", ">", 0)
+            ->sum("deuda");
+    }
+
 
     public function listar()
     {
@@ -57,14 +66,14 @@ class ServicioCuentas
                 'personas.nombres as nombres',
                 DB::raw('SUM(cuentas.deuda) as total_deuda')
             )
-            ->where("cuentas.deuda",">","0")
+            ->where("cuentas.deuda", ">", "0")
             ->groupBy('personas.id', 'personas.nombres', 'personas.telefono')
             ->get();
     }
 
     public function detallesCuentas(string $id)
     {
-        return Cuentas::with("venta","venta.abonos","venta.abonos.operacion")->whereRelation("venta", "cliente_id", "=", $id)->get();
+        return Cuentas::with("venta", "venta.abonos", "venta.abonos.operacion")->whereRelation("venta", "cliente_id", "=", $id)->get();
     }
 
     public function obtenerCodigo(int $numeroActual): string

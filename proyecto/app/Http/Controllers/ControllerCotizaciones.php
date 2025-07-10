@@ -50,13 +50,11 @@ class ControllerCotizaciones extends Controller
                 'facturacion' => $request->facturacion ?? 0,
                 'favor' => $request->favor ?? 0,
                 'pendiente' => $request->pendiente ?? 0,
+                'persona_id'=>$request->persona_id,
                 'created_at' => Carbon::now("America/Lima")->format("Y-m-d")
             ]);
 
-            if (!empty($request->cliente_id)) {
-                $cotizacion->cliente()->associate($request->cliente_id);
-            }
-            $cotizacion->save();
+            
 
             $cotizacion->productos()->createMany(
                 collect($request->productos)->map(function ($producto) {

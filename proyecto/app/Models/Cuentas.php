@@ -10,7 +10,8 @@ class Cuentas extends Model
       "venta_id",
       "total",
       "deuda",
-      "saldo_a_favor"
+      "saldo_a_favor",
+      'cliente_id'
     ];
 
     public function compra(){

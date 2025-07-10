@@ -28,7 +28,9 @@ class ControllerVentas extends Controller
         $codigo = "VEN" . str_pad($max + 1, 4, "0", STR_PAD_LEFT);
         $cuentas = CuentaBancaria::where("activo", true)->get();
         $ventas_del_dia = Venta::where('fecha', Carbon::now("America/Lima")->format("Y-m-d"));
-        $ventas = Venta::paginate(50);
+        $ventas = Venta::orderByRaw("estado = 'Pendiente' DESC")
+            ->orderBy('created_at', 'desc')
+            ->paginate(50);
         $cotizaciones = Cotizacion::where("estado", "Pendiente")->get();
         return view("ventas.index", compact("ventas_del_dia", "ventas", "cotizaciones", "codigo", "codigopersona", "cuentas"));
     }
@@ -56,7 +58,7 @@ class ControllerVentas extends Controller
             $codigo = "VEN" . str_pad($max + 1, 4, "0", STR_PAD_LEFT);
             $servicio = new ServicioVenta();
             $serviciodetalleventa = new ServicioDetalleVentas();
-            $ventaservicio=$servicio->crear($cotizacion, $codigo);
+            $ventaservicio = $servicio->crear($cotizacion, $codigo);
             foreach ($cotizacion->productos as $value) {
                 $serviciodetalleventa->crear([
                     'venta_id' => $ventaservicio->id,
@@ -119,11 +121,11 @@ class ControllerVentas extends Controller
      */
     public function update(Request $request, string $id)
     {
-         try {
+        try {
             $servicio = new ServicioVenta();
-            $venta = $servicio->actualizar((int)$id,[
-                "estado"=>"Impreso"
-            ]); 
+            $venta = $servicio->actualizar((int)$id, [
+                "estado" => "Impreso"
+            ]);
 
             return response()->json([
                 'success' => true,

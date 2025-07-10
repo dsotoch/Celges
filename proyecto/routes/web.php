@@ -88,7 +88,9 @@ Route::prefix('cuentas')
     ->group(function () {
         Route::get('/',             'index')->name('cuentas.index');        // Mostrar lista
         Route::get('/{id}',     'show')->name('cuentas.show');        // Guardar nuevo registro
+        Route::get('/saldoPendiente/{id}', 'saldoPendienteCuentaCliente');
         Route::post('/guardar',     'store')->name('cuentas.store');        // Guardar nuevo registro
         Route::put('/editar/{id}', 'update')->name('cuentas.update');
         Route::delete('/delete/{id}', 'destroy')->name('cuentas.destroy');    // Eliminar
+
     });
