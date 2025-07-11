@@ -21,4 +21,8 @@ class Compra extends Model
     {
         return $this->belongsTo(Persona::class);
     }
+    public function detalle()
+    {
+        return $this->hasMany(DetalleCompra::class);
+    }
 }

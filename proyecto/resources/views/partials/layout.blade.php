@@ -300,7 +300,7 @@
                             <span class="menu-title">Ventas</span>
                         </a>
                     </li>
-                     <li class="nav-item">
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('cuentas.index') }}">
                             <i class="fas fa-wallet menu-icon"></i>
                             <span class="menu-title">Cuentas Clientes</span>
@@ -312,6 +312,12 @@
                             <span class="menu-title">Compras</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('pagos.index') }}">
+                            <i class="fas fa-wallet menu-icon"></i> <span class="menu-title">Mis Pagos</span>
+                        </a>
+                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('productos.index') }}">
                             <i class="fas fa-tags menu-icon"></i>

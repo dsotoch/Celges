@@ -19,6 +19,8 @@ class ServicioCuentas
         }
     }
 
+   
+
     public function actualizar(int $id, array $data): Cuentas
     {
         try {

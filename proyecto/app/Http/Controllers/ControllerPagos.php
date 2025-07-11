@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Services\ServicioAbonoVenta;
+use App\Services\ServicioCompra;
+use App\Services\ServicioCuentaBancaria;
 use App\Services\ServicioCuentas;
 use App\Services\ServicioOperacion;
-
+use App\Services\ServicioPagos;
+use App\Services\ServicioServicio;
 use App\Services\ServicioVenta;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,16 +23,149 @@ class ControllerPagos extends Controller
      */
     public function index()
     {
-        //
+        $servicioCompras = new ServicioCompra();
+        $servicioPagos = new ServicioPagos();
+        $servicioServicios = new ServicioServicio();
+        $servicioCuentasBancarias = new ServicioCuentaBancaria();
+        $compras_pendientes = $servicioCompras->listarCuentasPendientes();
+        $pagos = [];
+        foreach ($compras_pendientes as $value) {
+            $pagos[$value->id] = $servicioPagos->obtenerPagosCompra($value->id);
+        }
+        $compras = $compras_pendientes;
+        $cuentasbancos = $servicioCuentasBancarias->listarActivas();
+        $servicios = $servicioServicios->listar();
+        $pendientes=$servicioPagos->listarPendientes();
+        return view("pagos.index", compact("compras", "pagos", "cuentasbancos", 'servicios',"pendientes"));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+
+    public function createPagoServicio(Request $request)
     {
-        //
+        try {
+            DB::beginTransaction();
+            $servicioPago = new ServicioPagos();
+                // Crear pago
+                $servicioPago->crear([
+                    'persona_id'   => null,
+                    'fecha_pago'   => $request->fecha,
+                    'servicio_id'  => $request->servicio,
+                    'metodo_pago'  => null,
+                    'operacion_id' => null,
+                    'monto_pagado' => $request->monto,
+                    'nota'         => $request->nota,
+                ]);
+            
+            DB::commit();
+            return redirect()->back()->with(["success_servicio" => "✅ Pago Registrado Correctamente."]);
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(["error_servicio" => $th->getMessage()]);
+        }
     }
+
+    public function createPagoCompra(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $servicioOperacion = new ServicioOperacion();
+            $servicioPago = new ServicioPagos();
+            $servicioCompra = new ServicioCompra();
+            $montos = $request->monto ?? [];
+            $tipos = $request->tipo ?? [];
+            $numeros = $request->operac ?? [];
+            $fechas = $request->fecha ?? [];
+            $cuentas = $request->cuenta_id ?? [];
+
+            foreach ($montos as $i => $monto) {
+                if (empty($monto)) continue;
+
+                // Crear operación
+                $operacion = $servicioOperacion->crear([
+                    'numero'     => $numeros[$i]     ?? null,
+                    'tipo'       => $tipos[$i]       ?? null,
+                    'fecha'      => $fechas[$i]      ?? now("America/Lima")->format("Y-m-d"),
+                    'cuenta_id'  => $cuentas[$i]     ?? null,
+                    'monto'      => $monto,
+                ], "Compra");
+
+                // Crear pago
+                $servicioPago->crear([
+                    'persona_id'   => $request->cliente_id,
+                    'fecha_pago'   => now("America/Lima")->format("Y-m-d"),
+                    'servicio_id'  => 2,
+                    'metodo_pago'  => $tipos[$i] ?? null,
+                    'operacion_id' => $operacion->id,
+                    'monto_pagado' => $monto,
+                    'nota'         => $request->compra_id,
+                ]);
+            }
+            $servicioCompra->actualizar($request->compra_id, ["estado" => "pagado"]);
+
+            DB::commit();
+            return redirect()->back()->with(["success" => "✅ Pago Registrado Correctamente."]);
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(["error" => $th->getMessage()]);
+        }
+    }
+
+    public function GuardarPagoCompra(array $request, string $compra_id, string $personaId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $servicioOperacion = new ServicioOperacion();
+            $servicioPago = new ServicioPagos();
+            $tipoCompra = $request['tipo_compra'] ?? '';
+            $montos = $request['monto'] ?? [];
+            $tipos = $request['tipo'] ?? [];
+            $numeros = $request['operac'] ?? [];
+            $fechas = $request['fecha'] ?? [];
+            $cuentas = $request['cuenta_id'] ?? [];
+
+            // Sumar total pagado
+            $total = is_array($montos) && !empty($montos) ? array_sum($montos) : 0.00;
+
+            // Solo pagos al contado
+            if ($tipoCompra && $tipoCompra !== "credito") {
+                foreach ($montos as $i => $monto) {
+                    if (empty($monto)) continue;
+
+                    // Crear operación
+                    $operacion = $servicioOperacion->crear([
+                        'numero'     => $numeros[$i]     ?? null,
+                        'tipo'       => $tipos[$i]       ?? null,
+                        'fecha'      => $fechas[$i]      ?? now("America/Lima")->format("Y-m-d"),
+                        'cuenta_id'  => $cuentas[$i]     ?? null,
+                        'monto'      => $monto,
+                    ], "Compra");
+
+                    // Crear pago
+                    $servicioPago->crear([
+                        'persona_id'   => $personaId,
+                        'fecha_pago'   => now("America/Lima")->format("Y-m-d"),
+                        'servicio_id'  => 1, // podrías hacerlo dinámico si varía
+                        'metodo_pago'  => $tipos[$i] ?? null,
+                        'operacion_id' => $operacion->id,
+                        'monto_pagado' => $monto,
+                        'nota'         => $compra_id,
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return true;
+        } catch (\Exception $th) {
+            DB::rollBack();
+            throw new \Exception($th->getMessage());
+        }
+    }
+
 
     /**
      * Store a newly created resource in storage.

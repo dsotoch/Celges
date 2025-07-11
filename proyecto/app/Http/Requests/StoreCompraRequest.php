@@ -31,6 +31,18 @@ class StoreCompraRequest extends FormRequest
             'tipo_documento' => 'required|string',
             'total' => 'required|numeric|min:0',
             'estado' => 'required|in:pendiente,pagado',
+
+            'monto' => 'nullable|array',
+            'monto.*' => 'nullable|numeric|min:0',
+
+            'tipo' => 'nullable|array',
+            'tipo.*' => 'nullable|string',
+
+            'fecha' => 'nullable|array',
+            'fecha.*' => 'nullable|date',
+
+            'cuenta_id' => 'nullable|array',
+            'cuenta_id.*' => 'nullable',
         ];
     }
     public function messages()
@@ -64,7 +76,7 @@ class StoreCompraRequest extends FormRequest
     }
     protected function failedValidation(Validator $validator)
     {
-        session()->flash("show_modal",true);
+        session()->flash("show_modal", true);
         parent::failedValidation($validator);
     }
 }

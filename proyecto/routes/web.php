@@ -80,6 +80,8 @@ Route::prefix('pagos')
     ->group(function () {
         Route::get('/',             'index')->name('pagos.index');        // Mostrar lista
         Route::post('/guardar',     'store')->name('pagos.store');        // Guardar nuevo registro
+        Route::post('/guardar-pago-compra',  'createPagoCompra')->name('pagos.create');        // Guardar nuevo registro
+        Route::post('/guardar-pago-servicio',  'createPagoServicio')->name('pagos.crearservicio');        // Guardar nuevo registro
         Route::put('/editar/{id}', 'update')->name('pagos.update');
         Route::delete('/delete/{id}', 'destroy')->name('pagos.destroy');    // Eliminar
     });

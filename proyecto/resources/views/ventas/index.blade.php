@@ -1466,7 +1466,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             let pendiente = parseFloat($("#pendiente").val()) || 0;
             let facturacion = parseFloat($("#facturacion").val()) || 0;
 
-            let total = subtotal + envio + encomienda + favor + pendiente + facturacion;
+            let total = subtotal + envio + encomienda + facturacion;
 
             $("#total").val(total.toFixed(2));
         }

@@ -9,8 +9,12 @@ use App\Models\Persona;
 use App\Models\Producto;
 use App\Services\ServicioAlmacenInterno;
 use App\Services\ServicioCompra;
+use App\Services\ServicioCuentaBancaria;
+use App\Services\ServicioCuentas;
 use App\Services\ServicioDetalleCompra;
+use App\Services\ServicioPagos;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ControllerCompra extends Controller
@@ -22,12 +26,14 @@ class ControllerCompra extends Controller
     {
         $compras = Compra::paginate(50);
         $servicio = new ServicioCompra();
+        $servicioCuentas = new ServicioCuentaBancaria();
         $codigo = "CMP-" . $servicio->obtenerCodigo(Compra::max("id") + 1);
+        $cuentas = $servicioCuentas->listarActivas();
         $proveedores = Persona::whereHas('tipo', function ($q) {
             $q->whereIn('tipo', ['ambos', 'proveedor']);
         })->with('tipo')->get();
         $productos = Producto::all();
-        return view("compras.index", compact("compras", "codigo", "proveedores", "productos"));
+        return view("compras.index", compact("compras", "codigo", "proveedores", "productos", "cuentas"));
     }
 
 
@@ -91,6 +97,9 @@ class ControllerCompra extends Controller
                 }
                 unset($producto);
             }
+            $controladorPagos = new ControllerPagos();
+            $controladorPagos->GuardarPagoCompra($request->all(), $compra->id, $compra->persona_id);
+
             DB::commit();
             return redirect()->route('compras.index')
                 ->with('success', 'Compra registrada correctamente.');
@@ -174,15 +183,17 @@ class ControllerCompra extends Controller
     public function destroy(string $id)
     {
         try {
-            $servicio = new ServicioCompra();
-            $compra_id = $servicio->obtenerPorId($id);
-            if ($compra_id->estado != "anulado") {
-                throw new Exception("Para poder eliminar la compra, primero tienes que Anularla");
+            $servicioCompra = new ServicioCompra();
+            $servicioalmacen = new ServicioAlmacenInterno();
+            $servicioalmacen->eliminar($id);
+            $servicioCompra->actualizar($id, ["estado"=>"anulado"]);
+            $servicioPagos = new ServicioPagos();
+            $pagos = $servicioPagos->obtenerPagosCompra($id);
+            foreach ($pagos as $pago) {
+                $pago->delete(); 
             }
-
-            $servicio->eliminar($id);
             return redirect()->route('compras.index')
-                ->with('success-delete', 'Compra eliminada correctamente.');
+                ->with('success-delete', 'Compra Anulada correctamente.');
         } catch (\Exception $ex) {
             return redirect()->back()
                 ->withErrors(['general-error' => $ex->getMessage()]);

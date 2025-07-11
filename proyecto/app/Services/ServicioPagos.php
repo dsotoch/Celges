@@ -8,6 +8,16 @@ use Illuminate\Support\Facades\Log;
 
 class ServicioPagos
 {
+
+    public function obtenerPagosCompra(string $idCompra)
+    {
+        return  Pagos::with(['servicio', 'operacion', 'persona'])->where("nota", $idCompra)->get();
+    }
+
+    public function listarPendientes()
+    {
+        return Pagos::with(['servicio', 'operacion', 'persona'])->where("metodo_pago", null)->get();
+    }
     public function listar()
     {
         return Pagos::with(['servicio', 'operacion', 'persona'])->get();

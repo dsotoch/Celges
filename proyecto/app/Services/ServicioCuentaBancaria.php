@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Log;
 
 class ServicioCuentaBancaria
 {
+     public function listarActivas()
+    {
+        return CuentaBancaria::where("activo",true)->get();
+    }
     public function listar()
     {
         return CuentaBancaria::all();

@@ -14,10 +14,10 @@
 
         <div class="container mt-4">
             <div class="card shadow-lg">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">
+                <div class="card-header bg-orange text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
                         <i class="fas fa-user-friends"></i> Todas las Cuentas de Clientes
-                    </h4>
+                    </h5>
 
                 </div>
                 @if (session('success'))

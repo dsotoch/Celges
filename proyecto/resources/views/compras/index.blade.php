@@ -185,7 +185,7 @@
                                                 </div>
                                                 <input type="text" name="numero_documento" id="numero_documento"
                                                     class="form-control @error('numero_documento') is-invalid @enderror"
-                                                    value="{{ old('numero_documento') }}" placeholder="Ej: F001-000123">
+                                                    value="{{ old('numero_documento') }}">
                                             </div>
                                             @error('numero_documento')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -231,6 +231,66 @@
                                             @enderror
                                         </div>
                                         <br>
+
+                                        <div class="modal-body">
+                                            <!-- Método de Pago -->
+                                            <div class="form-group  metodo_pago">
+                                                <label for="metodo_pago"><i
+                                                        class="fas fa-credit-card mr-1 text-black"></i>Método
+                                                    de Pago</label>
+                                                <select class="form-control" id="metodo_pago">
+                                                    <option value="">Seleccione un método</option>
+                                                    <option value="Transferencia">Transferencia</option>
+
+                                                    <option value="Efectivo">Efectivo</option>
+                                                </select>
+                                            </div>
+                                            <!-- Banco -->
+                                            <div class="form-group oculto banco">
+                                                <label for="banco"><i
+                                                        class="fas fa-university mr-1 text-black"></i>Banco</label>
+                                                <select class="form-control" id="banco">
+                                                    <option value="">Seleccione un banco</option>
+                                                    @foreach ($cuentas as $item)
+                                                        <option value="{{ $item->id }}">
+                                                            {{ $item->banco }}--{{ $item->tipo_cuenta }}--{{ $item->moneda }}--{{ $item->titular }}
+                                                        </option>
+                                                    @endforeach
+
+                                                </select>
+                                            </div>
+
+                                            <!-- N° de Operación -->
+                                            <div class="form-group oculto operacion">
+                                                <label for="numero_operacion"><i
+                                                        class="fas fa-receipt mr-1 text-black"></i>N° de
+                                                    Operación</label>
+                                                <input type="text" class="form-control" id="numero_operacion">
+                                            </div>
+
+                                            <!-- Monto -->
+                                            <div class="form-group oculto monto">
+                                                <label for="monto"><i class="fas fa-coins mr-1 text-black"></i>Monto
+                                                    (S/)</label>
+                                                <input type="number" step="0.01" class="form-control" name="monto"
+                                                    id="monto">
+                                            </div>
+
+                                            <hr>
+                                            <div class="oculto detallespagos">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <h5 class="mb-0">💳 Detalles de Pago</h5>
+                                                    <button class="btn btn-primary" type="button"
+                                                        id="btnagregarPago">Agregar</button>
+                                                </div>
+
+                                                <div class="card" id="cuerpopagos">
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+
 
                                         <div class="col-md-12 mt-4 mb-4 ">
                                             <h5>Productos de la Compra</h5>
@@ -641,13 +701,19 @@
                                                                 method="POST">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="btn btn-outline-primary"
-                                                                    onclick="return eliminar(event,'{{ $item->numero }}')">
-                                                                    <i class="fas fa-trash"></i>
+
+                                                                <button type="submit"
+                                                                    class="btn {{ $item->estado === 'anulado' ? 'btn-danger' : 'btn-outline-primary' }}"
+                                                                    {{ $item->estado === 'anulado' ? 'disabled' : '' }}
+                                                                    title="Anular Compra"
+                                                                    onclick="return eliminar(event, '{{ $item->numero }}')">
+                                                                    <i class="fas fa-ban"></i> Anular
                                                                 </button>
                                                             </form>
 
-                                                            <button class="btn btn-outline-primary" {{$item->estado=="anulado"?"disabled":""}}
+
+                                                            {{-- -  <button class="btn btn-outline-primary"
+                                                                {{ $item->estado == 'anulado' ? 'disabled' : '' }}
                                                                 onclick="llenarParaEditar(this,event)"
                                                                 data-id="{{ $item->id }}"
                                                                 data-persona="{{ $item->persona_id }}"
@@ -660,6 +726,7 @@
                                                                 data-estado="{{ $item->estado ?? '' }}">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
+                                                            --}}
                                                             <button class="btn btn-outline-primary" type="button"
                                                                 onclick="detalles({{ $item->id }})">
                                                                 <i class="fas fa-eye"></i>
@@ -703,6 +770,154 @@
     @endif
 
     <script>
+        $("#tipo_compra").on("change", function() {
+            const valor = $(this).val();
+            console.log(valor);
+            if (valor === "mixto" || valor === "contado") {
+                $(".metodo_pago").removeClass("oculto");
+                $(this).prop('readonly', true);
+
+            } else {
+                if (valor === "credito") {
+                    $(".metodo_pago").addClass("oculto");
+
+                    $(this).prop('readonly', true);
+
+                }
+
+
+            }
+
+
+        });
+        $("#metodo_pago").on("change", function() {
+            const valor = $(this).val();
+            if (valor === "Transferencia") {
+                $(".banco").removeClass("oculto");
+                $(".operacion").removeClass("oculto");
+                $(".monto").removeClass("oculto");
+                $(".detallespagos").removeClass("oculto");
+
+            } else {
+                if (valor === "Efectivo") {
+                    $(".monto").removeClass("oculto");
+                    $(".operacion").addClass("oculto");
+                    $(".banco").addClass("oculto");
+                    if (["mixto", "contado"].includes($("#tipo_compra").val())) {
+
+                        $(".detallespagos").removeClass("oculto");
+
+                    } else {
+                        $(".detallespagos").addClass("oculto");
+
+                    }
+
+                } else {
+                    $(".operacion").addClass("oculto");
+                    $(".monto").addClass("oculto");
+                    $(".banco").addClass("oculto");
+                    $(".detallespagos").addClass("oculto");
+
+                }
+            }
+        });
+
+
+        $(document).on('click', '#btnagregarPago', function() {
+            let totalCompra = $("#total").val();
+
+            if (totalCompra == "" || totalCompra <= 0) {
+                alert("✖️ Ingresa el Total de la Compra.");
+                return;
+            }
+            const metodo_pago = $("#metodo_pago")?.val();
+            const banco = $("#banco")?.val();
+            let operacion = $("#numero_operacion")?.val();
+            const monto = $("#monto")?.val();
+
+
+            if (metodo_pago == "Efectivo" && (monto == "" || monto <= 0)) {
+                alert("💢 Ingresa un monto valido");
+                return;
+            }
+            if (metodo_pago == "Transferencia" && (banco == "")) {
+                alert("💢 Seleccione la cuenta de banco.");
+                return;
+            }
+            if (metodo_pago == "Transferencia" && banco != "" && operacion == "") {
+                alert("💢 Ingrese el Numero de Operacion.");
+                return;
+            }
+            if (metodo_pago == "Transferencia" && banco != "" && operacion != "" && (monto == "" || monto <= 0)) {
+                alert("💢 Ingresa un monto valido");
+                return;
+            }
+
+            let bancoNombre = "---";
+            if (metodo_pago == "Transferencia") {
+                bancoNombre = $("#banco option:selected").text();
+            } else {
+                operacion = "0";
+            }
+            const fechaActual = new Date().toLocaleString('en-CA', {
+                timeZone: 'America/Lima',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            $("#cuerpopagos").append(`
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <strong>Método de pago:</strong>
+                    <p class="mb-1">${metodo_pago}</p>
+                </div>
+                <div class="col-md-6">
+                    <strong>Operación:</strong>
+                    <p class="mb-1">${operacion}</p>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-12">
+                    <strong>Banco:</strong>
+                    <p class="mb-1">${bancoNombre}</p>
+                </div>
+                
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <strong>Monto:</strong>
+                    <p class="mb-1">${monto}</p>
+                </div>
+                <div class="col-md-6 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Fecha:</strong>
+                        <p class="mb-1">${fechaActual}</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger btn-eliminar-pago">Eliminar</button>
+                </div>
+            </div>
+
+            <!-- Campos ocultos para el envío del formulario -->
+            <input type="hidden" name="operac[]" value="${operacion}">
+            <input type="hidden" name="tipo[]" value="${metodo_pago}">
+            <input type="hidden" name="monto[]" value="${monto}">
+            <input type="hidden" name="fecha[]" value="${fechaActual}">
+            <input type="hidden" name="cuenta_id[]" value="${banco}">
+        </div>
+    </div>
+`);
+
+
+
+        });
+
+        $(document).on("click", ".btn-eliminar-pago", function() {
+            $(this).closest(".card").remove();
+        });
+
         function detalles(id) {
             $.ajax({
                 url: '/compras/' + id,
@@ -833,7 +1048,7 @@
         function eliminar(event, nombre) {
             event.preventDefault();
 
-            if (confirm(`¿Estás seguro de que deseas eliminar a ${nombre}?`)) {
+            if (confirm(`¿Estás seguro de que deseas Anular a ${nombre}?`)) {
 
                 event.target.closest('form').submit();
             }
@@ -842,13 +1057,52 @@
             return false;
 
         }
+        async function calcularPagos(total) {
+            let tipo = $("#tipo_compra").val();
+            let divpagos = $("#cuerpopagos");
+            let totalmontos = 0.00;
 
-        function guardar(event) {
+            if (tipo === "contado") {
+                let montos = divpagos.find("[name='monto[]']");
+
+                montos.each(function() {
+                    const valor = parseFloat($(this).val()) || 0;
+                    totalmontos += valor;
+                });
+
+                if (totalmontos === 0.00) {
+                    alert("💰 Ingresa un monto válido para esta Compra Contado. No hay detalles de pago.");
+                    return "error";
+                }
+                if (totalmontos < total) {
+                    alert(
+                        "💰 La suma de todos los pagos es menor al total de la Compra,valido solo para Compras Mixtas."
+                    );
+                    return "error";
+                }
+                if (totalmontos > total) {
+                    alert(
+                        "💰 La suma de todos los pagos es mayor al total de la Compra."
+                    );
+                    return "error";
+                }
+
+                $("#estado").val("pagado");
+            }
+            return "ok";
+        }
+
+        async function guardar(event) {
+
             event.preventDefault();
+            let totalCompra = $("#total").val();
+            if (confirm(
+                    `¿Estás seguro de que deseas guardar esta Compra despues de haber revisado todos los detalles.?`
+                )) {
+                if (await calcularPagos(totalCompra) == "ok") {
+                    event.target.closest('form').submit();
 
-            if (confirm(`¿Estás seguro de que deseas guardar esta Compra despues de haber revisado todos los detalles.?`)) {
-
-                event.target.closest('form').submit();
+                }
             }
             return false;
         }

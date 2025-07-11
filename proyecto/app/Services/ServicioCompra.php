@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Log;
 
 class ServicioCompra
 {
+    public function listarCuentasPendientes()
+    {
+        return Compra::with("persona")->where("estado", "pendiente")->get();
+    }
+    
     public function listar()
     {
         return Compra::with('persona')->get();
@@ -28,7 +33,7 @@ class ServicioCompra
             throw new Exception("No se pudo registrar la compra.");
         }
     }
-   
+
     public function actualizar(int $id, array $data): Compra
     {
         try {
