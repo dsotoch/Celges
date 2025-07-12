@@ -18,9 +18,11 @@ use Illuminate\Support\Facades\Log;
 
 class ControllerPagos extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    function agregarCerosDerecha($numero, $cantidadCeros = 5)
+    {
+        return str_pad($numero, strlen($numero) + $cantidadCeros, "0", STR_PAD_RIGHT);
+    }
+
     public function index()
     {
         $servicioCompras = new ServicioCompra();
@@ -35,8 +37,8 @@ class ControllerPagos extends Controller
         $compras = $compras_pendientes;
         $cuentasbancos = $servicioCuentasBancarias->listarActivas();
         $servicios = $servicioServicios->listar();
-        $pendientes=$servicioPagos->listarPendientes();
-        return view("pagos.index", compact("compras", "pagos", "cuentasbancos", 'servicios',"pendientes"));
+        $pendientes = $servicioPagos->listarPendientes();
+        return view("pagos.index", compact("compras", "pagos", "cuentasbancos", 'servicios', "pendientes"));
     }
 
     /**
@@ -48,17 +50,17 @@ class ControllerPagos extends Controller
         try {
             DB::beginTransaction();
             $servicioPago = new ServicioPagos();
-                // Crear pago
-                $servicioPago->crear([
-                    'persona_id'   => null,
-                    'fecha_pago'   => $request->fecha,
-                    'servicio_id'  => $request->servicio,
-                    'metodo_pago'  => null,
-                    'operacion_id' => null,
-                    'monto_pagado' => $request->monto,
-                    'nota'         => $request->nota,
-                ]);
-            
+            // Crear pago
+            $servicioPago->crear([
+                'persona_id'   => null,
+                'fecha_pago'   => $request->fecha,
+                'servicio_id'  => $request->servicio,
+                'metodo_pago'  => null,
+                'operacion_id' => null,
+                'monto_pagado' => $request->monto,
+                'nota'         => $request->nota,
+            ]);
+
             DB::commit();
             return redirect()->back()->with(["success_servicio" => "✅ Pago Registrado Correctamente."]);
         } catch (\Exception $th) {
@@ -66,6 +68,104 @@ class ControllerPagos extends Controller
             return redirect()->back()->withErrors(["error_servicio" => $th->getMessage()]);
         }
     }
+
+    public function restarDeuda($proveedorId, $monto, $ventaId, $codigoVenta)
+    {
+        try {
+            $servicioCompra    = new ServicioCompra();
+            $servicioOperacion = new ServicioOperacion();
+            $servicioAbono     = new ServicioAbonoVenta();
+            $servicioPago      = new ServicioPagos();
+            $servicioVenta     = new ServicioVenta();
+
+            $comprasPendientes = $servicioCompra->listarCuentasPendientesProveedor($proveedorId);
+            $compras           = $comprasPendientes->sortBy('fecha_compra')->pluck('id');
+
+            $montoRestante     = $monto;
+            $totalAplicado     = 0;
+
+            foreach ($compras as $compraId) {
+                $compradeuda = $servicioCompra->obtenerPorId($compraId);
+
+                if (
+                    !$compradeuda ||
+                    $compradeuda->estado !== 'pendiente' ||
+                    $compradeuda->total <= 0
+                ) {
+                    continue;
+                }
+
+                $pagoAplicado = min($compradeuda->total, $montoRestante);
+
+                // Registrar operación de COMPRA
+                $operacion = $servicioOperacion->crear([
+                    'numero'     => $compradeuda->id,
+                    'tipo'       => "Compra",
+                    'fecha'      => now("America/Lima")->format("Y-m-d"),
+                    'cuenta_id'  => null,
+                    'monto'      => $pagoAplicado,
+                ], "Compra");
+
+                // Registrar pago aplicado al proveedor
+                $servicioPago->crear([
+                    'persona_id'   => $proveedorId,
+                    'fecha_pago'   => now("America/Lima")->format("Y-m-d"),
+                    'servicio_id'  => 2,
+                    'metodo_pago'  => "Descuento-Saldo-Favor",
+                    'operacion_id' => $operacion->id,
+                    'monto_pagado' => $pagoAplicado,
+                    'nota'         => "Descuento por saldo a favor en la venta $codigoVenta",
+                ]);
+
+                // Registrar operación de VENTA
+                $operacionventa = $servicioOperacion->crear([
+                    'numero'     => null,
+                    'tipo'       => "Venta",
+                    'fecha'      => now("America/Lima")->format("Y-m-d"),
+                    'cuenta_id'  => null,
+                    'monto'      => $pagoAplicado,
+                ], "Venta");
+
+                // Registrar abono de la venta
+                $servicioAbono->crear([
+                    'venta_id'     => $ventaId,
+                    'fecha'        => now("America/Lima")->format("Y-m-d"),
+                    'monto'        => $pagoAplicado,
+                    'metodo_pago'  => "Descuento-Saldo-Favor",
+                    'operacion_id' => $operacionventa->id,
+                ]);
+
+                // Actualizar deuda de la compra
+                $compratotalinicial = $compradeuda->total;
+                $compradeuda->total -= $pagoAplicado;
+                if (round($compradeuda->total, 2) <= 0) {
+                    $compradeuda->estado = "pagado";
+                }
+                $compradeuda->total = $compratotalinicial;
+                $compradeuda->save();
+
+                $montoRestante -= $pagoAplicado;
+                $totalAplicado += $pagoAplicado;
+
+                if ($montoRestante <= 0) break;
+            }
+
+            // Actualizar la venta una vez
+            if ($totalAplicado > 0) {
+                $servicioVenta->actualizar($ventaId, [
+                    "estado"         => $servicioVenta->obtenerPorId($ventaId)->total == 0 ? "Pagado" : "Deuda",
+                    "abono_inicial"  => $totalAplicado,
+                    "saldo_a_favor"  => 0.00,
+                    "saldo_pendiente" => $servicioVenta->obtenerPorId($ventaId)->total,
+                    "total" => $totalAplicado + $servicioVenta->obtenerPorId($ventaId)->total,
+                    "nota"           => "Se aplicó descuento por saldo a favor con un monto de $totalAplicado"
+                ]);
+            }
+        } catch (\Throwable $th) {
+            throw new Exception("Error al restar deuda: " . $th->getMessage());
+        }
+    }
+
 
     public function createPagoCompra(Request $request)
     {
@@ -86,28 +186,50 @@ class ControllerPagos extends Controller
 
                 // Crear operación
                 $operacion = $servicioOperacion->crear([
-                    'numero'     => $numeros[$i]     ?? null,
+                    'numero'     => $this->agregarCerosDerecha($numeros[$i])     ?? null,
                     'tipo'       => $tipos[$i]       ?? null,
                     'fecha'      => $fechas[$i]      ?? now("America/Lima")->format("Y-m-d"),
                     'cuenta_id'  => $cuentas[$i]     ?? null,
                     'monto'      => $monto,
                 ], "Compra");
 
-                // Crear pago
-                $servicioPago->crear([
-                    'persona_id'   => $request->cliente_id,
-                    'fecha_pago'   => now("America/Lima")->format("Y-m-d"),
-                    'servicio_id'  => 2,
-                    'metodo_pago'  => $tipos[$i] ?? null,
-                    'operacion_id' => $operacion->id,
-                    'monto_pagado' => $monto,
-                    'nota'         => $request->compra_id,
-                ]);
+                if (empty($request->cliente_id)) {
+                    $servicio = $servicioPago->obtenerPorId($request->compra_id);
+                    // Crear pago
+                    $servicioPago->crear([
+                        'persona_id'   => null,
+                        'fecha_pago'   => now("America/Lima")->format("Y-m-d"),
+                        'servicio_id'  => $servicio->servicio_id,
+                        'metodo_pago'  => $tipos[$i] ?? null,
+                        'operacion_id' => $operacion->id,
+                        'monto_pagado' => $monto,
+                        'nota'         => $servicio->nota,
+                    ]);
+                } else {
+                    // Crear pago
+                    $servicioPago->crear([
+                        'persona_id'   => $request->cliente_id,
+                        'fecha_pago'   => now("America/Lima")->format("Y-m-d"),
+                        'servicio_id'  => 2,
+                        'metodo_pago'  => $tipos[$i] ?? null,
+                        'operacion_id' => $operacion->id,
+                        'monto_pagado' => $monto,
+                        'nota'         => $request->compra_id,
+                    ]);
+                    $servicioCompra->actualizar($request->compra_id, ["estado" => "pagado"]);
+                }
             }
-            $servicioCompra->actualizar($request->compra_id, ["estado" => "pagado"]);
 
-            DB::commit();
-            return redirect()->back()->with(["success" => "✅ Pago Registrado Correctamente."]);
+
+
+            if (empty($request->cliente_id)) {
+                $servicioPago->eliminar($request->compra_id);
+                DB::commit();
+                return redirect()->back()->with(["success_servicio" => "✅ Pago Registrado Correctamente."]);
+            } else {
+                DB::commit();
+                return redirect()->back()->with(["success" => "✅ Pago Registrado Correctamente."]);
+            }
         } catch (\Exception $th) {
             DB::rollBack();
             return redirect()->back()->withErrors(["error" => $th->getMessage()]);
@@ -138,7 +260,7 @@ class ControllerPagos extends Controller
 
                     // Crear operación
                     $operacion = $servicioOperacion->crear([
-                        'numero'     => $numeros[$i]     ?? null,
+                        'numero'     => $this->agregarCerosDerecha($numeros[$i])    ?? null,
                         'tipo'       => $tipos[$i]       ?? null,
                         'fecha'      => $fechas[$i]      ?? now("America/Lima")->format("Y-m-d"),
                         'cuenta_id'  => $cuentas[$i]     ?? null,
@@ -199,7 +321,7 @@ class ControllerPagos extends Controller
                         if (empty($monto)) continue;
 
                         $operacion = $servicioOperacion->crear([
-                            'numero' => $request->input("numero.$i"),
+                            'numero' => $this->agregarCerosDerecha($request->input("numero.$i")),
                             'tipo' => $tipos[$i] ?? null,
                             'fecha' => $request->input("fecha.$i"),
                             'cuenta_id' => $request->input("cuenta_id.$i"),
@@ -248,7 +370,7 @@ class ControllerPagos extends Controller
 
                         // Crear operación de pago
                         $operacion = $servicioOperacion->crear([
-                            'numero' => $request->input("numero.$i"),
+                            'numero' => $this->agregarCerosDerecha($request->input("numero.$i")),
                             'tipo' => $tipos[$i] ?? null,
                             'fecha' => $request->input("fecha.$i"),
                             'cuenta_id' => $request->input("cuenta_id.$i"),
@@ -324,6 +446,15 @@ class ControllerPagos extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            DB::beginTransaction();
+            $servicioPago = new ServicioPagos();
+            $servicioPago->eliminar($id);
+            DB::commit();
+            return redirect()->back()->with(["success_servicio" => "✅ Registro Eliminado Correctamente"]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => '❌ Error inesperado. Intenta nuevamente o contacta a soporte.']);
+        }
     }
 }

@@ -365,6 +365,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
     <script>
         $(document).ready(function() {
+            let restarsaldo = false;
             const body = $('body');
 
             if ((body.hasClass('sidebar-toggle-display')) || (body.hasClass('sidebar-absolute'))) {
@@ -414,6 +415,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 document.getElementById("destino").value = direccionClienteTabla;
                 $("#modalCotizacionCliente").modal("hide");
                 await vercuentasCliente(idClienteTabla);
+                await verSaldoAFavorCliente(idClienteTabla);
             }
             async function vercuentasCliente(clienteId) {
                 try {
@@ -432,6 +434,34 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     if (data.saldo > 0) {
                         alert("ℹ️ El cliente tiene un saldo pendiente.");
                         $("#pendiente").val((data.saldo).toFixed(2));
+                        calcularTotal();
+                    }
+
+                } catch (error) {
+                    console.error("❌ Error al obtener las cuentas del cliente:", error);
+                }
+            }
+            async function verSaldoAFavorCliente(clienteId) {
+                try {
+                    const response = await fetch(`compras/saldo-favor/${clienteId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.mensaje > 0) {
+                        if (confirm(
+                                "ℹ️ El cliente tiene un saldo a Favor.¿Deseas que se Reste en el Total de la Deuda?"
+                            )) {
+                            restarsaldo = true;
+                        }
+                        $("#favor").val((data.mensaje).toFixed(2));
                         calcularTotal();
                     }
 
@@ -569,8 +599,19 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 let favor = parseFloat($("#favor").val()) || 0;
                 let pendiente = parseFloat($("#pendiente").val()) || 0;
                 let facturacion = parseFloat($("#facturacion").val()) || 0;
+                let total = 0.00;
+                if (restarsaldo) {
+                    let totalsinSaldoFavor = subtotal + envio + encomienda + facturacion;
+                    if(favor >= totalsinSaldoFavor) {
+                        total = 0.00;
+                    } else {
+                        total = subtotal + envio - favor + encomienda + facturacion;
+                    }
 
-                let total = subtotal + envio + encomienda + facturacion;
+                } else {
+                    total = subtotal + envio + encomienda + facturacion;
+
+                }
 
                 $("#total").val(total.toFixed(2));
             }

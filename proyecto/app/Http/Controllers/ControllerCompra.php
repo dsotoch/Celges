@@ -186,11 +186,11 @@ class ControllerCompra extends Controller
             $servicioCompra = new ServicioCompra();
             $servicioalmacen = new ServicioAlmacenInterno();
             $servicioalmacen->eliminar($id);
-            $servicioCompra->actualizar($id, ["estado"=>"anulado"]);
+            $servicioCompra->actualizar($id, ["estado" => "anulado"]);
             $servicioPagos = new ServicioPagos();
             $pagos = $servicioPagos->obtenerPagosCompra($id);
             foreach ($pagos as $pago) {
-                $pago->delete(); 
+                $pago->delete();
             }
             return redirect()->route('compras.index')
                 ->with('success-delete', 'Compra Anulada correctamente.');
@@ -198,5 +198,13 @@ class ControllerCompra extends Controller
             return redirect()->back()
                 ->withErrors(['general-error' => $ex->getMessage()]);
         }
+    }
+
+    public function ListarSaldoFavorCliente(string $id)
+    {
+        $servicioCompra = new ServicioCompra();
+        $comprasConDeudaDePago = $servicioCompra->listarCuentasPendientesProveedor($id);
+        $saldoAFavor = $comprasConDeudaDePago->sum('total');
+        return response()->json(["mensaje" => $saldoAFavor]);
     }
 }

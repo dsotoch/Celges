@@ -11,7 +11,12 @@ class ServicioPagos
 
     public function obtenerPagosCompra(string $idCompra)
     {
-        return  Pagos::with(['servicio', 'operacion', 'persona'])->where("nota", $idCompra)->get();
+        return Pagos::with(['servicio', 'operacion', 'persona'])
+            ->where('nota', 'like', "%$idCompra%")
+            ->orWhereHas('operacion', function ($q) use ($idCompra) {
+                $q->where('numero', 'like', "%$idCompra%");
+            })
+            ->get();
     }
 
     public function listarPendientes()
@@ -59,6 +64,22 @@ class ServicioPagos
         } catch (Exception $e) {
             Log::error("Error al eliminar el pago: " . $e->getMessage());
             throw new Exception("No se pudo eliminar el pago.");
+        }
+    }
+    public function eliminarMasAntiguo(string $servicio_id): bool
+    {
+        try {
+            $pago = Pagos::where("servicio_id", $servicio_id)->orderBy('created_at', 'asc')->first();
+
+            if (!$pago) {
+                throw new Exception("No hay pagos registrados para eliminar.");
+            }
+
+            $pago->delete();
+            return true;
+        } catch (Exception $e) {
+            Log::error("Error al eliminar el pago más antiguo: " . $e->getMessage());
+            throw new Exception("No se pudo eliminar el pago más antiguo.");
         }
     }
 }

@@ -12,7 +12,14 @@ class ServicioCompra
     {
         return Compra::with("persona")->where("estado", "pendiente")->get();
     }
-    
+    public function listarCuentasPendientesProveedor(string $proveedorId)
+    {
+        return Compra::with("persona")
+            ->where("estado", "pendiente")
+            ->where("persona_id", $proveedorId)
+            ->get();
+    }
+
     public function listar()
     {
         return Compra::with('persona')->get();

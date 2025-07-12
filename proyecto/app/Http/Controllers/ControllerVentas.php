@@ -10,6 +10,7 @@ use App\Services\ServicioDetalleVentas;
 use App\Services\ServicioPersona;
 use App\Services\ServicioVenta;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -38,27 +39,61 @@ class ControllerVentas extends Controller
     /**
      * Show the form for creating a new resource.
      */
+
+    private function restarDeuda($proveedorId, $monto, $ventaId, $codigoVenta)
+    {
+        try {
+            $controladorPagos = new ControllerPagos();
+            $controladorPagos->restarDeuda($proveedorId, $monto, $ventaId, $codigoVenta);
+        } catch (\Throwable $th) {
+            throw new Exception($th->getMessage());
+        }
+    }
     public function create(Request $request)
     {
         try {
             DB::beginTransaction();
             $cotizacion = Cotizacion::with("productos")->findOrFail($request->cotizacion);
+            $subtotal    = $request->subtotal ?? 0;
+            $envio       = $request->envio ?? 0;
+            $encomienda  = $request->encomienda ?? 0;
+            $facturacion = $request->facturacion ?? 0;
+            $favor       = $request->favor ?? 0;
+            $saldoFavorUsado = $favor;
+
+            $suma = $subtotal + $envio + $encomienda + $facturacion;
+            if ($request->total == $suma) {
+                $saldoFavorUsado = 0;
+            }
+            if ($saldoFavorUsado > 0) {
+                if ($favor > $suma) {
+                    $saldoFavorUsado = $suma;
+                    $saldoFavorRestante = $favor - $suma;
+                } else {
+                    $saldoFavorUsado = $favor;
+                    $saldoFavorRestante = 0;
+                }
+            }
+
             $cotizacion->update([
                 'destino'     => $request->destino,
                 'total'       => $request->total,
                 'subtotal'    => $request->subtotal,
                 'envio'       => $request->envio,
                 'encomienda'  => $request->encomienda,
-                'favor'       => $request->favor,
+                'favor'       => $saldoFavorUsado,
                 'pendiente'   => $request->pendiente,
                 'facturacion' => $request->facturacion,
                 'estado' => "Generado",
             ]);
-            $max = Venta::max("id");
-            $codigo = "VEN" . str_pad($max + 1, 4, "0", STR_PAD_LEFT);
+
             $servicio = new ServicioVenta();
             $serviciodetalleventa = new ServicioDetalleVentas();
-            $ventaservicio = $servicio->crear($cotizacion, $codigo);
+            $ventaservicio = $servicio->crear($cotizacion);
+            $codigo = "VEN" . str_pad($ventaservicio->id, 4, "0", STR_PAD_LEFT);
+            $ventaservicio->codigo = $codigo;
+            $ventaservicio->save();
+
             foreach ($cotizacion->productos as $value) {
                 $serviciodetalleventa->crear([
                     'venta_id' => $ventaservicio->id,
@@ -70,7 +105,14 @@ class ControllerVentas extends Controller
                     'subtotal' => $value->cantidad * $value->precio,
                 ]);
             }
-
+            if ($saldoFavorUsado > 0) {
+                $this->restarDeuda(
+                    $cotizacion->persona_id,
+                    $saldoFavorUsado,
+                    $ventaservicio->id,
+                    $ventaservicio->codigo
+                );
+            }
             DB::commit();
             return response()->json(["success" => true, "mensaje" => "Venta Registrada Correctamente"], 201);
         } catch (\Throwable $th) {

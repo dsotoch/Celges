@@ -35,6 +35,7 @@ Route::prefix('compras')
     ->controller(ControllerCompra::class)
     ->group(function () {
         Route::get('/',             'index')->name('compras.index');         // Mostrar lista de compras
+        Route::get('/saldo-favor/{id}',             'ListarSaldoFavorCliente')->name('compras.saldoFavor');         // Mostrar lista de compras
         Route::post('/guardar',     'store')->name('compras.store');         // Guardar nueva compra
         Route::get('/{id}',         'show')->name('compras.show');           // Ver detalle de una compra
         Route::put('/edit/{id}',    'update')->name('compras.update');       // Actualizar compra

@@ -70,8 +70,8 @@
                                             <td>{{ number_format($compra->total - $pagos[$compra->id]->sum('monto_pagado'), 2) }}
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-success" title="Pagar" data-toggle="modal"
-                                                    id="btnregistrarpago" data-target="#registroPagoModal"
+                                                <button class="btn btn-sm btn-success btnregistrarpago" title="Pagar"
+                                                    data-toggle="modal" data-target="#registroPagoModal"
                                                     data-id="{{ $compra->id }}" data-cliente="{{ $compra->persona->id }}"
                                                     data-total="{{ $compra->total - $pagos[$compra->id]->sum('monto_pagado') }}">
                                                     <i class="fas fa-money-bill-wave"></i>
@@ -255,14 +255,28 @@
                                             <td>{{ $gasto->servicio->nombre }}</td>
                                             <td>{{ $gasto->nota ?? $gasto->servicio->descripcion }}</td>
                                             <td>{{ number_format($gasto->monto_pagado, 2) }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($gasto->fecha)->format('Y-m-d') }}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-success" title="Pagar" data-toggle="modal"
-                                                    id="btnregistrarpagoServicio" data-target="#registroPagoModal"
-                                                    data-id="{{ $gasto->id }}">
+                                            <td>{{ \Carbon\Carbon::parse($gasto->fecha_pago)->format('Y-m-d') }}</td>
+                                            <td class="d-flex center gap-2">
+                                                <button class="btn btn-sm btn-success btnregistrarpagoServicio"
+                                                    title="Pagar" data-toggle="modal" data-target="#registroPagoModal"
+                                                    data-id="{{ $gasto->id }}"
+                                                    data-total="{{ $gasto->monto_pagado }}">
+
                                                     <i class="fas fa-money-bill-wave"></i>
                                                 </button>
+                                                <form action="{{ route('pagos.destroy', ['id' => $gasto->id]) }}"
+                                                    method="post">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" class="btn btn-danger" title="Eliminar Registro"
+                                                        onclick="return EliminarPago(event);">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
                                             </td>
+
+
+
                                         </tr>
                                     @empty
                                         <tr>
@@ -297,6 +311,13 @@
             let totaldeuda = "";
 
 
+            function EliminarPago(event) {
+                event.preventDefault();
+                if (confirm("¿Estas Seguro de Eliminar el Registro?")) {
+                    event.target.closest("form").submit();
+                }
+            }
+
             if ($(".msj").length) {
                 setTimeout(() => {
                     $(".msj").fadeOut();
@@ -307,7 +328,15 @@
                 event.preventDefault();
                 let confirmacion = confirm(
                     "⚠️ ¿Estás seguro de guardar los Pagos. Revisa bien los datos antes de confirmar.?");
-                let total = totaldeuda;
+                let total = 0.00;
+                const tabGastos = document.getElementById("gastos");
+
+                if (tabGastos.classList.contains("show") && tabGastos.classList.contains("active")) {
+                    total = totaldeudaServicio;
+
+                } else {
+                    total = totaldeuda;
+                }
                 if (confirmacion) {
                     let response = await calcularPagos(total);
                     if (response == "ok") {
@@ -325,27 +354,52 @@
                     const valor = parseFloat($(this).val()) || 0;
                     totalmontos += valor;
                 });
+                const tabGastos = document.getElementById("gastos");
+
 
                 if (totalmontos === 0.00) {
                     alert("💰 Ingresa un monto válido. No hay detalles de pago.");
                     return "error";
                 }
                 if (totalmontos < total) {
-                    alert(
-                        "💰 La suma de todos los pagos es menor al total de la Compra.");
+                    const tabGastos = document.getElementById("gastos");
+
+                    if (tabGastos.classList.contains("show") && tabGastos.classList.contains("active")) {
+                        alert(
+                            "💰 La suma de todos los pagos es menor al total del pago del Servicio.");
+                    } else {
+                        alert(
+                            "💰 La suma de todos los pagos es menor al total de la Compra.");
+                    }
                     return "error";
 
                 }
                 if (totalmontos > total) {
-                    alert(
-                        "💰 La suma de todos los pagos es mayor al total de la Compra."
-                    );
+                    if (tabGastos.classList.contains("show") && tabGastos.classList.contains("active")) {
+                        alert(
+                            "💰 La suma de todos los pagos es mayor al total del pago del Servicio.");
+                    } else {
+                        alert(
+                            "💰 La suma de todos los pagos es mayor al total de la Compra."
+                        );
+                    }
                     return "error";
                 }
 
                 return "ok";
             }
-            $("#btnregistrarpago").on("click", function() {
+
+            let totaldeudaServicio = 0.00;
+            $(".btnregistrarpagoServicio").on("click", function() {
+                let total = this.dataset.total;
+                let id = this.dataset.id;
+                totaldeudaServicio = total;
+                $("#n_ventapago").html("S/" + total);
+                $("#compra_id").val(id);
+
+            });
+
+            $(".btnregistrarpago").on("click", function() {
                 let total = this.dataset.total;
                 let id = this.dataset.id;
                 let cliente = this.dataset.cliente;

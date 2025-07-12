@@ -723,7 +723,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                     <td class="d-flex center gap-2">
 
                                                         <!-- Botón Pago -->
-                                                        @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado' && $vent->estado !='Deuda')
+                                                        @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado' && $vent->estado != 'Deuda')
                                                             <button class="btn btn-success" data-toggle="modal"
                                                                 id="btnregistrarpago" data-target="#registroPagoModal"
                                                                 data-id={{ $vent->id }}
@@ -743,7 +743,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                                 </button>
                                                             </form>
                                                         @endif
-                                                        @if ($vent->estado == 'Pagado' || $vent->estado=='Deuda')
+                                                        @if ($vent->estado == 'Pagado' || $vent->estado == 'Deuda')
                                                             <button id="btnCambiarEstado" data-codigo={{ $vent->codigo }}
                                                                 data-toggle="modal" data-target="#modalCambiarEstado"
                                                                 class="btn btn-warning" title="Cambiar Estado">
@@ -1048,7 +1048,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             const banco = $("#banco")?.val();
             let operacion = $("#numero_operacion")?.val();
             const monto = $("#monto")?.val();
-          
+
 
             if (metodo_pago == "Efectivo" && (monto == "" || monto <= 0)) {
                 alert("💢 Ingresa un monto valido");
@@ -1070,8 +1070,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             let bancoNombre = "---";
             if (metodo_pago == "Transferencia") {
                 bancoNombre = $("#banco option:selected").text();
-            }else{
-                operacion="0";
+            } else {
+                operacion = "0";
             }
             const fechaActual = new Date().toLocaleString('en-CA', {
                 timeZone: 'America/Lima',
@@ -1271,6 +1271,14 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
             });
 
+            function quitarCincoCerosFinal(numero) {
+                let str = numero.toString();
+                if (str.endsWith("00000")) {
+                    return str.slice(0, -5);
+                }
+                return str;
+            }
+
             $('#modalGenerar').appendTo('body').modal({
                 backdrop: true,
                 keyboard: false
@@ -1340,7 +1348,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
     **${abono.operacion?.cuenta?.cci ?? abono.operacion?.cuenta?.numero_cuenta? abono.operacion?.cuenta?.numero_cuenta:""}
     **${abono.operacion?.cuenta?.titular || ''}
   </td>    
-  <td>${abono.operacion.numero==0? "":abono.operacion.numero || ''}</td>
+  <td>${abono.operacion.numero==0? "":quitarCincoCerosFinal(abono.operacion.numero) || ''}</td>
     <td class="text-right">${Number(abono.monto).toFixed(2)}</td>
   </tr>
 `).join("");
