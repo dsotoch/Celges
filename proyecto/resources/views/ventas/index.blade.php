@@ -63,9 +63,11 @@
                 </div>
             </div>
         </div>
-        <div class="d-flex"><button class="btn bg-orange boton" data-toggle="modal" data-target="#tablaModal">
-                <i class="fas fa-plus-circle mr-2"></i> Generar Nueva venta
-            </button> </div>
+        @hasanyrole('admin|vendedor')
+            <div class="d-flex"><button class="btn bg-orange boton" data-toggle="modal" data-target="#tablaModal">
+                    <i class="fas fa-plus-circle mr-2"></i> Generar Nueva venta
+                </button> </div>
+        @endhasanyrole
 
         <!---Modal Nueva Venta-->
         <!-- Modal -->
@@ -113,17 +115,18 @@
                                                         onclick="obtenerCotizacion('{{ $item->id }}')">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-
-                                                    <!-- Botón Anular -->
-                                                    <form action="{{ route('cotizacion.update', ['id' => $item->id]) }}"
-                                                        method="post">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <button class="btn btn-sm btn-danger" type="button"
-                                                            onclick="anular(event,'{{ $item->codigo }}')" title="Anular">
-                                                            <i class="fas fa-ban"></i>
-                                                        </button>
-                                                    </form>
+                                                    @hasanyrole('admin|vendedor')
+                                                        <!-- Botón Anular -->
+                                                        <form action="{{ route('cotizacion.update', ['id' => $item->id]) }}"
+                                                            method="post">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <button class="btn btn-sm btn-danger" type="button"
+                                                                onclick="anular(event,'{{ $item->codigo }}')" title="Anular">
+                                                                <i class="fas fa-ban"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endhasanyrole
                                                 </div>
                                             </td>
                                         </tr>
@@ -315,7 +318,8 @@
                                             JAMB-TECNOLOGIA - CALIDAD Y GARANTÍA A TU SERVICIO
                                             <br>
                                             <br>
-                                            NÚMEROS DE CONTACTO: 916715991 - 916715998
+                                            NÚMEROS DE CONTACTO:
+                                            <span>{{ $numeros['numero1'] }}</span><span>-{{ $numeros['numero2'] }}</span>
                                         </th>
                                     </tr>
                                 </thead>
@@ -781,15 +785,17 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                                 </button>
                                                             @else
                                                                 @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado' && $vent->estado != 'Deuda')
-                                                                    <button class="btn btn-success btnregistrarpago"
-                                                                        data-toggle="modal"
-                                                                        data-target="#registroPagoModal"
-                                                                        data-id={{ $vent->id }}
-                                                                        data-codigo={{ $vent->codigo }}
-                                                                        data-total={{ $vent->total }}
-                                                                        title="Registrar Pagos">
-                                                                        <i class="fas fa-credit-card"></i>
-                                                                    </button>
+                                                                    @hasanyrole('admin|vendedor')
+                                                                        <button class="btn btn-success btnregistrarpago"
+                                                                            data-toggle="modal"
+                                                                            data-target="#registroPagoModal"
+                                                                            data-id={{ $vent->id }}
+                                                                            data-codigo={{ $vent->codigo }}
+                                                                            data-total={{ $vent->total }}
+                                                                            title="Registrar Pagos">
+                                                                            <i class="fas fa-credit-card"></i>
+                                                                        </button>
+                                                                    @endhasanyrole
                                                                     <form
                                                                         action="{{ route('ventas.anular', ['id' => $vent->id]) }}"
                                                                         method="POST">
@@ -1354,10 +1360,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         multiple size="5">
                     ${
                         item.almacen.map(prod => `
-                                                                                                                                                                    <option value="${prod.imei}">
-                                                                                                                                                                        ${prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
-                                                                                                                                                                    </option>
-                                                                                                                                                                `).join('')
+                                                                                                                                                                                    <option value="${prod.imei}">
+                                                                                                                                                                                        ${prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
+                                                                                                                                                                                    </option>
+                                                                                                                                                                                `).join('')
                     }
                 </select>
 

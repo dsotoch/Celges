@@ -27,6 +27,7 @@ class ControllerVentas extends Controller
         $servicio = new ServicioPersona();
         $personas = Persona::max("id") + 1;
         $codigopersona = "PE" . $servicio->obtenerCodigo($personas);
+        $numeros = (array) DB::table('configuraciones')->select('numero1', 'numero2')->first();
 
         $max = Venta::max("id");
         $codigo = "VEN" . str_pad($max + 1, 4, "0", STR_PAD_LEFT);
@@ -38,7 +39,7 @@ class ControllerVentas extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(50);
         $cotizaciones = Cotizacion::where("estado", "Pendiente")->get();
-        return view("ventas.index", compact("ventas_del_dia", "ventas", "cotizaciones", "codigo", "codigopersona", "cuentas"));
+        return view("ventas.index", compact("numeros","ventas_del_dia", "ventas", "cotizaciones", "codigo", "codigopersona", "cuentas"));
     }
 
     /**

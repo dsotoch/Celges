@@ -92,9 +92,17 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
                                                 </div>
-                                                <input type="text" name="tipo" id="tipo"
-                                                    class="form-control @error('tipo') is-invalid @enderror"
-                                                    value="{{ old('tipo') ?? 'celular' }}" placeholder="Ingrese tipo">
+                                                <select name="tipo" id="tipo"
+                                                    class="form-control p-2 @error('tipo') is-invalid @enderror">
+                                                    <option value="">-- Selecciona un tipo --</option>
+                                                    <option value="celular"
+                                                        {{ old('tipo', 'celular') == 'celular' ? 'selected' : '' }}>Celular
+                                                    </option>
+                                                    <option value="otro" {{ old('tipo') == 'otro' ? 'selected' : '' }}>
+                                                        Otro</option>
+                                                </select>
+
+
                                             </div>
                                             @error('tipo')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>

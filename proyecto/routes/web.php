@@ -11,16 +11,30 @@ use App\Http\Controllers\ControllerPersona;
 use App\Http\Controllers\ControllerProducto;
 use App\Http\Controllers\ControllerReportes;
 use App\Http\Controllers\ControllerVentas;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [ControllerReportes::class, 'index']);
+Route::get('/', function () {
+    return view("login");
+})->name("login");
+Route::get('/home', [ControllerReportes::class, 'index'])->name("dashboard.admin")->middleware("auth");
+Route::post('/configuraciones', [ControllerCaja::class, 'createConfiguraciones'])->middleware("auth");
+
+Route::prefix('usuarios')->controller(UsuarioController::class)->group(function () {
+    Route::get('/', 'index')->name('usuarios.index');
+    Route::post('/guardar', 'store')->name('usuarios.store');
+    Route::post('/login', 'login')->name('usuarios.login');
+    Route::get('/logout', 'logout')->name('usuarios.logout');
+    Route::put('/edit/{id}', 'update')->name('usuarios.updatePermisos');
+    Route::delete('/eliminar/{id}', 'destroy')->name('usuarios.destroy');
+})->middleware("auth");
 Route::prefix('productos')->controller(ControllerProducto::class)->group(function () {
     Route::get('/', 'index')->name('productos.index');
-    Route::post('/guardar', 'store')->name('productos.store');
+    Route::post('/guardar', 'store')->name('productos.store')->middleware(['permission:crear productos']);
     Route::get('/{id}', 'show')->name('productos.show');
-    Route::put('/edit/{id}', 'update')->name('productos.update');
-    Route::delete('/{id}', 'destroy')->name('productos.destroy');
-});
+    Route::put('/edit/{id}', 'update')->name('productos.update')->middleware(['permission:editar productos']);
+    Route::delete('/{id}', 'destroy')->name('productos.destroy')->middleware(['permission:eliminar productos']);
+})->middleware("auth");
 Route::prefix('proveedores')
     ->controller(ControllerPersona::class)
     ->group(function () {
@@ -30,17 +44,17 @@ Route::prefix('proveedores')
         Route::get('/{id}',         'show')->name('proveedores.show');
         Route::put('/edit/{id}',    'update')->name('proveedores.update');
         Route::delete('/{id}',      'destroy')->name('proveedores.destroy');
-    });
+    })->middleware("auth");
 Route::prefix('compras')
     ->controller(ControllerCompra::class)
     ->group(function () {
         Route::get('/',             'index')->name('compras.index');         // Mostrar lista de compras
         Route::get('/saldo-favor/{id}',             'ListarSaldoFavorCliente')->name('compras.saldoFavor');         // Mostrar lista de compras
-        Route::post('/guardar',     'store')->name('compras.store');         // Guardar nueva compra
-        Route::get('/{id}',         'show')->name('compras.show');           // Ver detalle de una compra
-        Route::put('/edit/{id}',    'update')->name('compras.update');       // Actualizar compra
-        Route::delete('/{id}',      'destroy')->name('compras.destroy');     // Eliminar compra
-    });
+        Route::post('/guardar',     'store')->name('compras.store')->middleware(['permission:crear compras']);         // Guardar nueva compra
+        Route::get('/{id}',         'show')->name('compras.show')->middleware(['permission:ver compras']);           // Ver detalle de una compra
+        Route::put('/edit/{id}',    'update')->name('compras.update')->middleware(['permission:editar compras']);      // Actualizar compra
+        Route::delete('/{id}',      'destroy')->name('compras.destroy')->middleware(['permission:editar compras']);     // Eliminar compra
+    })->middleware("auth");
 Route::prefix('almaceninterno')
     ->controller(ControllerAlmacenInterno::class)
     ->group(function () {
@@ -49,19 +63,19 @@ Route::prefix('almaceninterno')
         Route::get('/{id}',         'show')->name('almaceninterno.show');          // Ver detalle
         Route::get('/productos/{id}', 'listarProductosPorId')->name("almaceninterno.productoporid");
         Route::delete('/{id}',      'destroy')->name('almaceninterno.destroy');    // Eliminar
-    });
+    })->middleware("auth");
 Route::prefix('ventas')
     ->controller(ControllerVentas::class)
     ->group(function () {
         Route::get('/',             'index')->name('ventas.index');        // Mostrar lista
-        Route::post('/guardar',     'store')->name('ventas.store');        // Guardar nuevo registro
-        Route::post('/crear',     'create')->name('ventas.create');        // Guardar nuevo registro
+        Route::post('/guardar',     'store')->name('ventas.store')->middleware(['permission:crear ventas']);      // Guardar nuevo registro
+        Route::post('/crear',     'create')->name('ventas.create')->middleware(['permission:crear ventas']);     // Guardar nuevo registro
         Route::get('/{id}',         'show')->name('ventas.show');          // Ver detalle
-        Route::put('/editar/{id}',   'update')->name('ventas.update');    // Editar
-        Route::put('/anular/{id}',   'anular')->name('ventas.anular');    // Anular Venta
+        Route::put('/editar/{id}',   'update')->name('ventas.update')->middleware(['permission:editar ventas']);    // Editar
+        Route::put('/anular/{id}',   'anular')->name('ventas.anular')->middleware(['permission:editar ventas']);    // Anular Venta
         Route::put('/modificarVenta',   'actualizarVentayProductos')->name('ventas.actualizarVentaYProducto');    // ActualizarVentayProductos
-        Route::delete('/{id}',      'destroy')->name('ventas.destroy');    // Eliminar
-    });
+        Route::delete('/{id}',      'destroy')->name('ventas.destroy')->middleware(['permission:eliminar ventas']);    // Eliminar
+    })->middleware("auth");
 Route::prefix('cotizacion')
     ->controller(ControllerCotizaciones::class)
     ->group(function () {
@@ -70,7 +84,7 @@ Route::prefix('cotizacion')
         Route::get('/{id}',         'show')->name('cotizacion.show');          // Ver detalle
         Route::put('/editar/{id}',      'update')->name('cotizacion.update');    // Eliminar
 
-    });
+    })->middleware("auth");
 Route::prefix('caja')
     ->controller(ControllerCaja::class)
     ->group(function () {
@@ -79,15 +93,15 @@ Route::prefix('caja')
         Route::get('/{id}',         'show')->name('caja.show');          // Ver detalle
         Route::put('/editar/{id}',      'update')->name('caja.update');    // Eliminar
 
-    });
+    })->middleware("auth");
 Route::prefix('cuentasbancarias')
     ->controller(ControllerCuentaBancaria::class)
     ->group(function () {
         Route::get('/',             'index')->name('cuentasbancarias.index');        // Mostrar lista
-        Route::post('/guardar',     'store')->name('cuentasbancarias.store');        // Guardar nuevo registro
-        Route::put('/editar/{id}', 'update')->name('cuentasbancarias.update');
-        Route::delete('/delete/{id}', 'destroy')->name('cuentasbancarias.destroy');    // Eliminar
-    });
+        Route::post('/guardar',     'store')->name('cuentasbancarias.store')->middleware(['permission:crear cuentasbancarias']);        // Guardar nuevo registro
+        Route::put('/editar/{id}', 'update')->name('cuentasbancarias.update')->middleware(['permission:editar cuentasbancarias']);
+        Route::delete('/delete/{id}', 'destroy')->name('cuentasbancarias.destroy')->middleware(['permission:eliminar cuentasbancarias']);   // Eliminar
+    })->middleware("auth");
 Route::prefix('pagos')
     ->controller(ControllerPagos::class)
     ->group(function () {
@@ -97,7 +111,7 @@ Route::prefix('pagos')
         Route::post('/guardar-pago-servicio',  'createPagoServicio')->name('pagos.crearservicio');        // Guardar nuevo registro
         Route::put('/editar/{id}', 'update')->name('pagos.update');
         Route::delete('/delete/{id}', 'destroy')->name('pagos.destroy');    // Eliminar
-    });
+    })->middleware("auth");
 Route::prefix('cuentas')
     ->controller(ControllerCuentas::class)
     ->group(function () {
@@ -108,4 +122,4 @@ Route::prefix('cuentas')
         Route::put('/editar/{id}', 'update')->name('cuentas.update');
         Route::delete('/delete/{id}', 'destroy')->name('cuentas.destroy');    // Eliminar
 
-    });
+    })->middleware("auth");

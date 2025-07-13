@@ -30,7 +30,7 @@
                                 JAMB-TECNOLOGIA - CALIDAD Y GARANTÍA A TU SERVICIO
                                 <br>
                                 <br>
-                                NÚMEROS DE CONTACTO: 916715991 - 916715998
+                                NÚMEROS DE CONTACTO: <span>{{$numeros["numero1"]}}</span><span>-{{$numeros["numero2"]}}</span>
                             </th>
                         </tr>
                     </thead>

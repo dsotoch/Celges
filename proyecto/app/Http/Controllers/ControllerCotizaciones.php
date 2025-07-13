@@ -19,6 +19,9 @@ class ControllerCotizaciones extends Controller
         $maxId = Cotizacion::max("id") ?? 0;
         $codigo = "COT" . str_pad($maxId + 1, 4, "0", STR_PAD_LEFT);
         $cotizaciones = Cotizacion::all();
+        $numeros = (array) DB::table('configuraciones')->select('numero1', 'numero2')->first();
+
+
         $clientes = Persona::with('tipo')
             ->whereHas('tipo', function ($query) {
                 $query->whereIn('tipo', ['cliente', 'ambos']);
@@ -26,7 +29,7 @@ class ControllerCotizaciones extends Controller
             ->get();
 
         $almacen = AlmacenInterno::with("compra", "producto")->get();
-        return view("cotizacion.index", compact("cotizaciones", "codigo", "almacen", "clientes"));
+        return view("cotizacion.index", compact("numeros", "cotizaciones", "codigo", "almacen", "clientes"));
     }
 
 
@@ -50,11 +53,11 @@ class ControllerCotizaciones extends Controller
                 'facturacion' => $request->facturacion ?? 0,
                 'favor' => $request->favor ?? 0,
                 'pendiente' => $request->pendiente ?? 0,
-                'persona_id'=>$request->persona_id,
+                'persona_id' => $request->persona_id,
                 'created_at' => Carbon::now("America/Lima")->format("Y-m-d")
             ]);
 
-            
+
 
             $cotizacion->productos()->createMany(
                 collect($request->productos)->map(function ($producto) {

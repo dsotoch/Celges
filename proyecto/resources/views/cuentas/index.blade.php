@@ -68,6 +68,7 @@
                                                                 onclick="detallesDeuda('{{ $item->cliente_id }}')">
                                                                 <i class="fas fa-eye"></i>
                                                             </button>
+                                                           @hasrole("admin")
                                                             <button class="btn btn-sm btn-success btnregistrarpago" title="Pagar"
                                                                 data-toggle="modal"
                                                                 data-target="#registroPagoModal"
@@ -75,6 +76,7 @@
                                                                 data-total={{ $item->total_deuda }}>
                                                                 <i class="fas fa-money-bill-wave"></i>
                                                             </button>
+                                                           @endhasrole
                                                         </td>
                                                     </tr>
                                                 @endforeach

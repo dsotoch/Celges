@@ -6,6 +6,7 @@ use App\Services\ServicioAbonoVenta;
 use App\Services\ServicioPagos;
 use App\Services\ServicioVenta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ControllerCaja extends Controller
 {
@@ -62,16 +63,42 @@ class ControllerCaja extends Controller
             $pagosAgrupados[$metodo][$servicio] += $monto;
         }
 
-        return view("caja.index", compact("abonosPorMetodoCuenta","pagosAgrupados"));
+        return view("caja.index", compact("abonosPorMetodoCuenta", "pagosAgrupados"));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function createConfiguraciones(Request $request)
     {
-        //
+        $request->validate([
+            'telefono1' => 'required|digits:9',
+            'telefono2' => 'nullable|digits:9',
+        ]);
+
+        try {
+            DB::table('configuraciones')->updateOrInsert(
+                ['id' => 1], 
+                [
+                    'numero1' => $request->telefono1,
+                    'numero2' => $request->telefono2,
+                    'updated_at' => now()
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Teléfonos actualizados correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
 
     /**
      * Store a newly created resource in storage.
