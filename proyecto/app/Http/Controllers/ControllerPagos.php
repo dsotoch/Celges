@@ -177,7 +177,7 @@ class ControllerPagos extends Controller
             $servicioCompra = new ServicioCompra();
             $montos = $request->monto ?? [];
             $tipos = $request->tipo ?? [];
-            $numeros = $request->operac ?? [];
+            $numeros = $request->numero ?? [];
             $fechas = $request->fecha ?? [];
             $cuentas = $request->cuenta_id ?? [];
 

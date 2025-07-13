@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AlmacenInterno;
 use App\Services\ServicioAlmacenInterno;
+use App\Services\ServicioVenta;
 use Illuminate\Http\Request;
 
 class ControllerAlmacenInterno extends Controller
@@ -22,10 +23,45 @@ class ControllerAlmacenInterno extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function listarProductosPorId($id)
     {
-        //
+        $servicioVenta = new ServicioVenta();
+        $servicioAlmacen = new ServicioAlmacenInterno();
+
+        $venta = $servicioVenta->obtenerPorId($id);
+        $agrupados = [];
+
+        foreach ($venta->detalles as $detalle) {
+            $productoId = $detalle->producto_id;
+            $descripcion = trim($detalle->descripcion);
+            $productonombre = $detalle->producto->marca ." ". $detalle->producto->modelo ." ". $detalle->producto->capacidad;
+
+            // Clave única para agrupación
+            $clave = $productoId . '||' . $descripcion;
+
+            if (!isset($agrupados[$clave])) {
+                // Filtra almacenes por producto_id y descripcion = registrado
+                $almacenes = $servicioAlmacen->buscarPorProductoYDescripcion($productoId, $descripcion);
+
+                $agrupados[$clave] = [
+                    'producto_id' => $productoId,
+                    'producto_nombre' => $productonombre,
+                    'descripcion' => $descripcion,
+                    'cantidad' => $detalle->cantidad,
+                    'almacen' => $almacenes
+                ];
+            } else {
+                $agrupados[$clave]['cantidad'] += $detalle->cantidad;
+            }
+        }
+
+        return response()->json(array_values($agrupados));
     }
+
+
+
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -40,7 +76,7 @@ class ControllerAlmacenInterno extends Controller
      */
     public function show($id)
     {
-        $idsArray = explode(',', $id); 
+        $idsArray = explode(',', $id);
 
         $items = AlmacenInterno::with(['compra', 'producto'])
             ->whereIn('id', $idsArray)

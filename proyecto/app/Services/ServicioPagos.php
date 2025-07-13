@@ -3,12 +3,56 @@
 namespace App\Services;
 
 use App\Models\Pagos;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
 class ServicioPagos
 {
 
+
+    public function listarPagosDelMes()
+    {
+        $inicioMes = Carbon::now()->startOfMonth()->format('Y-m-d');
+        $finMes = Carbon::now()->endOfMonth()->format('Y-m-d');
+
+        return Pagos::with([
+            'servicio',
+            'operacion',
+            'operacion.cuenta',
+            'persona'
+        ])
+            ->whereBetween('fecha_pago', [$inicioMes, $finMes])
+            ->get();
+    }
+    public function listarPagosDeLaSemana()
+    {
+        $inicioSemana = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $finSemana = Carbon::now()->endOfWeek()->format('Y-m-d');
+
+        return Pagos::with([
+            'servicio',
+            'operacion',
+            'operacion.cuenta',
+            'persona'
+        ])
+            ->whereBetween('fecha_pago', [$inicioSemana, $finSemana])
+            ->get();
+    }
+
+    public function listarPagosPorFecha($fecha)
+    {
+        $fechaFormateada = Carbon::parse($fecha)->format('Y-m-d');
+
+        return Pagos::with([
+            'servicio',
+            'operacion',
+            'operacion.cuenta',
+            'persona'
+        ])
+            ->whereDate('fecha_pago', $fechaFormateada)
+            ->get();
+    }
     public function obtenerPagosCompra(string $idCompra)
     {
         return Pagos::with(['servicio', 'operacion', 'persona'])

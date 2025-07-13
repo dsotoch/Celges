@@ -247,3 +247,40 @@
 .oculto{
     display: none;
 }
+
+.border-blue{
+    border: 1px solid  #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+.bg-gradient-orange {
+    background: linear-gradient(135deg, #fa471a, #ff8f39);
+    color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border: none;
+}
+
+.statistics-item {
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+.statistics-item:hover {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.statistics-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: white;
+}
+
+.statistics-item h4 {
+    font-weight: bold;
+    margin-top: 0.5rem;
+    color: white;
+}

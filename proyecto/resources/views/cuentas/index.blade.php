@@ -68,8 +68,8 @@
                                                                 onclick="detallesDeuda('{{ $item->cliente_id }}')">
                                                                 <i class="fas fa-eye"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-success" title="Pagar"
-                                                                data-toggle="modal" id="btnregistrarpago"
+                                                            <button class="btn btn-sm btn-success btnregistrarpago" title="Pagar"
+                                                                data-toggle="modal"
                                                                 data-target="#registroPagoModal"
                                                                 data-id={{ $item->cliente_id }}
                                                                 data-total={{ $item->total_deuda }}>
@@ -250,14 +250,14 @@
 
                     if (totalmontos > total) {
                         let resp = confirm(
-                            "💰 La suma de todos los pagos es mayor al total de la venta, si continuas el monto sobrante se registrara como saldo a favor para el cliente y podra ser usado en su proxima cuenta."
+                            "💰 La suma de todos los pagos es mayor al total de la deuda."
                         );
-                        return resp ? "ok" : "error";
+                        return  "error";
                     }
                 }
                 return "ok";
             }
-            $("#btnregistrarpago").on("click", function() {
+            $(".btnregistrarpago").on("click", function() {
                 let total = this.dataset.total;
                 let id = this.dataset.id;
                 totaldeuda = total;

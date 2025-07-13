@@ -13,6 +13,10 @@ class ServicioDetalleVentas
         return DetalleVenta::with(['venta', 'producto'])->get();
     }
 
+    public function obtenerPorIdTodaVenta(int $ventaid)
+    {
+        return DetalleVenta::with(['venta', 'producto'])->where("venta_id", $ventaid)->get();
+    }
     public function obtenerPorId(int $id): DetalleVenta
     {
         return DetalleVenta::with(['venta', 'producto'])->findOrFail($id);
@@ -39,6 +43,35 @@ class ServicioDetalleVentas
             throw new Exception("No se pudo actualizar el detalle de venta.");
         }
     }
+
+    public function actualizarPorProductoYImeis(int $productoId, array $imeis, int $compraId): array
+    {
+        $detallesActualizados = [];
+
+        foreach ($imeis as $imeiData) {
+            $codigo = $imeiData['codigo'];
+            $descripcion = $imeiData['descripcion'];
+
+            $detalle = DetalleVenta::where('producto_id', $productoId)
+                ->where('descripcion', $descripcion)
+                ->where("venta_id", $compraId)
+                ->first();
+
+            if ($detalle) {
+                $detalle->update([
+                    'imei' => $codigo,
+                ]);
+
+                $detallesActualizados[] = $detalle;
+            } else {
+                Log::warning("No se encontró detalle para producto_id {$productoId}, descripcion {$descripcion} con IMEI {$codigo}");
+            }
+        }
+
+        return $detallesActualizados;
+    }
+
+
 
     public function eliminar(int $id): bool
     {

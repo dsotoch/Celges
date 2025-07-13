@@ -3,11 +3,57 @@
 namespace App\Services;
 
 use App\Models\AbonoVenta;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
 class ServicioAbonoVenta
 {
+
+    public function listarAbonosDelMes()
+    {
+        $inicioMes = Carbon::now()->startOfMonth()->format('Y-m-d');
+        $finMes = Carbon::now()->endOfMonth()->format('Y-m-d');
+
+        return AbonoVenta::with([
+            'venta',
+            'operacion.cuenta'
+        ])
+            ->whereBetween('fecha', [$inicioMes, $finMes])
+            ->whereHas('venta', function ($q) {
+                $q->where('estado', '!=', 'Anulado');
+            })
+            ->get();
+    }
+
+    public function listarAbonosDeLaSemana()
+    {
+        $inicioSemana = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $finSemana = Carbon::now()->endOfWeek()->format('Y-m-d');
+
+        return AbonoVenta::with([
+            'venta',
+            'operacion.cuenta'
+        ])
+            ->whereBetween('fecha', [$inicioSemana, $finSemana])
+            ->whereHas('venta', function ($q) {
+                $q->where('estado', '!=', 'Anulado');
+            })
+            ->get();
+    }
+
+
+    public function listarAbonosPorFecha($fecha)
+    {
+        $fechaFormateada = Carbon::parse($fecha)->format('Y-m-d');
+
+        return AbonoVenta::with([
+            'venta',
+            'operacion.cuenta'
+        ])
+            ->whereDate('fecha', $fechaFormateada)
+            ->get();
+    }
     public function listar()
     {
         return AbonoVenta::with(['venta', 'operacion'])->get();
@@ -45,6 +91,20 @@ class ServicioAbonoVenta
         try {
             $abono = AbonoVenta::findOrFail($id);
             $abono->delete();
+            return true;
+        } catch (Exception $e) {
+            Log::error("Error al eliminar abono de venta: " . $e->getMessage());
+            throw new Exception("No se pudo eliminar el abono.");
+        }
+    }
+
+    public function eliminarAbonoVenta(int $venta_id): bool
+    {
+        try {
+            $abono = AbonoVenta::where("venta_id", $venta_id)->get();
+            foreach ($abono as $it) {
+                $it->delete();
+            }
             return true;
         } catch (Exception $e) {
             Log::error("Error al eliminar abono de venta: " . $e->getMessage());

@@ -6,6 +6,8 @@ use App\Models\Cotizacion;
 use App\Models\CuentaBancaria;
 use App\Models\Persona;
 use App\Models\Venta;
+use App\Services\ServicioAbonoVenta;
+use App\Services\ServicioAlmacenInterno;
 use App\Services\ServicioDetalleVentas;
 use App\Services\ServicioPersona;
 use App\Services\ServicioVenta;
@@ -13,6 +15,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ControllerVentas extends Controller
 {
@@ -28,7 +31,9 @@ class ControllerVentas extends Controller
         $max = Venta::max("id");
         $codigo = "VEN" . str_pad($max + 1, 4, "0", STR_PAD_LEFT);
         $cuentas = CuentaBancaria::where("activo", true)->get();
-        $ventas_del_dia = Venta::where('fecha', Carbon::now("America/Lima")->format("Y-m-d"));
+        $ventas_del_dia = Venta::where('fecha', Carbon::now("America/Lima")->format("Y-m-d"))
+            ->where("estado", "!=", "Anulado")
+            ->get();
         $ventas = Venta::orderByRaw("estado = 'Pendiente' DESC")
             ->orderBy('created_at', 'desc')
             ->paginate(50);
@@ -161,27 +166,76 @@ class ControllerVentas extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(string $id)
     {
         try {
             $servicio = new ServicioVenta();
             $venta = $servicio->actualizar((int)$id, [
-                "estado" => "Impreso"
+                "estado" => "Despachado"
             ]);
 
-            return response()->json([
-                'success' => true,
-                'data' => $venta
-            ], 200);
+            return redirect()->back()->with('success_edit', "✅ Se actualizó la venta {$venta->codigo} correctamente al estado 'Despachado'.");
         } catch (\Throwable $th) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al obtener la venta',
-                'error' => $th->getMessage()
-            ], 500);
+            return redirect()->back()->with('error_edit', "❌ Error al actualizar la venta: {$th->getMessage()}");
         }
     }
 
+    public function anular(string $id)
+    {
+        try {
+            DB::beginTransaction();
+            $servicioVenta = new ServicioVenta();
+            $servicioDetalleVenta = new ServicioDetalleVentas();
+            $servicioAlmacen = new ServicioAlmacenInterno();
+            $servicioAbono  = new ServicioAbonoVenta();
+
+            $ventaSinModificar = $servicioVenta->obtenerPorId($id);
+            if ($ventaSinModificar->estado == "Despachado") {
+                $detalleVenta = $servicioDetalleVenta->obtenerPorIdTodaVenta($id);
+                foreach ($detalleVenta as $value) {
+                    $servicioAlmacen->actualizarPorImei($value->imei, ["cantidad" => $value->cantidad]);
+                }
+                $servicioAbono->eliminarAbonoVenta($id);
+            }
+            $venta = $servicioVenta->actualizar((int)$id, [
+                "estado" => "Anulado"
+            ]);
+            DB::commit();
+            return redirect()->back()->with('success_edit', "✅ Se Anuló la venta {$venta->codigo} correctamente.");
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back()->with('error_edit', "❌ Error al anular la venta: {$th->getMessage()}");
+        }
+    }
+
+
+    public function actualizarVentayProductos(Request $request)
+    {
+
+        try {
+            DB::beginTransaction();
+            $servicio = new ServicioVenta();
+            $servicioDetalleVenta = new ServicioDetalleVentas();
+            $servicioAlmacen = new ServicioAlmacenInterno();
+            $venta = $servicio->actualizar((int)$request->numero_venta, [
+                "estado" => $request->estado
+            ]);
+            $productos = $request->input('productos');
+            foreach ($productos as $productoId => $datos) {
+                $imeis = $datos['imeis'];
+                $servicioDetalleVenta->actualizarPorProductoYImeis($productoId, $imeis, $request->numero_venta);
+                $servicioAlmacen->eliminarProductoporImei($imeis);
+            }
+            DB::commit();
+            return redirect()->back()->with(["success_edit" => "✅ Se Registro el nuevo Estado de la Venta $venta->codigo  Correctamente "]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error("Error al registrar el nuevo estado de la venta: " . $th->getMessage());
+            return redirect()->back()->withErrors([
+                'error_edit' => '❌ Ocurrió un error al registrar el nuevo estado de la venta. Por favor, inténtalo nuevamente.'
+            ]);
+        }
+    }
     /**
      * Remove the specified resource from storage.
      */

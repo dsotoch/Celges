@@ -634,6 +634,9 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             @if (session('success_edit'))
                 <div class="alert alert-success msj">{{ session('success_edit') }}</div>
             @endif
+            @if ($errors->has('error_edit'))
+                <div class="alert alert-danger msj">{{ $errors->first('error_edit') }}</div>
+            @endif
             @if ($errors->has('general_edit'))
                 <div class="alert alert-danger msj">{{ $errors->first('general_edit') }}</div>
             @endif
@@ -644,8 +647,11 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             <!-- Modal -->
             <div class="modal fade" id="modalCambiarEstado" tabindex="-1" role="dialog"
                 aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <form id="formCambiarEstado">
+                <div class="modal-dialog modal-lg" role="document">
+                    <form id="formCambiarEstado" action="{{ route('ventas.actualizarVentaYProducto') }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" id="numero_venta" name="numero_venta">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estado de Venta <span
@@ -657,12 +663,14 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                             <div class="modal-body">
                                 <label for="estadoVenta">Nuevo Estado:</label>
                                 <select class="form-control" id="estadoVenta" name="estado">
-                                    <option value="Empacado">Empacado</option>
+                                    <option value="Empacado" selected>Empacado</option>
                                     <option value="Despachado">Despachado</option>
                                 </select>
                             </div>
+
+                            <div id="detallesVenta" class="row p-2"></div>
                             <div class="modal-footer">
-                                <button type="submit" class="btn btn-success">Guardar</button>
+                                <button type="button" class="btn btn-success" id="btnConfirmarVenta">Guardar</button>
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                             </div>
                         </div>
@@ -670,7 +678,20 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 </div>
             </div>
 
-            <h4 class="card-title">Lista de Ventas</h4>
+
+
+
+            <h4 class="card-title ">Lista de Ventas</h4>
+
+            <div class="mt-3 mb-3"
+                style="background-color: rgba(0, 123, 255, 0.1); border: 1px solid #007bff; border-radius: 8px; padding: 1rem; color: #004085;">
+                <h5 style="margin-top: 0; font-weight: bold;">📋 Estados de Ventas</h5>
+
+                <p>🟢 <strong>Pagado:</strong> Venta pagada completamente, pero productos aún no descontados de almacén.</p>
+                <p>🟡 <strong>Deuda:</strong> Venta pagada parcialmente, pero productos aún no descontados de almacén.</p>
+                <p>📦 <strong>Empacado:</strong> Productos descontados de almacén.</p>
+                <p>🚚 <strong>Despachado:</strong> Productos enviados al cliente.</p>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <div class="table-responsive">
@@ -723,41 +744,82 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                     <td class="d-flex center gap-2">
 
                                                         <!-- Botón Pago -->
-                                                        @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado' && $vent->estado != 'Deuda')
-                                                            <button class="btn btn-success" data-toggle="modal"
-                                                                id="btnregistrarpago" data-target="#registroPagoModal"
-                                                                data-id={{ $vent->id }}
-                                                                data-codigo={{ $vent->codigo }}
-                                                                data-total={{ $vent->total }} title="Registrar Pagos">
-                                                                <i class="fas fa-credit-card"></i>
-                                                            </button>
-                                                            <form
-                                                                action="{{ route('ventas.update', ['id' => $vent->id]) }}"
-                                                                method="POST">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="btn btn-danger"
-                                                                    title="Anular Venta"
-                                                                    onclick="return AnularVenta(event,'{{ $vent->codigo }}')">
-                                                                    <i class="fas fa-ban"></i>
-                                                                </button>
-                                                            </form>
-                                                        @endif
-                                                        @if ($vent->estado == 'Pagado' || $vent->estado == 'Deuda')
-                                                            <button id="btnCambiarEstado" data-codigo={{ $vent->codigo }}
-                                                                data-toggle="modal" data-target="#modalCambiarEstado"
-                                                                class="btn btn-warning" title="Cambiar Estado">
-                                                                <i class="fas fa-exchange-alt"></i>
-                                                            </button>
-
+                                                        @if ($vent->estado == 'Despachado')
                                                             <button class="btn btn-primary"
                                                                 onclick="obtenerVenta('{{ $vent->id }}')"
                                                                 title="Imprimir Venta">
                                                                 <i class="fas fa-print"></i>
                                                             </button>
+                                                            <form
+                                                                action="{{ route('ventas.anular', ['id' => $vent->id]) }}"
+                                                                method="POST">
+                                                                @csrf
+                                                                @method('PUT')
+                                                                <button type="button" class="btn btn-danger"
+                                                                    title="Anular Venta"
+                                                                    onclick="return AnularVenta(event,'{{ $vent->codigo }}')">
+                                                                    <i class="fas fa-ban"></i>
+                                                                </button>
+                                                            </form>
+                                                        @else
+                                                            @if ($vent->estado == 'Empacado')
+                                                                <form
+                                                                    action="{{ route('ventas.update', ['id' => $vent->id]) }}"
+                                                                    method="post">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <button class="btn btn-success" type="submit"
+                                                                        title="Venta Despachada">
+                                                                        <i class="fas fa-box-open"
+                                                                            title="Venta despachada"></i>
+                                                                    </button>
+                                                                </form>
+                                                                <button class="btn btn-primary"
+                                                                    onclick="obtenerVenta('{{ $vent->id }}')"
+                                                                    title="Imprimir Venta">
+                                                                    <i class="fas fa-print"></i>
+                                                                </button>
+                                                            @else
+                                                                @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado' && $vent->estado != 'Deuda')
+                                                                    <button class="btn btn-success btnregistrarpago"
+                                                                        data-toggle="modal"
+                                                                        data-target="#registroPagoModal"
+                                                                        data-id={{ $vent->id }}
+                                                                        data-codigo={{ $vent->codigo }}
+                                                                        data-total={{ $vent->total }}
+                                                                        title="Registrar Pagos">
+                                                                        <i class="fas fa-credit-card"></i>
+                                                                    </button>
+                                                                    <form
+                                                                        action="{{ route('ventas.anular', ['id' => $vent->id]) }}"
+                                                                        method="POST">
+                                                                        @csrf
+                                                                        @method('PUT')
+                                                                        <button type="button" class="btn btn-danger"
+                                                                            title="Anular Venta"
+                                                                            onclick="return AnularVenta(event,'{{ $vent->codigo }}')">
+                                                                            <i class="fas fa-ban"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
+                                                                @if ($vent->estado == 'Pagado' || $vent->estado == 'Deuda')
+                                                                    <button id="btnCambiarEstado"
+                                                                        data-codigo='{{ $vent->codigo }}'
+                                                                        data-venta='{{ $vent->id }}'
+                                                                        data-toggle="modal"
+                                                                        data-target="#modalCambiarEstado"
+                                                                        class="btn btn-warning" title="Cambiar Estado">
+                                                                        <i class="fas fa-exchange-alt"></i>
+                                                                    </button>
+
+                                                                    <button class="btn btn-primary"
+                                                                        onclick="obtenerVenta('{{ $vent->id }}')"
+                                                                        title="Imprimir Venta">
+                                                                        <i class="fas fa-print"></i>
+                                                                    </button>
+                                                                @endif
+                                                            @endif
                                                         @endif
-
-
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -776,16 +838,39 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="{{ asset('melody/data-table.js') }}"></script>
+    @if (session('success_edit'))
+        <script>
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        </script>
+    @endif
+
     <script>
         let cotizacionNumero = "";
         let totalventa = 0.00;
-        $(document).on('click', '#btnCambiarEstado', function() {
+
+
+        function AnularVenta(event, codigoVenta) {
+            event.preventDefault();
+
+            if (confirm(`¿Estás seguro de que deseas anular la venta con código ${codigoVenta}?`)) {
+                event.target.closest("form").submit();
+            }
+
+            return false;
+        }
+        $(document).on('click', '#btnCambiarEstado', async function() {
             $("#numeroestadoventa").html('');
             let codigo = this.dataset.codigo;
+            let venta = this.dataset.venta;
             $("#numeroestadoventa").html(codigo);
+            $("#numero_venta").val(venta);
+            await obtenerProductosVenta(venta);
         });
 
-        $("#btnregistrarpago").on("click", function() {
+        $(".btnregistrarpago").on("click", function() {
             let codigo = this.dataset.codigo;
             let total = this.dataset.total;
             let id = this.dataset.id;
@@ -841,10 +926,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     return "error";
                 }
                 if (totalmontos > total) {
-                    let resp = confirm(
-                        "💰 La suma de todos los pagos es mayor al total de la venta, si continuas el monto sobrante se registrara como saldo a favor para el cliente y podra ser usado en su proxima cuenta."
+                    alert(
+                        "💰 La suma de todos los pagos es mayor al total de la venta"
                     );
-                    return resp ? "ok" : "error";
+                    return "error";
                 }
             }
             return "ok";
@@ -1124,7 +1209,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
     </div>
 `);
 
-
+            $("#metodo_pago")?.val("");
+            $("#banco")?.val("");
+            $("#numero_operacion")?.val("");
+            $("#monto")?.val("");
 
         });
 
@@ -1218,6 +1306,109 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 }
             });
         }
+
+        async function obtenerProductosVenta(ventaId) {
+            try {
+                const url = `/almaceninterno/productos/${ventaId}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                mostrarDetallesVenta(data);
+
+            } catch (error) {
+                console.error('Error al obtener los productos:', error);
+            }
+        }
+        let i = 0;
+
+        function mostrarDetallesVenta(data) {
+            const contenedor = document.getElementById('detallesVenta');
+            contenedor.innerHTML = ''; // Limpiar contenido anterior
+
+            data.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'col-md-6 mb-3';
+
+                const cardId = `card-${index}`;
+
+                card.innerHTML = `
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">${item.producto_nombre}</h5>
+                <p class="card-text">
+                    <strong>Registrado:</strong> ${item.descripcion == 1 ? "SI" : "NO"}<br>
+                    <strong>Cantidad Solicitada:</strong> ${item.cantidad}
+                </p>
+
+                <label><strong>Seleccionar IMEIs desde almacén:</strong></label>
+                <select class="form-control select-imeis" 
+                        data-producto-id="${item.producto_id}" 
+                        data-descripcion="${item.descripcion}"
+                        data-productonombre="${item.producto_nombre} ${item.descripcion==1?'REGISTRADO':''}"
+                        data-cantidad="${item.cantidad}" 
+                        data-card-id="${cardId}"
+                        multiple size="5">
+                    ${
+                        item.almacen.map(prod => `
+                                                                                                                                                                    <option value="${prod.imei}">
+                                                                                                                                                                        ${prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
+                                                                                                                                                                    </option>
+                                                                                                                                                                `).join('')
+                    }
+                </select>
+
+                <div class="mt-2">
+                    <p class="seleccionados text-info mb-1"><strong>IMEIs seleccionados:</strong> <span class="imeis-text">Ninguno</span></p>
+                    <div class="hidden-inputs"></div>
+                </div>
+            </div>
+        </div>
+        `;
+
+                contenedor.appendChild(card);
+
+                // Selección y manejo de cambios
+                const select = card.querySelector('select');
+                const imeisText = card.querySelector('.imeis-text');
+                const hiddenInputs = card.querySelector('.hidden-inputs');
+
+                select.addEventListener('change', function() {
+                    const max = parseInt(this.dataset.cantidad);
+                    const selectedOptions = this.selectedOptions;
+
+                    if (selectedOptions.length > max) {
+                        selectedOptions[selectedOptions.length - 1].selected = false;
+                        alert(`Solo puedes seleccionar hasta ${max} IMEI(s) para este producto.`);
+                        return;
+                    }
+
+                    // Mostrar los seleccionados en el texto
+                    const imeis = Array.from(selectedOptions).map(opt => opt.textContent.trim());
+                    imeisText.textContent = imeis.length ? imeis.join(', ') : 'Ninguno';
+
+                    hiddenInputs.innerHTML = '';
+
+                    Array.from(selectedOptions).forEach(opt => {
+                        const imei = opt.value;
+                        const descripcion = item.descripcion;
+
+                        hiddenInputs.innerHTML += `
+        <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][codigo]" value="${imei}">
+        <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][descripcion]" value="${descripcion}">
+    `;
+                        i++;
+                    });
+
+
+                });
+            });
+        }
+
+
 
 
         function obtenerVenta(id) {
@@ -1407,6 +1598,39 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             });
         }
 
+        document.getElementById('btnConfirmarVenta').addEventListener('click', function(event) {
+            const selects = document.querySelectorAll('.select-imeis');
+            let validado = true;
+            let mensajeError = '';
+
+            selects.forEach(select => {
+                const cantidadRequerida = parseInt(select.dataset.cantidad);
+                const cantidadSeleccionada = select.selectedOptions.length;
+
+                if (cantidadSeleccionada !== cantidadRequerida) {
+                    validado = false;
+                    const productoNombre = select.dataset.productonombre;
+
+                    mensajeError +=
+                        `❌ ${productoNombre}: se requieren ${cantidadRequerida} IMEI(s), pero seleccionaste ${cantidadSeleccionada}.\n`;
+                }
+            });
+
+            if (!validado) {
+                alert('⚠️ Debes completar todos los IMEIs requeridos:\n\n' + mensajeError);
+                return;
+            }
+            if (!confirm(
+                    "¿Estás seguro de procesar la venta? Revisa todos los datos antes de  continuar."
+                )) {
+                return;
+            }
+            event.target.closest("form").submit();
+        });
+
+
+
+
         function prepararParaCaptura() {
             document
                 .getElementById("modalGenerar")
@@ -1504,12 +1728,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
         };
         $("#generar-imagen").on("click", async function() {
-
             if (!confirm(
                     "¿Estás seguro de generar la imagen? La cotización se guardará automáticamente al continuar."
                 )) {
                 return;
             }
+
             // Mostrar mensaje de carga
             const cargando = $("<div>")
                 .attr("id", "mensaje-cargando")
@@ -1528,13 +1752,17 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 });
 
             $("body").append(cargando);
-            const codigo = $("#codigo").text();
-            if (await guardarCotizacion() == false) {
-                $("#mensaje-cargando").remove();
 
+            const codigo = $("#codigo").text();
+
+            // Verifica si guardarCotizacion retorna false
+            if (await guardarCotizacion() === false) {
+                $("#mensaje-cargando").remove();
                 return;
             }
+
             prepararParaCaptura();
+
             html2canvas(document.getElementById('miDiv'), {
                 scale: 3
             }).then(function(canvas) {
@@ -1543,11 +1771,11 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 link.download = 'cotizacion_' + codigo + '.png';
                 link.href = imgData;
                 link.click();
+
                 $("#mensaje-cargando").remove();
                 alert("✅ Imagen Generada y Cotización guardada Correctamente.");
                 location.reload();
             });
-
         });
 
         async function guardarCotizacion() {
