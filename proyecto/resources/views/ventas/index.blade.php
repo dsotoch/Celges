@@ -921,7 +921,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     totalmontos += valor;
                 });
 
-                if (totalmontos === 0.00) {
+                if (total>0 && totalmontos === 0.00) {
                     alert("💰 Ingresa un monto válido para esta venta Contado. No hay detalles de pago.");
                     return "error";
                 }
@@ -1141,7 +1141,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             const monto = $("#monto")?.val();
 
 
-            if (metodo_pago == "Efectivo" && (monto == "" || monto <= 0)) {
+            if (metodo_pago == "Efectivo" && (monto == "" || monto < 0)) {
                 alert("💢 Ingresa un monto valido");
                 return;
             }
@@ -1350,7 +1350,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     <strong>Cantidad Solicitada:</strong> ${item.cantidad}
                 </p>
 
-                <label><strong>Seleccionar IMEIs desde almacén:</strong></label>
+                <label><strong>Seleccionar IMEIs💢Productos desde almacén:</strong></label>
                 <select class="form-control select-imeis" 
                         data-producto-id="${item.producto_id}" 
                         data-descripcion="${item.descripcion}"
@@ -1360,15 +1360,15 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         multiple size="5">
                     ${
                         item.almacen.map(prod => `
-                                                                                                                                                                                    <option value="${prod.imei}">
-                                                                                                                                                                                        ${prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
+                                                                                                                                                                                    <option value="${prod.imei=="-"?prod.producto.id:prod.imei}">
+                                                                                                                                                                                        ${prod.imei=="-"?prod.producto.marca +" "+ prod.producto.modelo:prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
                                                                                                                                                                                     </option>
                                                                                                                                                                                 `).join('')
                     }
                 </select>
 
                 <div class="mt-2">
-                    <p class="seleccionados text-info mb-1"><strong>IMEIs seleccionados:</strong> <span class="imeis-text">Ninguno</span></p>
+                    <p class="seleccionados text-info mb-1"><strong>IMEIs💢Productos seleccionados:</strong> <span class="imeis-text">Ninguno</span></p>
                     <div class="hidden-inputs"></div>
                 </div>
             </div>
@@ -1618,12 +1618,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     const productoNombre = select.dataset.productonombre;
 
                     mensajeError +=
-                        `❌ ${productoNombre}: se requieren ${cantidadRequerida} IMEI(s), pero seleccionaste ${cantidadSeleccionada}.\n`;
+                        `❌ ${productoNombre}: se requieren ${cantidadRequerida} IMEI(s)💢Productos, pero seleccionaste ${cantidadSeleccionada}.\n`;
                 }
             });
 
             if (!validado) {
-                alert('⚠️ Debes completar todos los IMEIs requeridos:\n\n' + mensajeError);
+                alert('⚠️ Debes completar todos los IMEIs💢Productos requeridos:\n\n' + mensajeError);
                 return;
             }
             if (!confirm(

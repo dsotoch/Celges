@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cotizacion;
 use App\Models\CuentaBancaria;
 use App\Models\Persona;
+use App\Models\Producto;
 use App\Models\Venta;
 use App\Services\ServicioAbonoVenta;
 use App\Services\ServicioAlmacenInterno;
@@ -39,7 +40,7 @@ class ControllerVentas extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(50);
         $cotizaciones = Cotizacion::where("estado", "Pendiente")->get();
-        return view("ventas.index", compact("numeros","ventas_del_dia", "ventas", "cotizaciones", "codigo", "codigopersona", "cuentas"));
+        return view("ventas.index", compact("numeros", "ventas_del_dia", "ventas", "cotizaciones", "codigo", "codigopersona", "cuentas"));
     }
 
     /**
@@ -225,7 +226,11 @@ class ControllerVentas extends Controller
             foreach ($productos as $productoId => $datos) {
                 $imeis = $datos['imeis'];
                 $servicioDetalleVenta->actualizarPorProductoYImeis($productoId, $imeis, $request->numero_venta);
-                $servicioAlmacen->eliminarProductoporImei($imeis);
+                $producto = Producto::find($productoId);
+                $esTipoOtro = $producto && $producto->tipo === "OTRO";
+                if (!$esTipoOtro) {
+                    $servicioAlmacen->eliminarProductoporImei($imeis);
+                }
             }
             DB::commit();
             return redirect()->back()->with(["success_edit" => "✅ Se Registro el nuevo Estado de la Venta $venta->codigo  Correctamente "]);

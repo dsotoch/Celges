@@ -14,7 +14,7 @@ class ServicioAlmacenInterno
     }
     public function buscarPorProductoYDescripcion($productoId, $descripcion)
     {
-        return AlmacenInterno::with("compra", "compra.persona")->where('producto_id', $productoId)
+        return AlmacenInterno::with("compra", "compra.persona","producto")->where('producto_id', $productoId)
             ->where('registrado', $descripcion)->where("cantidad", ">", "0")
             ->get();
     }

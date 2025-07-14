@@ -10,6 +10,7 @@ class RolesSeeder extends Seeder
 {
     public function run(): void
     {
+        Permission::query()->delete();
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $modulos = [

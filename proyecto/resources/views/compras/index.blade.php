@@ -308,7 +308,8 @@
                                                 <select name="producto_id" id="producto_id" class="form-select">
                                                     <option value="">Seleccione un producto</option>
                                                     @foreach ($productos as $producto)
-                                                        <option value="{{ $producto->id }}">
+                                                        <option value="{{ $producto->id }}"
+                                                            data-tipo={{ $producto->tipo }}>
                                                             {{ $producto->marca }} {{ $producto->modelo }}
                                                             {{ $producto->capacidad }}
                                                         </option>
@@ -332,7 +333,7 @@
                                                             class="fas fa-mobile-alt"></i></span>
                                                 </div>
                                                 <input type="text" name="imei" id="imei" class="form-control"
-                                                    placeholder="IMEI del producto">
+                                                    placeholder="IMEI del producto" value="-" readonly>
                                             </div>
                                         </div>
 
@@ -938,6 +939,19 @@
             placeholder: "Buscar producto",
             allowEmptyOption: true
         });
+        $("#producto_id").on("change", function() {
+            const tipoProductoSeleccionado = $('#producto_id option:selected').data('tipo');
+
+            if (tipoProductoSeleccionado !== "OTRO") {
+                $("#cantidad").prop("readonly", true);
+                $("#imei").prop("readonly", false);
+            } else {
+                $("#cantidad").prop("readonly", false);
+                $("#imei").val("-");
+                $("#imei").prop("readonly", true);
+            }
+        });
+
 
         $('#imei').on('keydown', function(e) {
             if (e.key === 'Enter') {

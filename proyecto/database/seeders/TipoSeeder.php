@@ -13,6 +13,7 @@ class TipoSeeder extends Seeder
      */
     public function run(): void
     {
+        
         Tipo::create([
             "tipo" => EnumTipos::ambos,
         ]);

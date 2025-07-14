@@ -34,21 +34,36 @@ class ControllerAlmacenInterno extends Controller
         foreach ($venta->detalles as $detalle) {
             $productoId = $detalle->producto_id;
             $descripcion = trim($detalle->descripcion);
-            $productonombre = $detalle->producto->marca ." ". $detalle->producto->modelo ." ". $detalle->producto->capacidad;
+            $productonombre = $detalle->producto->marca . " " . $detalle->producto->modelo . " " . $detalle->producto->capacidad;
 
             // Clave única para agrupación
             $clave = $productoId . '||' . $descripcion;
 
             if (!isset($agrupados[$clave])) {
-                // Filtra almacenes por producto_id y descripcion = registrado
+                // Buscar registros de almacén con ese producto y descripción
                 $almacenes = $servicioAlmacen->buscarPorProductoYDescripcion($productoId, $descripcion);
+
+                // Transformar cada registro en unidades individuales
+                $almacenesUnitarios = [];
+                foreach ($almacenes as $almacen) {
+                    for ($i = 0; $i < $almacen->cantidad; $i++) {
+                        $almacenesUnitarios[] = [
+                            'id' => $almacen->id,
+                            'imei' => $almacen->imei,
+                            'registrado' => $almacen->registrado,
+                            'compra' => $almacen->compra,
+                            'producto' => $almacen->producto,
+                            'color' => $almacen->color,
+                        ];
+                    }
+                }
 
                 $agrupados[$clave] = [
                     'producto_id' => $productoId,
                     'producto_nombre' => $productonombre,
                     'descripcion' => $descripcion,
                     'cantidad' => $detalle->cantidad,
-                    'almacen' => $almacenes
+                    'almacen' => $almacenesUnitarios,
                 ];
             } else {
                 $agrupados[$clave]['cantidad'] += $detalle->cantidad;

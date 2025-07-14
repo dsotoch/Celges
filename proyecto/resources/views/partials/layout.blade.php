@@ -42,7 +42,8 @@
 
                     <li class="nav-item nav-profile dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
-                            <img src="https://randomuser.me/api/portraits/lego/5.jpg" alt="image" />
+                            <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png" alt="Avatar con celular"
+                               />
                         </a>
                         <div class="dropdown-menu dropdown-menu-right navbar-dropdown"
                             aria-labelledby="profileDropdown">
@@ -74,16 +75,14 @@
         <div class="container-fluid page-body-wrapper">
             <!-- partial:partials/_settings-panel.html -->
             <div class="theme-setting-wrapper">
-                @if (Route::currentRouteName() == 'ventas.index' || Route::currentRouteName() == 'cotizacion.index')
+                @if (Route::currentRouteName() == 'cotizacion.index')
                     <div id="settings-trigger" style="cursor: pointer"><i class="fas fa-sliders-h"></i> </div>
                 @endif
                 <div id="theme-settings" class="settings-panel">
                     <i class="settings-close fa fa-times"></i>
-                    @if (Route::currentRouteName() == 'ventas.index')
-                        <p class="settings-heading">Opciones para Ventas</p>
-                    @else
-                        <p class="settings-heading">Opciones para Cotizaciónes</p>
-                    @endif
+
+                    <p class="settings-heading">Opciones para Cotizaciónes</p>
+
                     <!-- Sidebar -->
                     <div id="sidebar-coti" class="d-flex flex-column align-items-start p-3">
                         <h5 class="text-center w-100 mb-4 settings-heading">📋 Panel de Opciones</h5>
@@ -121,12 +120,13 @@
                     <li class="nav-item nav-profile">
                         <div class="nav-link">
                             <div class="profile-image">
-                                <img src="https://randomuser.me/api/portraits/lego/5.jpg" alt="image" />
+                                <img src="https://cdn-icons-png.flaticon.com/512/3062/3062634.png"
+                                    alt="Icono celular tecnología" width="100" />
                             </div>
 
                             <div class="profile-name">
                                 <p class="name">Bienvenido</p>
-                                <p class="designation">{{ Auth::user()->getRoleNames()->first() }}</p>
+                                <p class="designation">{{ Auth::user()->name }}</p>
                             </div>
                         </div>
                     </li>
