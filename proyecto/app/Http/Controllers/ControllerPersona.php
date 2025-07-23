@@ -29,6 +29,18 @@ class ControllerPersona extends Controller
         $codigo = $this->obtenerCodigo();
         return view('proveedores.index', compact('personas', 'codigo', 'tipos'));
     }
+      public function clientes()
+    {
+        $tipos = Tipo::all();
+        $servicio = new ServicioPersona();
+        $personas = $servicio->listar()
+            ->filter(function ($persona) {
+                return in_array($persona->tipo_id, [2]);
+            });
+
+        $codigo = $this->obtenerCodigo();
+        return view('proveedores.indexclientes', compact('personas', 'codigo', 'tipos'));
+    }
 
     public function create(String $id, Request $request)
     {
