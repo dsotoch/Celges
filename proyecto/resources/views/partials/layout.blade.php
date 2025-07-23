@@ -42,8 +42,16 @@
 
                     <li class="nav-item nav-profile dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
-                            <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png" alt="Avatar con celular"
-                               />
+                          <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png"
+                                alt="Avatar con celular" />
+                            @if (Auth::user()->foto)
+                                <img src="{{ asset('storage/' . Auth::user()->foto) }}" alt="Foto del usuario"
+                                    width="100" class="img-thumbnail">
+                            @else
+                                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png"
+                                    alt="Avatar con celular" />
+                            @endif
+
                         </a>
                         <div class="dropdown-menu dropdown-menu-right navbar-dropdown"
                             aria-labelledby="profileDropdown">
@@ -139,217 +147,226 @@
                             </a>
                         </li>
                     @endhasanyrole
+                    @hasanyrole('admin') <li class="nav-item">
+                            <a class="nav-link" href="{{ route('dashboard.reportes') }}">
+                                <i class="fas fa-chart-bar menu-icon"></i>
+                                <span class="menu-title">Reporte Ventas</span>
+                            </a>
+                            </li>
+                        @endhasanyrole
 
-                    @hasrole('admin')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('usuarios.index') }}">
-                                <i class="fas fa-user-shield menu-icon"></i>
-                                <span class="menu-title">Roles y Permisos</span>
-                            </a>
-                        </li>
-                    @endhasrole
+                        @hasrole('admin')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('usuarios.index') }}">
+                                    <i class="fas fa-user-shield menu-icon"></i>
+                                    <span class="menu-title">Roles y Permisos</span>
+                                </a>
+                            </li>
+                        @endhasrole
 
-                    @hasanyrole('admin|vendedor')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('caja.index') }}">
-                                <i class="fas fa-money-bill-wave menu-icon"></i>
-                                <span class="menu-title">Caja</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('cotizacion.index') }}">
-                                <i class="fas fa-file-invoice menu-icon"></i>
-                                <span class="menu-title">Cotizaciones</span>
-                            </a>
-                        </li>
-                    @endhasanyrole
-                    @hasanyrole('admin|vendedor|almacenero')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('ventas.index') }}">
-                                <i class="fas fa-shopping-cart menu-icon"></i>
-                                <span class="menu-title">Ventas</span>
-                            </a>
-                        </li>
-                    @endhasanyrole
-                    @hasanyrole('admin|vendedor')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('cuentas.index') }}">
-                                <i class="fas fa-wallet menu-icon"></i>
-                                <span class="menu-title">Cuentas Clientes</span>
-                            </a>
-                        </li>
-                    @endhasanyrole
+                        @hasanyrole('admin|vendedor')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('caja.index') }}">
+                                    <i class="fas fa-money-bill-wave menu-icon"></i>
+                                    <span class="menu-title">Caja</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('cotizacion.index') }}">
+                                    <i class="fas fa-file-invoice menu-icon"></i>
+                                    <span class="menu-title">Cotizaciones</span>
+                                </a>
+                            </li>
+                        @endhasanyrole
+                        @hasanyrole('admin|vendedor|almacenero')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('ventas.index') }}">
+                                    <i class="fas fa-shopping-cart menu-icon"></i>
+                                    <span class="menu-title">Ventas</span>
+                                </a>
+                            </li>
+                        @endhasanyrole
+                        @hasanyrole('admin|vendedor')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('cuentas.index') }}">
+                                    <i class="fas fa-wallet menu-icon"></i>
+                                    <span class="menu-title">Cuentas Clientes</span>
+                                </a>
+                            </li>
+                        @endhasanyrole
 
-                    @hasanyrole('admin|almacenero')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('compras.index') }}">
-                                <i class="fas fa-credit-card menu-icon"></i>
-                                <span class="menu-title">Compras</span>
-                            </a>
-                        </li>
-                    @endhasanyrole
+                        <<<<<<< Updated upstream
+                            @hasanyrole('admin|almacenero')=======@hasanyrole('admin|almaceneroventa|almacenero')>>>>>>>
+                            Stashed changes
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('compras.index') }}">
+                                    <i class="fas fa-credit-card menu-icon"></i>
+                                    <span class="menu-title">Compras</span>
+                                </a>
+                            </li>
+                        @endhasanyrole
 
-                    @hasrole('admin')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('pagos.index') }}">
-                                <i class="fas fa-wallet menu-icon"></i>
-                                <span class="menu-title">Pagos</span>
-                            </a>
-                        </li>
-                    @endhasrole
+                        @hasrole('admin')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('pagos.index') }}">
+                                    <i class="fas fa-wallet menu-icon"></i>
+                                    <span class="menu-title">Pagos</span>
+                                </a>
+                            </li>
+                        @endhasrole
 
-                    @hasanyrole('admin|vendedor|almacenero')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('productos.index') }}">
-                                <i class="fas fa-tags menu-icon"></i>
-                                <span class="menu-title">Productos</span>
-                            </a>
-                        </li>
-                    @endhasanyrole
+                        @hasanyrole('admin|vendedor|almacenero')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('productos.index') }}">
+                                    <i class="fas fa-tags menu-icon"></i>
+                                    <span class="menu-title">Productos</span>
+                                </a>
+                            </li>
+                        @endhasanyrole
 
-                    @hasanyrole('admin|almacenero')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('proveedores.index') }}">
-                                <i class="fas fa-industry menu-icon"></i>
-                                <span class="menu-title">Proveedores</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('almaceninterno.index') }}">
-                                <i class="fas fa-warehouse menu-icon"></i>
-                                <span class="menu-title">Almacen Interno</span>
-                            </a>
-                        </li>
-                    @endhasanyrole
+                        @hasanyrole('admin|almacenero')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('proveedores.index') }}">
+                                    <i class="fas fa-industry menu-icon"></i>
+                                    <span class="menu-title">Proveedores</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('almaceninterno.index') }}">
+                                    <i class="fas fa-warehouse menu-icon"></i>
+                                    <span class="menu-title">Almacen Interno</span>
+                                </a>
+                            </li>
+                        @endhasanyrole
 
-                    @hasanyrole('admin|vendedor|almacenero')
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('cuentasbancarias.index') }}">
-                                <i class="fas fa-university menu-icon"></i>
-                                <span class="menu-title">Cuentas Bancarias</span>
-                            </a>
-                        </li>
-                    @endhasanyrole
-                </ul>
+                        @hasanyrole('admin|vendedor|almacenero')
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('cuentasbancarias.index') }}">
+                                    <i class="fas fa-university menu-icon"></i>
+                                    <span class="menu-title">Cuentas Bancarias</span>
+                                </a>
+                            </li>
+                        @endhasanyrole
+            </ul>
 
-            </nav>
+        </nav>
+        <!-- partial -->
+        <div class="main-panel">
+
+
+
+            @yield('pagina')
+
+            <!-- partial:partials/_footer.html -->
+            <footer class="footer">
+                <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                    <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2025
+                        Todos los Derechos Reservados.</span>
+                    <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hecho desde cero y
+                        desarrollado con <i class="far fa-heart text-danger"></i></span>
+                </div>
+            </footer>
             <!-- partial -->
-            <div class="main-panel">
+        </div>
+
+
+        <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+
+</div>
+<!-- container-scroller -->
 
 
 
-                @yield('pagina')
+<div class="modal fade" id="modalTelefonos" tabindex="-1" aria-labelledby="modalTelefonosLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
 
-                <!-- partial:partials/_footer.html -->
-                <footer class="footer">
-                    <div class="d-sm-flex justify-content-center justify-content-sm-between">
-                        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2025
-                            Todos los Derechos Reservados.</span>
-                        <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hecho desde cero y
-                            desarrollado con <i class="far fa-heart text-danger"></i></span>
-                    </div>
-                </footer>
-                <!-- partial -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTelefonosLabel"><i class="fas fa-phone-alt"></i> Contactos
+                    Telefónicos de la Empresa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="telefono1">
+                        <i class="fas fa-phone text-info mr-2"></i> Número de teléfono 1
+                    </label>
+                    <input type="tel" class="form-control" id="telefono1" name="telefono1" maxlength="9"
+                        required pattern="\d{9}" placeholder="Ej. 987654321">
+                    <small class="form-text text-muted">Ingrese un número válido de 9 dígitos.</small>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="telefono2">
+                        <i class="fas fa-phone text-info mr-2"></i> Número de teléfono 2
+                    </label>
+                    <input type="tel" class="form-control" id="telefono2" name="telefono2" maxlength="9"
+                        pattern="\d{9}" placeholder="Ej. 912345678">
+                    <small class="form-text text-muted">Opcional. Solo si desea registrar un segundo
+                        número.</small>
+                </div>
             </div>
 
+            <div class="modal-footer justify-content-between">
 
-            <!-- main-panel ends -->
-        </div>
-        <!-- page-body-wrapper ends -->
-
-    </div>
-    <!-- container-scroller -->
-
-
-
-    <div class="modal fade" id="modalTelefonos" tabindex="-1" aria-labelledby="modalTelefonosLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTelefonosLabel"><i class="fas fa-phone-alt"></i> Contactos
-                        Telefónicos de la Empresa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="telefono1">
-                            <i class="fas fa-phone text-info mr-2"></i> Número de teléfono 1
-                        </label>
-                        <input type="tel" class="form-control" id="telefono1" name="telefono1" maxlength="9"
-                            required pattern="\d{9}" placeholder="Ej. 987654321">
-                        <small class="form-text text-muted">Ingrese un número válido de 9 dígitos.</small>
-                    </div>
-
-                    <div class="form-group mt-3">
-                        <label for="telefono2">
-                            <i class="fas fa-phone text-info mr-2"></i> Número de teléfono 2
-                        </label>
-                        <input type="tel" class="form-control" id="telefono2" name="telefono2" maxlength="9"
-                            pattern="\d{9}" placeholder="Ej. 912345678">
-                        <small class="form-text text-muted">Opcional. Solo si desea registrar un segundo
-                            número.</small>
-                    </div>
-                </div>
-
-                <div class="modal-footer justify-content-between">
-
-                    <button type="button" class="btn btn-success" onclick="guardarTelefonos()">
-                        <i class="fas fa-save mr-1"></i> Guardar
-                    </button>
-                </div>
-
+                <button type="button" class="btn btn-success" onclick="guardarTelefonos()">
+                    <i class="fas fa-save mr-1"></i> Guardar
+                </button>
             </div>
 
         </div>
+
     </div>
-    <!-- plugins:js -->
-    <script src="{{ asset('melody/vendor.bundle.base.js') }}"></script>
-    <script src="{{ asset('melody/vendor.bundle.addons.js') }}"></script>
-    <script>
-        function guardarTelefonos() {
-            const telefono1 = document.getElementById('telefono1').value.trim();
-            const telefono2 = document.getElementById('telefono2').value.trim();
+</div>
+<!-- plugins:js -->
+<script src="{{ asset('melody/vendor.bundle.base.js') }}"></script>
+<script src="{{ asset('melody/vendor.bundle.addons.js') }}"></script>
+<script>
+    function guardarTelefonos() {
+        const telefono1 = document.getElementById('telefono1').value.trim();
+        const telefono2 = document.getElementById('telefono2').value.trim();
 
-            if (!telefono1.match(/^\d{9}$/)) {
-                alert('Teléfono 1 debe tener 9 dígitos');
-                return;
-            }
-
-            if (telefono2 && !telefono2.match(/^\d{9}$/)) {
-                alert('Teléfono 2 debe tener 9 dígitos');
-                return;
-            }
-
-            fetch('/configuraciones', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        telefono1: telefono1,
-                        telefono2: telefono2
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Teléfonos guardados correctamente');
-                        $('#modalTelefonos').modal('hide');
-                    } else {
-                        alert('Error al guardar: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error en la solicitud');
-                });
+        if (!telefono1.match(/^\d{9}$/)) {
+            alert('Teléfono 1 debe tener 9 dígitos');
+            return;
         }
-    </script>
 
-    @yield('scripts')
+        if (telefono2 && !telefono2.match(/^\d{9}$/)) {
+            alert('Teléfono 2 debe tener 9 dígitos');
+            return;
+        }
+
+        fetch('/configuraciones', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    telefono1: telefono1,
+                    telefono2: telefono2
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Teléfonos guardados correctamente');
+                    $('#modalTelefonos').modal('hide');
+                } else {
+                    alert('Error al guardar: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error en la solicitud');
+            });
+    }
+</script>
+
+@yield('scripts')
 
 
 

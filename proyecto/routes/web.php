@@ -45,6 +45,8 @@ Route::prefix('proveedores')
         Route::put('/edit/{id}',    'update')->name('proveedores.update');
         Route::delete('/{id}',      'destroy')->name('proveedores.destroy');
     })->middleware("auth");
+Route::get('/tipoClientes', [ControllerPersona::class, 'clientes'])->name('proveedores.tipoclientes');
+
 Route::prefix('compras')
     ->controller(ControllerCompra::class)
     ->group(function () {
@@ -64,10 +66,12 @@ Route::prefix('almaceninterno')
         Route::get('/productos/{id}', 'listarProductosPorId')->name("almaceninterno.productoporid");
         Route::delete('/{id}',      'destroy')->name('almaceninterno.destroy');    // Eliminar
     })->middleware("auth");
+    Route::get('/ventas', [ControllerVentas::class, 'index'])->name('ventas.index');
+
 Route::prefix('ventas')
     ->controller(ControllerVentas::class)
     ->group(function () {
-        Route::get('/',             'index')->name('ventas.index');        // Mostrar lista
+       // Route::get('/',             'index')->name('ventas.index');        // Mostrar lista
         Route::post('/guardar',     'store')->name('ventas.store')->middleware(['permission:crear ventas']);      // Guardar nuevo registro
         Route::post('/crear',     'create')->name('ventas.create')->middleware(['permission:crear ventas']);     // Guardar nuevo registro
         Route::get('/{id}',         'show')->name('ventas.show');          // Ver detalle

@@ -63,7 +63,7 @@ class ControllerPersona extends Controller
             DB::commit();
             return response()->json([
                 'success' => true,
-                'message' => 'Proveedor registrado correctamente.',
+                'message' => 'Persona registrada correctamente.',
                 'id' => $persona->id
             ], 200);
         } catch (\Exception $ex) {
@@ -83,8 +83,8 @@ class ControllerPersona extends Controller
         try {
             $servicio = new ServicioPersona();
             $servicio->crear($request->validated());
-            return redirect()->route('proveedores.index')
-                ->with('success', 'Proveedor registrado correctamente.');
+            return redirect()->back()
+                ->with('success', 'Persona registrada correctamente.');
         } catch (\Exception $ex) {
             return redirect()->back()
                 ->withErrors(['general' => $ex->getMessage()])
@@ -111,8 +111,8 @@ class ControllerPersona extends Controller
         try {
             $servicio = new ServicioPersona();
             $servicio->actualizar($id, $request->validated());
-            return redirect()->route('proveedores.index')
-                ->with('success_edit', 'Proveedor modificado correctamente.');
+            return redirect()->back()
+                ->with('success_edit', 'Persona modificada correctamente.');
         } catch (\Exception $ex) {
             return redirect()->back()
                 ->withErrors(['general_edit' => $ex->getMessage()])
@@ -128,8 +128,8 @@ class ControllerPersona extends Controller
         try {
             $servicio = new ServicioPersona();
             $servicio->eliminar($id);
-            return redirect()->route('proveedores.index')
-                ->with('success-delete', 'Proveedor eliminado correctamente.');
+            return redirect()->back()
+                ->with('success-delete', 'Persona eliminada correctamente.');
         } catch (\Exception $ex) {
             return redirect()->back()
                 ->withErrors(['general-error' => $ex->getMessage()])
