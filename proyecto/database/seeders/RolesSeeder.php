@@ -71,15 +71,12 @@ class RolesSeeder extends Seeder
             'ver productos',
             'crear productos',
             'editar productos',
-
             'ver proveedores',
             'crear proveedores',
-
             'ver compras',
             'crear compras',
-
             'ver almacen',
-            'crear almacen',
+            'editar almacen',
             'ver cuentasbancarias',
             'editar ventas',
         ]);
