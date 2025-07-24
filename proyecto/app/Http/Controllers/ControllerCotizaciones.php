@@ -8,6 +8,7 @@ use App\Models\Cotizacion;
 use App\Models\Persona;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ControllerCotizaciones extends Controller
 {
@@ -38,6 +39,7 @@ class ControllerCotizaciones extends Controller
      */
     public function store(StoreRequestCotizacion $request)
     {
+
         try {
             DB::beginTransaction();
             // Crear cotización
@@ -49,10 +51,12 @@ class ControllerCotizaciones extends Controller
                 'total' => $request->total,
                 'utilidad' => $request->utilidad ?? 0,
                 'envio' => $request->envio ?? 0,
+                'totalregistro'=>$request->totalregistro ?? 0,
                 'encomienda' => $request->encomienda ?? 0,
                 'facturacion' => $request->facturacion ?? 0,
                 'favor' => $request->favor ?? 0,
                 'pendiente' => $request->pendiente ?? 0,
+                'nota' => $request->nota ?? '',
                 'persona_id' => $request->persona_id,
                 'created_at' => Carbon::now("America/Lima")->format("Y-m-d")
             ]);
@@ -64,6 +68,7 @@ class ControllerCotizaciones extends Controller
                     return [
                         'producto_id' => $producto['id'],
                         'cantidad' => $producto['cantidad'],
+                        'color' => $producto["color"],
                         'precio' => $producto['precio'],
                         'registrado' => $producto['registrado'],
                     ];
@@ -76,6 +81,7 @@ class ControllerCotizaciones extends Controller
                 'cotizacion_id' => $cotizacion->id
             ], 201);
         } catch (\Exception $e) {
+            Log::error($e->getMessage());
             DB::rollBack();
             return response()->json([
                 'error' => 'Error al guardar la cotización: ' . $e->getMessage()

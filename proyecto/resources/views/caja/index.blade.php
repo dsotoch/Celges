@@ -19,6 +19,94 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
+                        <div class="d-flex align-items-center ml-4 mb-3">
+                            <i class="fas fa-money-bill-wave text-success mr-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h5 class="mb-0">Solo Efectivo</h5>
+                                <small class="text-muted">Pagos realizados exclusivamente en efectivo</small>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <table class="table table-bordered table-striped">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Descripción</th>
+                                        <th>Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{-- ABONOS EN EFECTIVO (Ingresos) --}}
+                                    @foreach ($abonosEfectivo as $abono)
+                                        <tr>
+                                            <td><span class="badge badge-success">Ingreso</span></td>
+                                            <td>{{ $abono->venta->cliente->nombres ?? 'Abono de cliente' }}</td>
+                                            <td class="text-success">+ S/ {{ number_format($abono->monto, 2) }}</td>
+                                        </tr>
+                                    @endforeach
+
+                                    {{-- PAGOS EN EFECTIVO (Egresos) --}}
+                                    @foreach ($pagosEfectivo as $pago)
+                                        <tr>
+                                            <td><span class="badge badge-danger">Gasto</span></td>
+                                            <td>{{ $pago->servicio->nombre }} **
+                                                {{ $pago->persona->nombres ?? $pago->nota }}
+                                            </td>
+                                            <td class="text-danger">- S/ {{ number_format($pago->monto_pagado ?? 0, 2) }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                                @php
+                                    $totalIngresos = array_sum(array_map(fn($a) => $a->monto, $abonosEfectivo));
+                                    $totalEgresos = array_sum(
+                                        array_map(fn($p) => $p->monto_pagado ?? 0, $pagosEfectivo),
+                                    );
+
+                                    $totalEnCaja = $totalIngresos - $totalEgresos;
+
+                                @endphp
+
+
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" class="text-right font-weight-bold ">Total Ingresos
+                                            :</td>
+                                        <td class="text-success font-weight-bold">
+                                            + S/ {{ number_format($totalIngresos, 2) }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" class="text-right font-weight-bold">Total Egresos
+                                            :</td>
+                                        <td class="text-danger font-weight-bold">
+                                            - S/ {{ number_format($totalEgresos, 2) }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" class="text-right font-weight-bold">Total En Caja
+                                            (Efectivo):</td>
+                                        <td class=" font-weight-bold">
+                                            S/ {{ number_format($totalEnCaja, 2) }}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+
+                            </table>
+                        </div>
+
+
+                        <hr>
+                        <div class="d-flex align-items-center mb-4 col-12 mt-4">
+                            <i class="fas fa-exchange-alt text-warning mr-2" style="font-size: 1.5rem;"></i>
+
+                            <div>
+                                <div class="d-flex align-items-baseline">
+                                    <h5 class="mb-0 mr-2">Pago Mixto</h5>
+                                    <small class="text-muted">Parte en efectivo, parte con tarjeta u otros medios</small>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Entradas -->
                         <div class="col-md-6 mb-3">
@@ -44,7 +132,7 @@
                                             @php
                                                 $totalGeneral = 0;
                                                 $totalSalidas = 0;
-                                            @endphp 
+                                            @endphp
 
                                             @foreach ($abonosPorMetodoCuenta as $metodo => $cuentas)
                                                 @foreach ($cuentas as $cuenta => $monto)

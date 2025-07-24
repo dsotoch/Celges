@@ -302,10 +302,39 @@
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="overflow-auto">
-                        <div class="border border-danger text-danger p-3 mb-2 hidden blink" id="mensaje_productos">
 
+
+                        <div class="modal-content" id="mensajepadre">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Detalles Importantes</h5>
+                                <button type="button" class="close text-white"
+                                    onclick="this.closest('#mensajepadre').remove()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div>
+                                    <div class="border border-danger text-danger p-3 mb-2 hidden blink"
+                                        id="mensaje_productos">
+
+                                    </div>
+                                    <button class="hidden" id="imprimirMensaje"
+                                        style="
+        cursor: pointer;
+        border: 1px solid #007bff;
+        background-color: #ffffff;
+        color: #007bff;
+        padding: 8px 16px;
+        border-radius: 4px;
+        margin-top: 4px;
+        margin-bottom: 12px;
+        transition: background-color 0.3s, color 0.3s;
+    "
+                                        onmouseover="this.style.backgroundColor='#007bff'; this.style.color='white';"
+                                        onmouseout="this.style.backgroundColor='white'; this.style.color='#007bff';">
+                                        Generar Imagen Mensaje
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-
 
                         <div class="modal-content cuerpo-coti" id="miDiv">
 
@@ -315,7 +344,7 @@
                                 <thead class="bg-blue-pad text-white">
                                     <tr>
                                         <th colspan="4">
-                                            JAMB-TECNOLOGIA - CALIDAD Y GARANTÍA A TU SERVICIO
+                                            JAMB TECHNOLOGY - CALIDAD Y GARANTÍA A TU SERVICIO
                                             <br>
                                             <br>
                                             NÚMEROS DE CONTACTO:
@@ -443,7 +472,16 @@
                                             </div>
                                         </td>
                                     </tr>
-
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td class="text-12 bg-blue text-white p-2">REGISTRO DE EQUIPO</td>
+                                        <td class="bg-moke">
+                                            <div class="flex text-12 ">S/
+                                                <input type="text" class="text-12" value="0.00" id="totalregistro"
+                                                    readonly>
+                                            </div>
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <td colspan="5" class="text-12">
                                             <input type="text" class="form-control no-border" readonly
@@ -560,7 +598,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                     <option value="">Seleccione tipo de venta</option>
                                     <option value="Mixto">Mixta</option>
                                     <option value="Contado">Al Contado</option>
-                                    <option value="Credito">A Cuenta</option>
+                                    <option value="Credito">A Credito</option>
                                 </select>
                             </div>
                             <!-- Método de Pago -->
@@ -840,6 +878,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             </div>
         </div>
     </div>
+
+
+
+
 @endsection
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -921,7 +963,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     totalmontos += valor;
                 });
 
-                if (total>0 && totalmontos === 0.00) {
+                if (total > 0 && totalmontos === 0.00) {
                     alert("💰 Ingresa un monto válido para esta venta Contado. No hay detalles de pago.");
                     return "error";
                 }
@@ -1002,6 +1044,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         subtotal: $("#subtotal").val(),
                         envio: $("#envio").val(),
                         encomienda: $("#encomienda").val(),
+                        totalregistro: $("#totalregistro").val(),
                         favor: $("#favor").val(),
                         pendiente: $("#pendiente").val(),
                         facturacion: $("#facturacion").val()
@@ -1021,6 +1064,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 alert("❌ Ocurrió un error en la solicitud: " + error.message);
             }
         }
+
 
         $("#btnguardarcliente").on("click", function() {
             let telefono = $("#telefono").val();
@@ -1238,13 +1282,14 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
         });
 
         function obtenerCotizacion(id) {
+
             $('#modalGenerar').appendTo('body').modal({
                 backdrop: true,
                 keyboard: false
             });
             cotizacionNumero = id;
             $.ajax({
-                url: 'cotizacion/' + id,
+                url: '/cotizacion/' + id,
                 type: 'GET',
                 success: function(respuesta) {
 
@@ -1256,6 +1301,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     $("#subtotal").html('');
                     $("#envio").html('');
                     $("#encomienda").html('');
+                    $("#totalregistro").html('');
                     $("#favor").html('');
                     $("#pendiente").html('');
                     $("#facturacion").html('');
@@ -1275,6 +1321,20 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     $("#pendiente").val(respuesta.pendiente);
                     $("#facturacion").val(respuesta.facturacion);
                     $("#utilidad").html(respuesta.utilidad);
+                    $("#totalregistro").val(respuesta.totalregistro);
+
+                    if (respuesta.nota && respuesta.nota.trim() !== '') {
+
+                        $("#mensaje_productos").removeClass("hidden").show();
+                        $("#imprimirMensaje").removeClass("hidden").show();
+                        let notaFormateada = respuesta.nota.replace(/\n/g, "<br>");
+
+                        $("#mensaje_productos").empty().append(`
+    <div class="alert alert-info" role="alert">
+        ${notaFormateada}
+    </div>
+`);
+                    }
 
                     // Iterar productos
                     respuesta.productos.forEach(element => {
@@ -1283,6 +1343,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         const producto = element.producto.modelo + " " +
                             element.producto.marca + " " +
                             element.producto.capacidad + " " +
+                            (element.color).toUpperCase() + " " +
                             (element.registrado == 1 ? "REGISTRADO" : "LIBRE");
 
 
@@ -1360,10 +1421,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         multiple size="5">
                     ${
                         item.almacen.map(prod => `
-                                                                                                                                                                                    <option value="${prod.imei=="-"?prod.producto.id:prod.imei}">
-                                                                                                                                                                                        ${prod.imei=="-"?prod.producto.marca +" "+ prod.producto.modelo:prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
-                                                                                                                                                                                    </option>
-                                                                                                                                                                                `).join('')
+                                                                                                                                                                                                                                            <option value="${prod.imei=="-"?prod.producto.id:prod.imei}">
+                                                                                                                                                                                                                                                ${prod.imei=="-"?prod.producto.marca +" "+ prod.producto.modelo:prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
+                                                                                                                                                                                                                                            </option>
+                                                                                                                                                                                                                                        `).join('')
                     }
                 </select>
 
@@ -1401,10 +1462,13 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     Array.from(selectedOptions).forEach(opt => {
                         const imei = opt.value;
                         const descripcion = item.descripcion;
+                        const color = item.producto_color;
 
                         hiddenInputs.innerHTML += `
         <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][codigo]" value="${imei}">
         <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][descripcion]" value="${descripcion}">
+                <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][color]" value="${color}">
+
     `;
                         i++;
                     });
@@ -1481,7 +1545,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 keyboard: false
             });
             $.ajax({
-                url: 'ventas/' + id,
+                url: '/ventas/' + id,
                 type: 'GET',
                 success: function(respuesta) {
 
@@ -1495,6 +1559,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     $("#encomienda").html('');
                     $("#favor").html('');
                     $("#pendiente").html('');
+                    $("#totalregistro").html('');
+
                     $("#facturacion").html('');
                     $("#utlidad").html('');
                     $("#codigo").html(''),
@@ -1513,6 +1579,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     $("#facturacion").val(Number(respuesta.data.comision_facturacion).toFixed(2));
                     $("#utilidad").html(Number(respuesta.data.utilidad).toFixed(2));
                     $("#codigo").html(respuesta.data.codigo);
+                    $("#totalregistro").val(Number(respuesta.data.totalregistro).toFixed(2));
 
                     // Iterar productos
                     respuesta.data.detalles.forEach(element => {
@@ -1520,6 +1587,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         const producto = element.producto.modelo + " " +
                             element.producto.marca + " " +
                             element.producto.capacidad + " " +
+                            (element.color).toUpperCase() + " " +
                             (element.registrado == 1 ? "REGISTRADO" : "LIBRE");
 
 
@@ -1794,6 +1862,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 subtotal: $("#subtotal").val(),
                 envio: $("#envio").val(),
                 encomienda: $("#encomienda").val(),
+                totalregistro: $("#totalregistro").val(),
                 favor: $("#favor").val(),
                 pendiente: $("#pendiente").val(),
                 facturacion: $("#facturacion").val(),
@@ -1833,5 +1902,18 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
             return respuesta;
         }
+        $("#imprimirMensaje").on("click", function() {
+            html2canvas(document.getElementById('mensaje_productos'), {
+                scale: 3
+            }).then(function(canvas) {
+                let imgData = canvas.toDataURL('image/png');
+                let link = document.createElement('a');
+                link.download = `mensaje-${$("#codigo").text()}.png`;
+                link.href = imgData;
+                link.click();
+                alert("✅ Imagen Generada Correctamente.");
+            });
+
+        })
     </script>
 @endsection

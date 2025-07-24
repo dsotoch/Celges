@@ -22,7 +22,9 @@ class Venta extends Model
         'envio',
         'destino',
         'codigo',
-        'utilidad'
+        'utilidad',
+        'totalregistro',
+        'notaProductos',
     ];
 
     public function cliente()

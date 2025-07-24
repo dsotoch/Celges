@@ -57,7 +57,6 @@ class ControllerCompra extends Controller
             }
 
             // Validar productos
-            $totalproductos = 0.00;
 
             if (!isset($request["productos"]) || !is_array($request["productos"])) {
                 DB::rollBack();
@@ -67,20 +66,8 @@ class ControllerCompra extends Controller
                     ->with('show_modal', true);
             }
 
-            foreach ($request["productos"] as $value) {
-                $totalproductos += floatval($value["precio"]);
-            }
 
-            $totalproductos = number_format($totalproductos, 2, '.', '');
-            $compraTotal = number_format($request->total, 2, '.', '');
-
-            if ($compraTotal != $totalproductos) {
-                DB::rollBack();
-                return redirect()->back()
-                    ->withErrors(['general' => "El total de la compra no corresponde al total de la suma de los productos."])
-                    ->withInput()
-                    ->with('show_modal', true);
-            }
+          
 
             // Crear compra
             $servicio = new ServicioCompra();

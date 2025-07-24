@@ -98,6 +98,8 @@
                                                     <option value="celular"
                                                         {{ old('tipo', 'celular') == 'celular' ? 'selected' : '' }}>Celular
                                                     </option>
+                                                    <option value="tablet" {{ old('tipo') == 'otro' ? 'selected' : '' }}>
+                                                        Tablet</option>
                                                     <option value="otro" {{ old('tipo') == 'otro' ? 'selected' : '' }}>
                                                         Otro</option>
                                                 </select>
@@ -116,9 +118,16 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-tag"></i></span>
                                                 </div>
-                                                <input type="text" name="marca" id="marca"
-                                                    class="form-control @error('marca') is-invalid @enderror"
-                                                    value="{{ old('marca') }}" placeholder="Ingrese marca">
+                                                <select name="marca" id="marca"
+                                                    class="form-control @error('marca') is-invalid @enderror">
+                                                    <option value="">Seleccione una marca</option>
+                                                    @foreach ($marcas as $marca)
+                                                        <option value="{{ $marca->marca }}"
+                                                            {{ old('marca') == $marca->marca ? 'selected' : '' }}>
+                                                            {{ $marca->marca }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             @error('marca')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -148,14 +157,37 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-database"></i></span>
                                                 </div>
-                                                <input type="text" name="capacidad" id="capacidad"
-                                                    class="form-control @error('capacidad') is-invalid @enderror"
-                                                    value="{{ old('capacidad') }}" placeholder="Ingrese capacidad">
+                                                <select name="capacidad" id="capacidad"
+                                                    class="form-control @error('capacidad') is-invalid @enderror">
+                                                    <option value="">Seleccione una capacidad</option>
+                                                    @foreach ($capacidades as $cap)
+                                                        <option value="{{ $cap->capacidad }}"
+                                                            {{ old('capacidad') == $cap->capacidad ? 'selected' : '' }}>
+                                                            {{ $cap->capacidad }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             @error('capacidad')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
                                         </div>
+                                        <div class="col-md-6 mb-3 oculto" id="simGroup">
+                                            <label for="tiene_sim">¿Tiene SIM? <span class="obligatorio">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">
+                                                        <i class="fas fa-sim-card"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="form-control d-flex align-items-center">
+                                                    <input type="checkbox" id="tiene_sim" name="sim" value="si"
+                                                        class="mr-2">
+                                                    <label for="tiene_sim" class="mb-0">Sí</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
 
                                     <div class="modal-footer">
@@ -234,9 +266,17 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-tag"></i></span>
                                                 </div>
-                                                <input type="text" name="marca" id="marca_ed"
-                                                    class="form-control @error('marca') is-invalid @enderror"
-                                                    value="{{ old('marca') }}" placeholder="Ingrese marca">
+                                                <select name="marca" id="marca_ed"
+                                                    class="form-control @error('marca') is-invalid @enderror">
+                                                    <option value="">Seleccione una marca</option>
+                                                    @foreach ($marcas as $marca)
+                                                        <option value="{{ $marca->marca }}"
+                                                            {{ old('marca') == $marca->marca ? 'selected' : '' }}>
+                                                            {{ $marca->marca }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+
                                             </div>
                                             @error('marca')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -266,13 +306,38 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-database"></i></span>
                                                 </div>
-                                                <input type="text" name="capacidad" id="capacidad_ed"
-                                                    class="form-control @error('capacidad') is-invalid @enderror"
-                                                    value="{{ old('capacidad') }}" placeholder="Ingrese capacidad">
+
+                                                <select name="capacidad" id="capacidad_ed"
+                                                    class="form-control @error('capacidad') is-invalid @enderror">
+                                                    <option value="">Seleccione una capacidad</option>
+                                                    @foreach ($capacidades as $cap)
+                                                        <option value="{{ $cap->capacidad }}"
+                                                            {{ old('capacidad') == $cap->capacidad ? 'selected' : '' }}>
+                                                            {{ $cap->capacidad }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+
                                             </div>
                                             @error('capacidad')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
+                                        </div>
+                                        <div class="col-md-6 mb-3 oculto" id="simGroupedit">
+                                            <label for="tiene_sim_edit">¿Tiene SIM? <span
+                                                    class="obligatorio">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">
+                                                        <i class="fas fa-sim-card"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="form-control d-flex align-items-center">
+                                                    <input type="checkbox" id="tiene_sim_edit" name="sim"
+                                                        value="si" class="mr-2">
+                                                    <label for="tiene_sim" class="mb-0">Sí</label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -295,6 +360,94 @@
                 <!--Fin Modal editar producto -->
 
             </div>
+            @if (session('success-atributo'))
+                <div class="alert alert-success mb-4 msj">
+                    {{ session('success-atributo') }}
+                </div>
+            @endif
+            @if ($errors->has('error-atributo'))
+                <div class="alert alert-danger msj">
+                    <i class="fas fa-exclamation-triangle"></i> {{ $errors->first('error-atributo') }}
+                </div>
+            @endif
+            <div class="card contenedor-atributo m-3 position-relative p-4 border border-primary shadow rounded">
+                <!-- Botón de cerrar -->
+                <button type="button" class="close position-absolute text-danger" style="top: 10px; right: 15px;"
+                    aria-label="Cerrar" onclick="this.closest('.contenedor-atributo').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+
+                <h5 class="mb-3 text-primary">
+                    <i class="fas fa-tags mr-2"></i>Registrar Atributos
+                </h5>
+
+                <!-- Formulario de Marca -->
+                <form action="{{ route('productos.marca') }}" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label for="marca">
+                            <i class="fas fa-industry mr-1 text-secondary"></i>Marca
+                        </label>
+                        <input type="text" id="marcainput" class="form-control" placeholder="Ej: Samsung">
+                        <p class="text-primary m-2">Pulse Enter para Ingresar</p>
+                    </div>
+                    <div id="listamarcas" class="mt-2 mb-3 d-flex flex-wrap gap-2"></div>
+
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-save mr-1"></i>Registrar Marca
+                    </button>
+                </form>
+
+                <!-- Lista de marcas -->
+                <div class="mt-4">
+                    <h6 class="text-info">
+                        <i class="fas fa-list-ul mr-1"></i>Marcas Registradas
+                    </h6>
+                    <ul class="list-group">
+                        @foreach ($marcas as $item)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $item->marca }}
+
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Formulario de Capacidad -->
+                <form action="{{ route('productos.capacidad') }}" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label for="capacidad">
+                            <i class="fas fa-hdd mr-1 text-secondary"></i>Capacidad
+                        </label>
+                        <input type="text" id="inputcapacidad" class="form-control" placeholder="Ej: 256GB">
+                    </div>
+                    <div id="listacapacidades" class="mt-2 mb-3 d-flex flex-wrap gap-2"></div>
+
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-save mr-1"></i>Registrar Capacidad
+                    </button>
+                </form>
+
+                <!-- Lista de capacidades -->
+                <div class="mt-4">
+                    <h6 class="text-info">
+                        <i class="fas fa-list-ul mr-1"></i>Capacidades Registradas
+                    </h6>
+                    <ul class="list-group">
+                        @foreach ($capacidades ?? [] as $item)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $item->capacidad }}
+
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+
+
             <div class="card-body">
                 @if (session('success-delete'))
                     <div class="alert alert-success mb-4 msj">
@@ -376,6 +529,7 @@
                                                             <button class="btn btn-outline-primary"
                                                                 onclick="llenarParaEditar(this,event)"
                                                                 data-id="{{ $item->id }}"
+                                                                data-sim="{{ $item->sim }}"
                                                                 data-codigo="{{ $item->codigo }}"
                                                                 data-tipo="{{ $item->tipo }}"
                                                                 data-marca="{{ $item->marca ?? '' }}"
@@ -420,6 +574,81 @@
         </script>
     @endif
     <script>
+        $("#marcainput").on("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // ⛔ Bloquear envío
+
+                const valor = $(this).val().trim();
+                if (valor === "") return;
+
+                // Evitar duplicados
+                const duplicado = $("input[name='marca[]']").toArray().some(input => input.value.toLowerCase() ===
+                    valor.toLowerCase());
+                if (duplicado) return;
+
+                const div = $(`
+                    <div class="badge badge-primary d-flex align-items-center px-2 py-1">
+                        <span class="mr-2">${valor}</span>
+                        <input type="hidden" name="marca[]" value="${valor}">
+                        <button type="button" class="close text-white ml-2" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `);
+
+                div.find(".close").on("click", function() {
+                    div.remove();
+                });
+
+                $("#listamarcas").append(div);
+                $(this).val("");
+            }
+        });
+
+        $("#inputcapacidad").on("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // ⛔ Bloquear envío
+
+                const valor = $(this).val().trim();
+                if (valor === "") return;
+
+                // Evitar duplicados
+                const duplicado = $("input[name='capacidad[]']").toArray().some(input => input.value
+                    .toLowerCase() ===
+                    valor.toLowerCase());
+                if (duplicado) return;
+
+                const div = $(`
+                    <div class="badge badge-primary d-flex align-items-center px-2 py-1">
+                        <span class="mr-2">${valor}</span>
+                        <input type="hidden" name="capacidad[]" value="${valor}">
+                        <button type="button" class="close text-white ml-2" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `);
+
+                div.find(".close").on("click", function() {
+                    div.remove();
+                });
+
+                $("#listacapacidades").append(div);
+                $(this).val("");
+            }
+        });
+
+        $("#tipo").on("change", function() {
+            const valorSeleccionado = $(this).val().trim().toLowerCase();
+
+            if (valorSeleccionado == "tablet") {
+                document.getElementById("simGroup").classList.remove("oculto");
+            } else {
+                document.getElementById("simGroup").classList.add("oculto");
+                document.getElementById("tiene_sim").checked = false; // Limpia si se oculta
+            }
+        });
+
+
         function eliminar(event, nombre) {
             event.preventDefault();
 
@@ -437,17 +666,39 @@
             let $btn = $(boton);
 
             let id = $btn.data('id') || '';
+            let sim = $btn.data('sim') || '';
+
             let codigo = $btn.data('codigo') || '';
             let tipo = $btn.data('tipo') || '';
             let marca = $btn.data('marca') || '';
             let modelo = $btn.data('modelo') || '';
             let capacidad = $btn.data('capacidad') || '';
-
             $('#codigo_ed').val(codigo);
             $('#tipo_ed').val(tipo);
-            $('#marca_ed').val(marca);
             $('#modelo_ed').val(modelo);
-            $('#capacidad_ed').val(capacidad);
+            $('#marca_ed option').each(function() {
+                if (normalizarTexto($(this).val()) === normalizarTexto(marca)) {
+                    $('#marca_ed').val($(this).val()).trigger('change');
+                }
+            });
+
+            $('#capacidad_ed option').each(function() {
+                if (normalizarTexto($(this).val()) === normalizarTexto(capacidad)) {
+                    $('#capacidad_ed').val($(this).val()).trigger('change');
+                }
+            });
+            if (tipo == "TABLET") {
+                document.getElementById("simGroupedit").classList.remove("oculto");
+            } else {
+                document.getElementById("simGroupedit").classList.add("oculto");
+            }
+            if (sim === "SI" || sim === "si") {
+                $("#tiene_sim_edit").prop("checked", true);
+
+            } else {
+                $("#tiene_sim_edit").prop("checked", false);
+
+            }
 
             // Modificar la acción del formulario para que apunte a la ruta de actualización
             let urlBase = "{{ route('productos.update', ['id' => 'ID_REEMPLAZAR']) }}";
@@ -462,6 +713,9 @@
             event.target.classList.remove('active');
         }
 
+        function normalizarTexto(texto) {
+            return texto.trim().toLowerCase();
+        }
 
         function Modificar(event) {
             event.preventDefault();

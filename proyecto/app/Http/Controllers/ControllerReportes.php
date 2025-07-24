@@ -7,6 +7,7 @@ use App\Services\ServicioAbonoVenta;
 use App\Services\ServicioPagos;
 use App\Services\ServicioVenta;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ControllerReportes extends Controller
@@ -49,6 +50,7 @@ class ControllerReportes extends Controller
         $clientestop = $servicioVentas->obtenerClientesTop();
         $ticketPromediomes = $servicioVentas->calcularTicketPromedioMes();
         $ticketPromedioAnual = $servicioVentas->calcularTicketPromedioAnual();
+        $diasVentas = $this->ObtenerDiasDeLaSemanaConMasVentas();
         $totalIngresos = $abonos->sum("monto");
         $totalEgresos = $pagos->sum("monto_pagado");
         $utilidad = max(0, $totalIngresos - $totalEgresos);
@@ -56,13 +58,13 @@ class ControllerReportes extends Controller
         $cotizacionesPromedios = $this->calcularPorcentajesDeCotizaciones();
         $productosmasVendidos = $this->ObtenerCincoProductosMasvendidos();
         $productosPorAgotarse = $this->calcularProductosPorAgotarse();
-        $gastosServicios=$this->calcularGastosServicios();
-        return view("welcome", compact("gastosServicios","productosPorAgotarse", "productosmasVendidos", "cotizacionesPromedios", "reporteMensual", "reporteSemanal", "totalIngresos", "totalEgresos", "utilidad", "clientestop", 'ticketPromediomes', "ticketPromedioAnual"));
+        $gastosServicios = $this->calcularGastosServicios();
+        return view("welcome", compact("diasVentas", "gastosServicios", "productosPorAgotarse", "productosmasVendidos", "cotizacionesPromedios", "reporteMensual", "reporteSemanal", "totalIngresos", "totalEgresos", "utilidad", "clientestop", 'ticketPromediomes', "ticketPromedioAnual"));
     }
 
     private function calcularGastosServicios()
     {
-        $fechaInicio = Carbon::now()->subMonths(2)->startOfMonth(); 
+        $fechaInicio = Carbon::now()->subMonths(2)->startOfMonth();
         $fechaFin = Carbon::now()->endOfMonth();
 
         $gastos = DB::table('pagos')
@@ -118,9 +120,53 @@ class ControllerReportes extends Controller
             ->select('p.marca', 'p.modelo', 'p.capacidad', DB::raw('SUM(dv.cantidad) as total_vendidos'))
             ->whereMonth('v.fecha', Carbon::now()->month)
             ->whereYear('v.fecha', Carbon::now()->year)
+            ->whereNotIn('v.estado', ['Esperando Aprobacion', 'anulado'])
             ->groupBy('dv.producto_id', 'p.marca', 'p.modelo', 'p.capacidad')
             ->orderByDesc('total_vendidos')
             ->limit(5)
             ->get();
+    }
+
+    public function ObtenerDiasDeLaSemanaConMasVentas()
+    {
+        $ventasPorDiaSemana = DB::table('ventas as v')
+            ->select(
+                DB::raw('DAYOFWEEK(v.fecha) as dia_orden'),
+                DB::raw('DAYNAME(v.fecha) as dia_semana'),
+                DB::raw('SUM(dv.cantidad) as total_vendidos')
+            )
+            ->join('detalle_ventas as dv', 'dv.venta_id', '=', 'v.id')
+            ->where('v.fecha', '>=', Carbon::now()->subMonths(3)->startOfDay())
+            ->whereNotIn('v.estado', ['Esperando Aprobacion', 'anulado'])
+            ->groupBy(DB::raw('DAYOFWEEK(v.fecha), DAYNAME(v.fecha)'))
+            ->orderByDesc('total_vendidos')
+            ->get();
+
+        $diaMasVentas = $ventasPorDiaSemana->first();
+        $diaMenosVentas = $ventasPorDiaSemana->sortBy('total_vendidos')->first();
+
+        return [
+            'ventas_por_dia_semana' => $ventasPorDiaSemana,
+            'dia_mas_ventas_semana' => $diaMasVentas,
+            'dia_menos_ventas_semana' => $diaMenosVentas,
+        ];
+    }
+
+     public function reportes(Request $request)
+    {
+        $servicioVentas = new ServicioVenta();
+        $ventas = $servicioVentas->listarActivas();
+
+        if ($request->has('semana')) {
+            $desde = now()->subDays(7)->toDateString();
+            $hasta = now()->toDateString();
+            $ventas = $ventas->whereBetween('fecha', [$desde, $hasta]);
+        }
+
+        if ($request->filled('desde') && $request->filled('hasta')) {
+            $ventas = $ventas->whereBetween('fecha', [$request->desde, $request->hasta]);
+        }
+
+        return view("reportes", compact("ventas"));
     }
 }

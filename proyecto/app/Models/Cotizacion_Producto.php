@@ -13,6 +13,7 @@ class Cotizacion_Producto extends Model
         'producto_id',
         'cantidad',
         'precio',
+        'color',
         'registrado',
     ];
     

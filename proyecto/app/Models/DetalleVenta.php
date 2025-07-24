@@ -15,6 +15,8 @@ class DetalleVenta extends Model
         'precio_unitario',
         'cantidad',
         'subtotal',
+        'color',
+
     ];
 
     public function venta()

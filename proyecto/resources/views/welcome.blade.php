@@ -100,21 +100,37 @@
                     <div class="card border-left-primary shadow h-100">
                         <div class="card-body d-flex align-items-center justify-content-center flex-column text-center">
                             <i class="fas fa-receipt fa-3x text-primary mb-3"></i>
-                            <h5 class="font-weight-bold text-primary">Ticket Promedio {{ now()->year }}</h5>
-                            <h3 class="text-dark font-weight-bold">S/
-                                {{ number_format($ticketPromedioAnual['ticket_promedio'], 2) }}</h3>
-                            <hr class="w-75">
-                            <p class="mb-1">
-                                <i class="fas fa-cash-register text-muted"></i>
-                                <strong>Total vendido:</strong><br>
-                                <span class="text-primary">S/
-                                    {{ number_format($ticketPromedioAnual['total_vendido'], 2) }}</span>
-                            </p>
-                            <p class="mb-0">
-                                <i class="fas fa-shopping-cart text-muted"></i>
-                                <strong>Nº de ventas:</strong><br>
-                                <span class="text-primary">{{ $ticketPromedioAnual['numero_ventas'] }}</span>
-                            </p>
+                            <h5 class="font-weight-bold text-primary">Dia Con Mas Ventas(Ultimos 3 Meses)</h5>
+                            @if ($diasVentas['dia_mas_ventas_semana'])
+                                <h3 class="text-dark font-weight-bold">
+                                    <p>
+                                        📈 Día con más ventas:
+                                        @php
+                                            $dias = [
+                                                'Monday' => 'Lunes',
+                                                'Tuesday' => 'Martes',
+                                                'Wednesday' => 'Miércoles',
+                                                'Thursday' => 'Jueves',
+                                                'Friday' => 'Viernes',
+                                                'Saturday' => 'Sábado',
+                                                'Sunday' => 'Domingo',
+                                            ];
+                                            $dia =
+                                                $dias[$diasVentas['dia_mas_ventas_semana']->dia_semana] ??
+                                                $diasVentas['dia_mas_ventas_semana']->dia_semana;
+                                        @endphp </p>
+                                    {{ $dia }}
+
+                                </h3>
+                                <hr class="w-75">
+                                <p class="mb-1">
+                                    <i class="fas fa-cash-register text-muted"></i>
+                                    <strong> ({{ $diasVentas['dia_mas_ventas_semana']->total_vendidos }} unidades)
+                                    </strong><br>
+
+                                </p>
+                            @endif
+
                         </div>
                     </div>
                 </div>
@@ -123,22 +139,36 @@
                     <div class="card border-left-success shadow h-100">
                         <div class="card-body d-flex align-items-center justify-content-center flex-column text-center">
                             <i class="fas fa-calendar-alt fa-3x text-success mb-3"></i>
-                            <h5 class="font-weight-bold text-success">Ticket Promedio -
-                                {{ \Carbon\Carbon::now()->translatedFormat('F') }}</h5>
-                            <h3 class="text-dark font-weight-bold">S/
-                                {{ number_format($ticketPromediomes['ticket_promedio'], 2) }}</h3>
-                            <hr class="w-75">
-                            <p class="mb-1">
-                                <i class="fas fa-cash-register text-muted"></i>
-                                <strong>Total vendido:</strong><br>
-                                <span class="text-primary">S/
-                                    {{ number_format($ticketPromediomes['total_vendido'], 2) }}</span>
-                            </p>
-                            <p class="mb-0">
-                                <i class="fas fa-shopping-cart text-muted"></i>
-                                <strong>Nº de ventas:</strong><br>
-                                <span class="text-primary">{{ $ticketPromediomes['numero_ventas'] }}</span>
-                            </p>
+                            <h5 class="font-weight-bold text-success">Dia que menos se Vende(Ultimos 3 Meses)</h5>
+                            @if ($diasVentas['dia_mas_ventas_semana'])
+                                <h3 class="text-dark font-weight-bold">
+                                    <p>
+                                        📈 Día con menos ventas:
+                                        @php
+                                            $dias = [
+                                                'Monday' => 'Lunes',
+                                                'Tuesday' => 'Martes',
+                                                'Wednesday' => 'Miércoles',
+                                                'Thursday' => 'Jueves',
+                                                'Friday' => 'Viernes',
+                                                'Saturday' => 'Sábado',
+                                                'Sunday' => 'Domingo',
+                                            ];
+                                            $dia =
+                                                $dias[$diasVentas['dia_menos_ventas_semana']->dia_semana] ??
+                                                $diasVentas['dia_menos_ventas_semana']->dia_semana;
+                                        @endphp </p>
+                                    {{ $dia }}
+
+                                </h3>
+                                <hr class="w-75">
+                                <p class="mb-1">
+                                    <i class="fas fa-cash-register text-muted"></i>
+                                    <strong> ({{ $diasVentas['dia_menos_ventas_semana']->total_vendidos }} unidades)
+                                    </strong><br>
+
+                                </p>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -230,7 +260,11 @@
                         <div class="card-body">
                             <h4 class="card-title">
                                 <i class=" fas fa-tag"></i>
-                                Productos mas vendidos
+                                @php
+                                    \Carbon\Carbon::setLocale('es');
+                                @endphp
+
+                                Productos más vendidos {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
                             </h4>
                             <div class="table-responsive">
                                 <table class="table">

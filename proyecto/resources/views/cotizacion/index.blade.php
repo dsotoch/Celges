@@ -14,8 +14,31 @@
 
 
         <div class="overflow-auto">
-            <div class="border border-danger text-danger p-3 mb-2 hidden blink" id="mensaje_productos">
 
+            <div>
+                <div class="border border-danger text-danger p-3 mb-2 hidden blink" id="mensaje_productos">
+                    <p><b>Cliente:</b> <span id="mensajecliente"></span></p>
+                    <p class="mt-2"><b>Numero:</b> <span>{{ $codigo }}</span></p>
+                    <p class="mt-2"><b>Fecha:</b> <span>{{ now('America/Lima')->format('Y-m-d') }}</span></p>
+
+
+                </div>
+                <button class="hidden" id="imprimirMensaje"
+                    style="
+        cursor: pointer;
+        border: 1px solid #007bff;
+        background-color: #ffffff;
+        color: #007bff;
+        padding: 8px 16px;
+        border-radius: 4px;
+        margin-top: 4px;
+        margin-bottom: 12px;
+        transition: background-color 0.3s, color 0.3s;
+    "
+                    onmouseover="this.style.backgroundColor='#007bff'; this.style.color='white';"
+                    onmouseout="this.style.backgroundColor='white'; this.style.color='#007bff';">
+                    Generar Imagen Mensaje
+                </button>
             </div>
 
 
@@ -27,10 +50,11 @@
                     <thead class="bg-blue-pad text-white">
                         <tr>
                             <th colspan="4">
-                                JAMB-TECNOLOGIA - CALIDAD Y GARANTÍA A TU SERVICIO
+                                JAMB TECHNOLOGY - CALIDAD Y GARANTÍA A TU SERVICIO
                                 <br>
                                 <br>
-                                NÚMEROS DE CONTACTO: <span>{{$numeros["numero1"]}}</span><span>-{{$numeros["numero2"]}}</span>
+                                NÚMEROS DE CONTACTO:
+                                <span>{{ $numeros['numero1'] }}</span><span>-{{ $numeros['numero2'] }}</span>
                             </th>
                         </tr>
                     </thead>
@@ -57,6 +81,7 @@
                         <tr class="bg-blue">
                             <th style="width: 70px" class="text-12">Cantidad</th>
                             <th class="text-12">Descripcion</th>
+                            <th style="width: 50px" class="text-12">Costo por Registro</th>
                             <th style="width: 70px" class="text-12">Costo Unitario</th>
                             <th style="width: 70px" class="text-12">Sub Total</th>
                         </tr>
@@ -152,10 +177,20 @@
                         </tr>
 
                         <tr>
+                            <td colspan="5"></td>
+                            <td class="text-12 bg-blue text-white p-2">REGISTRO DE EQUIPO</td>
+                            <td class="bg-moke">
+                                <div class="flex text-12 ">S/
+                                    <input type="text" class="text-12" value="0.00" id="totalregistro" readonly>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
                             <td colspan="5" class="text-12">
                                 <input type="text" class="form-control no-border" readonly
                                     value="- Atentamente, JAMB TECHNOLOGY.">
                             </td>
+
                             <td class="text-12 bg-blue text-white pb-2"> TOTAL</td>
                             <td class="resaltado">
                                 <div class="flex text-12 ">S/
@@ -231,7 +266,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 </div>
 
                 <div class="modal-body overflow-auto">
-                    <table class="table table-bordered table-sm">
+                    <div class="form-group">
+                        <label for="buscador">Buscar</label>
+                        <input type="search" name="buscador" id="buscador" class="form-control"
+                            placeholder="Ingrese texto a buscar">
+                    </div>
+                    <table class="table datatable  table-bordered table-sm">
                         <thead class="thead-p bg-success">
                             <tr>
                                 <th>Fecha de Compra</th>
@@ -251,6 +291,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                     $item->producto->modelo .
                                     ' ' .
                                     $item->producto->capacidad .
+                                    ' ' .
+                                    strtoupper($item->color) .
                                     ' ' .
                                     ($item->registrado == 1 ? 'REGISTRADO' : 'LIBRE');
 
@@ -278,15 +320,18 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                         ' ' .
                                         $item->producto->capacidad .
                                         ' ' .
+                                        strtoupper($item->color) .
+                                        ' ' .
                                         ($item->registrado == 1 ? 'REGISTRADO' : 'LIBRE');
 
                                     $precioUnificado = $preciosUnificados[$claveProducto] ?? $item->precio_compra;
                                 @endphp
 
                                 <tr class="selectable-row {{ $item->cantidad == 0 ? 'bgred' : '' }}"
-                                    data-id="{{ $item->producto->id }}" data-imei="{{ $item->imei }}"
-                                    data-cantidad="{{ $item->cantidad }}" data-registrado="{{ $item->registrado }}"
-                                    data-precio="{{ $precioUnificado }}" data-producto="{{ $claveProducto }}">
+                                    data-id="{{ $item->producto->id }}"data-color="{{ $item->color }}"
+                                    data-imei="{{ $item->imei }}" data-cantidad="{{ $item->cantidad }}"
+                                    data-registrado="{{ $item->registrado }}" data-precio="{{ $precioUnificado }}"
+                                    data-producto="{{ $claveProducto }}">
 
                                     <td>{{ $item->compra->fecha_compra }}</td>
                                     <td>{{ $claveProducto }}</td>
@@ -364,6 +409,21 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <script>
+        document.getElementById('buscador').addEventListener('input', function() {
+            const filtro = this.value.toLowerCase();
+            const filas = document.querySelectorAll('table.datatable tbody tr');
+
+            filas.forEach(fila => {
+                // Concatenar el texto de todas las celdas de la fila
+                const textoFila = fila.textContent.toLowerCase();
+                if (textoFila.indexOf(filtro) > -1) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        });
+
         $(document).ready(function() {
             let restarsaldo = false;
             const body = $('body');
@@ -380,12 +440,14 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             let registrado = '';
             let precio_compra = "";
             let total_utilidades = 0.00;
+            let color = "";
             // Selección de fila
             $('.selectable-row').on('click', function() {
                 $('.selectable-row').removeClass('selected');
                 $(this).addClass('selected');
                 id = $(this).data('id');
                 producto = $(this).data('producto');
+                color = $(this).data('color');
                 registrado = $(this).data('registrado');
                 precio_compra = $(this).data('precio');
 
@@ -411,6 +473,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     return;
                 }
                 document.getElementById("cliente").value = clienteTabla;
+                document.getElementById("mensajecliente").textContent = clienteTabla;
                 document.getElementById("idcliente").value = idClienteTabla;
                 document.getElementById("destino").value = direccionClienteTabla;
                 $("#modalCotizacionCliente").modal("hide");
@@ -472,7 +535,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
             // Evento botón enviar
             $('#enviar').on('click', function() {
-                let existe = productos.some(p => p.id === id && p.registrado == registrado);
+                let existe = productos.some(p => p.id === id && p.color == color && p.registrado ==
+                    registrado);
                 if (existe) {
                     alert("Este Producto ya esta Agregado en la Cotización");
                     return;
@@ -481,7 +545,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             });
 
 
-            function enviarTabla() {
+            async function enviarTabla() {
                 if (!producto) {
                     alert("Seleccione un producto.");
                     return;
@@ -503,33 +567,16 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                 cantidad = parseInt(cantidad);
                 precio = parseFloat(precio);
-                let cuantos_almacen = 0;
+                color = color;
 
-                $("#datos-productos tr").each(function() {
-                    const dataset = this.dataset;
-
-                    if (dataset.producto === producto) {
-                        const cantidad = parseFloat(dataset.cantidad) || 0;
-                        cuantos_almacen += cantidad;
-                    }
-                });
-                if (cantidad > cuantos_almacen) {
-                    let dif = cantidad - cuantos_almacen;
-                    $("#mensaje_productos").removeClass("hidden").show();
-                    $("#mensaje_productos").append(
-                        `<p> Faltan ${dif} existencias en el Almacen para el Producto ${producto} </p>`
-                    );
-                    $('html, body').animate({
-                        scrollTop: 0
-                    }, 'slow');
-
-                }
-
+                await listarEnAlmacenInterno(id, color, registrado, cantidad);
 
                 $("#detalles").append(`
     <tr>
-        <td class="text-center">${cantidad}</td>
-        <td class="text-center">${producto}</td>
+        <td class="text-center" class='tdcantidad'>${cantidad}</td>
+        <td class="text-center"><input class='form-control no-border' style='text-align:center;' type='text' value='${producto}'/></td>
+        <td class="text-center"><input  class='costoregistro text-center' value='0.00'/></td>
+
         <td class="text-center">${precio.toFixed(2)}</td>
         <td class="text-center">${(cantidad * precio).toFixed(2)}</td>
     </tr>
@@ -552,7 +599,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 `);
 
 
-                agregarProducto(id, cantidad, precio, registrado);
+                agregarProducto(id, cantidad, precio, registrado, color);
                 calcularsubtotal();
                 cantidad = "";
                 precio = "";
@@ -561,14 +608,67 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 producto = "";
                 precio_compra = "";
                 diferencia = "";
+                color = "";
 
             }
+            $("#detalles").on('keydown', '.costoregistro', function(e) {
+                if (e.key === "Enter" || e.keyCode === 13) {
+                    e.preventDefault();
+                    const $fila = $(this).closest("tr");
 
-            function agregarProducto(id, cantidad, precio, registrado) {
+                    const primerTD = $(this).closest("tr").children("td").first();
+                    const cantidad = primerTD.text();
+                    const costo = parseFloat($(this).val()) || 0;
+                    const subtotal = cantidad * costo;
+                    const subTotalActual = $(this).closest("td").next();
+                    const tdActual = $(this).closest("td").next().next();
+                    const totalActual = parseFloat(tdActual.text()) || 0;
+
+                    const total = totalActual + subtotal;
+
+                    if (costo > 0) {
+                        tdActual.text(total.toFixed(2));
+                        $(this).val(subtotal);
+
+                    } else {
+                        tdActual.text((parseFloat(subTotalActual.text()) * cantidad).toFixed(2));
+
+
+                    }
+                    calcularsubtotal();
+                }
+            });
+
+            async function listarEnAlmacenInterno(producto_id, color, registrado, cantidad) {
+                let cuantos_almacen = 0;
+
+                $("#datos-productos tr").each(function() {
+                    const dataset = this.dataset;
+
+                    if (dataset.producto === producto) {
+                        const cantidad = parseFloat(dataset.cantidad) || 0;
+                        cuantos_almacen += cantidad;
+                    }
+                });
+                let diferencia = Number(cuantos_almacen);
+
+                if (Number(cantidad) > diferencia) {
+                    let dif = Number(cantidad) - diferencia;
+                    $("#mensaje_productos").removeClass("hidden").show();
+                    $("#imprimirMensaje").removeClass("hidden").show();
+                    $("#mensaje_productos").append(`
+    <p> Faltan ${dif} existencias para Despachar, para el producto ${producto} </p>
+    <hr>
+`);
+                }
+            }
+
+            function agregarProducto(id, cantidad, precio, registrado, color) {
                 // Crear un objeto producto
                 let item = {
                     id: id,
                     cantidad: parseInt(cantidad),
+                    color: color,
                     precio: parseFloat(precio),
                     registrado: parseInt(registrado)
                 };
@@ -581,19 +681,30 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 let total = 0;
 
                 $("#detalles tr").each(function() {
-                    let valorTexto = $(this).find("td").eq(3).text().trim();
+                    let valorTexto = $(this).find("td").eq(4).text().trim();
                     let valor = parseFloat(valorTexto);
                     if (!isNaN(valor)) {
                         total += valor;
                     }
                 });
-                $("#subtotal").val(total.toFixed(2));
-                $("#total").val(total.toFixed(2));
+                let totalRegistro = 0.00;
+                $("#detalles tr").each(function() {
+                    let valorTexto = $(this).find("td").eq(2).find("input").val().trim();
+                    let valor = parseFloat(valorTexto);
+                    if (!isNaN(valor)) {
+                        totalRegistro += valor;
+                    }
+                });
+                $("#totalregistro").val(totalRegistro.toFixed(2));
+                const diferencia = total - totalRegistro;
+                $("#subtotal").val(diferencia.toFixed(2));
                 calcularTotal();
             }
 
             function calcularTotal() {
                 let subtotal = parseFloat($("#subtotal").val()) || 0;
+                let totalregistro = parseFloat($("#totalregistro").val()) || 0;
+
                 let envio = parseFloat($("#envio").val()) || 0;
                 let encomienda = parseFloat($("#encomienda").val()) || 0;
                 let favor = parseFloat($("#favor").val()) || 0;
@@ -601,15 +712,15 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 let facturacion = parseFloat($("#facturacion").val()) || 0;
                 let total = 0.00;
                 if (restarsaldo) {
-                    let totalsinSaldoFavor = subtotal + envio + encomienda + facturacion;
-                    if(favor >= totalsinSaldoFavor) {
+                    let totalsinSaldoFavor = subtotal + envio + encomienda + facturacion + totalregistro;
+                    if (favor >= totalsinSaldoFavor) {
                         total = 0.00;
                     } else {
-                        total = subtotal + envio - favor + encomienda + facturacion;
+                        total = subtotal + envio - favor + encomienda + facturacion + totalRegistro;
                     }
 
                 } else {
-                    total = subtotal + envio + encomienda + facturacion;
+                    total = subtotal + envio + encomienda + facturacion + totalregistro;
 
                 }
 
@@ -628,7 +739,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         if (selector === "#facturacion") {
                             let subtotal = parseFloat($("#subtotal").val()) || 0;
                             valor = (valor / 100) * subtotal;
-                            $(this).val(valor.toFixed(2)); // Reemplazamos con el monto calculado
+                            $(this).val(valor.toFixed(
+                                2)); // Reemplazamos con el monto calculado
                         } else {
                             $(this).val(valor.toFixed(2)); // Redondeamos a 2 decimales
                         }
@@ -673,6 +785,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             $("#cliente").on("keyup", function() {
                 let valor = $(this).val().toUpperCase();
                 $(this).val(valor);
+                $("#mensajecliente").text(valor);
             });
             $("#destino").on("keyup", function() {
                 let valor = $(this).val().toUpperCase();
@@ -739,6 +852,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     favor: $("#favor").val(),
                     pendiente: $("#pendiente").val(),
                     facturacion: $("#facturacion").val(),
+                    totalregistro:$("#totalregistro").val(),
+                    nota: $("#mensaje_productos").text(),
                     total: $("#total").val(),
                     utilidad: $("#utilidades").text(),
                     persona_id: document.getElementById("idcliente").value,
@@ -781,6 +896,23 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
 
         });
+        $("#imprimirMensaje").on("click", function() {
+            if (document.getElementById("cliente").value == "") {
+                alert("💢Ingresa el Cliente");
+                return;
+            }
+            html2canvas(document.getElementById('mensaje_productos'), {
+                scale: 3
+            }).then(function(canvas) {
+                let imgData = canvas.toDataURL('image/png');
+                let link = document.createElement('a');
+                link.download = `mensaje-${$("#codigo").text()}.png`;
+                link.href = imgData;
+                link.click();
+                alert("✅ Imagen Generada Correctamente.");
+            });
+
+        })
     </script>
 
     <script src="{{ asset('melody/data-table.js') }}"></script>

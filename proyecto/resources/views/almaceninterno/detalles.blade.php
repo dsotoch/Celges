@@ -13,38 +13,49 @@
 
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Proveedor</th>
-                            <th>Modelo</th>
-                            <th>Registrado</th>
-                            <th>Stock</th>
-                            <th>IMEI</th>
-                            <th>Precio Compra</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($almaceninterno as $item)
+                <form action="{{ route('almaceninterno.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
                             <tr>
-                                <td>{{$item->compra->persona->nombres}}</td>
-                                <td>{{ $item->producto->marca }} {{ $item->producto->modelo }}
-                                    {{ $item->producto->capacidad }}</td>
-                                <td>
-                                    @if ($item->registrado)
-                                        <span class="badge badge-success">Sí</span>
-                                    @else
-                                        <span class="badge badge-secondary">No</span>
-                                    @endif
-                                </td>
-                                <td>{{ $item->cantidad }}</td>
-                                <td>{{ $item->imei }}</td>
-                                <td>S/ {{ number_format($item->precio_compra, 2) }}</td>
-
+                                <th>Proveedor</th>
+                                <th>Modelo</th>
+                                <th>Registrado</th>
+                                <th>Stock</th>
+                                <th>IMEI</th>
+                                <th>Precio Compra</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach ($almaceninterno as $item)
+                                <tr>
+                                    <input type="hidden" value="{{ $item->id }}" name="id[]">
+                                    <td>{{ $item->compra->persona->nombres }}</td>
+                                    <td>{{ $item->producto->marca }} {{ $item->producto->modelo }}
+                                        {{ $item->producto->capacidad }}</td>
+                                    <td>
+                                        @if ($item->registrado)
+                                            <span class="badge badge-success">Sí</span>
+                                        @else
+                                            <span class="badge badge-secondary">No</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $item->cantidad }}</td>
+                                    <td>{{ $item->imei }}</td>
+                                    <td><input type="text" name="precio[]" class="form-control"
+                                            value="{{ number_format($item->precio_compra, 2) }}"></td>
+
+                                </tr>
+                            @endforeach
+
+
+                        </tbody>
+                    </table>
+                    <div class="text-end mt-3 mb-2">
+                        <button type="submit" class="btn bg-orange">Modificar Precio</button>
+                    </div>
+                </form>
             </div>
         </div>
 

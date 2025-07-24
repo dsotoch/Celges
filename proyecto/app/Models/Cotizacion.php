@@ -18,6 +18,8 @@ class Cotizacion extends Model
         'encomienda',
         'facturacion',
         'favor',
+        'nota',
+        'totalregistro',
         'pendiente',
         'persona_id',
         'created_at',

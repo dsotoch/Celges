@@ -12,6 +12,24 @@ class ControllerAlmacenInterno extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function modificarPrecio(Request $request)
+    {
+        $servicioAlmacen = new ServicioAlmacenInterno();
+
+        $ids = $request->input('id');
+        $precios = $request->input('precio');
+
+        foreach ($ids as $index => $id) {
+            $precioLimpio = floatval(str_replace(',', '', $precios[$index]));
+
+            $servicioAlmacen->actualizar($id, [
+                'precio_compra' => $precioLimpio
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Precios actualizados correctamente.');
+    }
     public function index()
     {
         $servicio = new ServicioAlmacenInterno();

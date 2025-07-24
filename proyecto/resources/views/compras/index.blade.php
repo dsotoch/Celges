@@ -178,7 +178,7 @@
                                         <!-- Número Documento -->
                                         <div class="col-md-6 mb-3">
                                             <label for="numero_documento">N° Documento <span
-                                                    class="obligatorio">*</span></label>
+                                                    class="obligatorio"></span></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-barcode"></i></span>
@@ -194,7 +194,7 @@
 
                                         <!-- Total -->
                                         <div class="col-md-6 mb-3">
-                                            <label for="total">Total (S/.) <span class="obligatorio">*</span></label>
+                                            <label for="total">Total (S/.) <span class="obligatorio"></span></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i
@@ -309,11 +309,16 @@
                                                     <option value="">Seleccione un producto</option>
                                                     @foreach ($productos as $producto)
                                                         <option value="{{ $producto->id }}"
-                                                            data-tipo={{ $producto->tipo }}>
+                                                            data-tipo='{{ $producto->tipo }}'
+                                                            data-sim='{{ $producto->sim }}'>
                                                             {{ $producto->marca }} {{ $producto->modelo }}
                                                             {{ $producto->capacidad }}
+                                                            @if (strtolower($producto->sim) === 'si')
+                                                                SIM
+                                                            @endif
                                                         </option>
                                                     @endforeach
+
                                                 </select>
                                             </div>
                                         </div>
@@ -333,7 +338,7 @@
                                                             class="fas fa-mobile-alt"></i></span>
                                                 </div>
                                                 <input type="text" name="imei" id="imei" class="form-control"
-                                                    placeholder="IMEI del producto" value="-" readonly>
+                                                    placeholder="IMEI del producto" value="" readonly>
                                             </div>
                                         </div>
 
@@ -346,7 +351,7 @@
                                                     <span class="input-group-text"><i class="fas fa-palette"></i></span>
                                                 </div>
                                                 <input type="text" name="color" id="color" class="form-control"
-                                                    placeholder="Color del producto">
+                                                    placeholder="Color del producto" value="-">
                                             </div>
                                         </div>
 
@@ -360,7 +365,7 @@
                                                             class="fas fa-dollar-sign"></i></span>
                                                 </div>
                                                 <input type="number" step="0.01" id="precio" name="precio"
-                                                    class="form-control" placeholder="Precio">
+                                                    class="form-control" placeholder="Precio" value="0.00">
                                             </div>
                                         </div>
 
@@ -394,7 +399,8 @@
                                         <div class="col-md-12 ">
 
                                             <div class="d-flex gap-2">
-                                                <button type="button" type="button" onclick="agregarProducto()"
+                                                <button type="button" type="button" id="btnagregar"
+                                                    onclick="agregarProducto()"
                                                     class="btn  d-flex align-items-center gap-2 btn-border">
                                                     <i class="fas fa-list"></i>
                                                     Agregar
@@ -559,7 +565,7 @@
                                         <!-- Número Documento -->
                                         <div class="col-md-6 mb-3">
                                             <label for="numero_documento">N° Documento <span
-                                                    class="obligatorio">*</span></label>
+                                                    class="obligatorio"></span></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-barcode"></i></span>
@@ -575,7 +581,7 @@
 
                                         <!-- Total -->
                                         <div class="col-md-6 mb-3">
-                                            <label for="total">Total (S/.) <span class="obligatorio">*</span></label>
+                                            <label for="total">Total (S/.) <span class="obligatorio"></span></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i
@@ -939,18 +945,38 @@
             placeholder: "Buscar producto",
             allowEmptyOption: true
         });
+        document.getElementById('imei').addEventListener('input', function() {
+            $("#btnagregar").click();
+        });
         $("#producto_id").on("change", function() {
-            const tipoProductoSeleccionado = $('#producto_id option:selected').data('tipo');
+            const tipo = $('#producto_id option:selected').data('tipo')?.toString().toUpperCase();
+            const sim = $('#producto_id option:selected').data('sim')?.toString().toLowerCase();
 
-            if (tipoProductoSeleccionado !== "OTRO") {
+            // Por defecto
+            $("#cantidad").prop("readonly", false);
+            $("#imei").val("-");
+            $("#imei").prop("readonly", true);
+
+            if (tipo === "OTRO") {
+                // Ya está cubierto por los valores por defecto
+            } else if (tipo === "TABLET") {
+                if (sim === "si") {
+                    $("#cantidad").prop("readonly", true);
+                    $("#imei").prop("readonly", false);
+                                $("#imei").val("");
+            $("#imei").focus();
+
+                }
+            } else if (tipo === "CELULAR") {
+                            $("#imei").val("");
+
                 $("#cantidad").prop("readonly", true);
                 $("#imei").prop("readonly", false);
-            } else {
-                $("#cantidad").prop("readonly", false);
-                $("#imei").val("-");
-                $("#imei").prop("readonly", true);
+                            $("#imei").focus();
+
             }
         });
+
 
 
         $('#imei').on('keydown', function(e) {
@@ -959,6 +985,7 @@
             }
         });
         var detallesProductos = [];
+        let total_compra = 0;
 
         function agregarProducto() {
             const ulresultados = $('#detalles_productos');
@@ -966,8 +993,8 @@
             const producto_id = $('#producto_id').val();
             const imei = $('#imei').val();
             const color = $('#color').val();
-            const precio = $('#precio').val();
-            const cantidad = $('#cantidad').val();
+            let precio = $('#precio').val();
+            let cantidad = $('#cantidad').val();
             const registrado = $('#registrado').prop("checked") ? "SI" : "NO";
 
             if (!producto_id) return alert('Seleccione un producto.');
@@ -986,17 +1013,16 @@
                 cantidad,
                 registrado
             });
+            precio = parseFloat(precio);
+            cantidad = parseInt(cantidad);
+
+            total_compra += (precio * cantidad);
 
             actualizarListaVisual();
+            $("#imei").val("");
+            $("#total").val(total_compra);
 
-            // Limpiar campos
-            $('#producto_id').val('');
-            select.clear(); // si usas TomSelect
-            $('#imei').val('');
-            $('#color').val('');
-            $('#precio').val('');
-            $('#cantidad').val('1');
-            $('#registrado').prop('checked', false);
+            $("#imei").focus();
         }
 
         function eliminarItem(imeiBuscado) {

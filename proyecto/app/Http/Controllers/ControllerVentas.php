@@ -39,7 +39,9 @@ class ControllerVentas extends Controller
         $ventas = Venta::orderByRaw("estado = 'Pendiente' DESC")
             ->orderBy('created_at', 'desc')
             ->paginate(50);
-        $cotizaciones = Cotizacion::where("estado", "Pendiente")->get();
+        $cotizaciones = Cotizacion::where("estado", "Pendiente")
+            ->orderBy("created_at", "desc")
+            ->get();
         return view("ventas.index", compact("numeros", "ventas_del_dia", "ventas", "cotizaciones", "codigo", "codigopersona", "cuentas"));
     }
 
@@ -88,6 +90,7 @@ class ControllerVentas extends Controller
                 'subtotal'    => $request->subtotal,
                 'envio'       => $request->envio,
                 'encomienda'  => $request->encomienda,
+                'totalregistro'=> $request->totalregistro,
                 'favor'       => $saldoFavorUsado,
                 'pendiente'   => $request->pendiente,
                 'facturacion' => $request->facturacion,
@@ -107,6 +110,7 @@ class ControllerVentas extends Controller
                     'producto_id' => $value->producto_id,
                     'imei' => "***",
                     'descripcion' => $value->registrado,
+                    'color'=>$value->color,
                     'precio_unitario' => $value->precio,
                     'cantidad' => $value->cantidad,
                     'subtotal' => $value->cantidad * $value->precio,

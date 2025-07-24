@@ -27,9 +27,9 @@ class StoreCompraRequest extends FormRequest
             'persona_id' => 'required|exists:personas,id',
             'tipo_compra' => 'required|string',
             'fecha_compra' => 'required|date',
-            'numero_documento' => 'required|unique:compras,numero_documento',
+            'numero_documento' => 'nullable|unique:compras,numero_documento',
             'tipo_documento' => 'required|string',
-            'total' => 'required|numeric|min:0',
+            'total' => 'nullable|numeric|min:0',
             'estado' => 'required|in:pendiente,pagado',
 
             'monto' => 'nullable|array',
@@ -60,13 +60,11 @@ class StoreCompraRequest extends FormRequest
             'fecha_compra.required' => 'Debe ingresar la fecha de compra.',
             'fecha_compra.date' => 'La fecha de compra no es válida.',
 
-            'numero_documento.required' => 'Debe ingresar el número de documento.',
             'numero_documento.unique' => 'Este número de documento ya está registrado.',
 
             'tipo_documento.required' => 'Debe seleccionar el tipo de documento.',
             'tipo_documento.string' => 'El tipo de documento debe ser texto.',
 
-            'total.required' => 'Debe ingresar el total de la compra.',
             'total.numeric' => 'El total debe ser un número.',
             'total.min' => 'El total no puede ser negativo.',
 

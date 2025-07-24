@@ -12,6 +12,21 @@ use Illuminate\Support\Facades\Log;
 
 class ServicioVenta
 {
+    public function ventasAprobacionPendiente()
+    {
+
+        return Venta::with([
+            'abonos' => function ($query) {
+                $query->where('metodo_pago', '!=', 'Efectivo');
+            },
+            'abonos.operacion'
+        ])
+            ->where("estado", "Esperando Aprobacion")
+            ->whereHas('abonos', function ($query) {
+                $query->where('metodo_pago', '!=', 'Efectivo');
+            })
+            ->get();
+    }
 
     public function calcularTicketPromedioAnual()
     {
@@ -27,6 +42,10 @@ class ServicioVenta
             'numero_ventas' => $numeroVentas,
             'ticket_promedio' => round($ticketPromedio, 2),
         ];
+    }
+   public function listarActivas()
+    {
+        return Venta::with(['cliente', 'detalles', 'abonos'])->where("estado", "!=", "Anulada")->get();
     }
 
 
@@ -104,6 +123,9 @@ class ServicioVenta
                 'abono_inicial' => 0.00,
                 'saldo_pendiente' => $data->pendiente,
                 'saldo_a_favor' => $data->favor,
+                'totalregistro'=>$data->totalregistro,
+                'notaProductos'=>"-",
+                'color'=>$data->color,
                 'comision_facturacion' => $data->facturacion,
                 'envio' => $data->envio,
                 'destino' => $data->destino,

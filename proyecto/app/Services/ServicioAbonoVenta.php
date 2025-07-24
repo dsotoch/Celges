@@ -10,6 +10,46 @@ use Illuminate\Support\Facades\Log;
 class ServicioAbonoVenta
 {
 
+    public function listarTotalAbonosVenta(string $ventaId): float
+    {
+        try {
+            $total = AbonoVenta::where('venta_id', $ventaId)
+                ->where('validado', 'validado')
+                ->sum('monto');
+
+            return $total;
+        } catch (\Throwable $th) {
+            Log::error('Error al listar total de abonos: ' . $th->getMessage());
+            throw new Exception('Error al obtener el total de abonos.');
+        }
+    }
+
+    public function listarAbonoPendienteVenta(string $ventaId)
+    {
+        try {
+            $total = AbonoVenta::where('venta_id', $ventaId)
+                ->where('validado', 'no')
+                ->count();
+
+            return $total;
+        } catch (\Throwable $th) {
+            Log::error('Error al listar abonos pendientes: ' . $th->getMessage());
+            throw new Exception('Error al obtener abonos pendientes');
+        }
+    }
+
+    public function validarAbono(string $id)
+    {
+        try {
+            $abono = AbonoVenta::findOrFail($id);
+            $abono->validado = "validado";
+            $abono->save();
+        } catch (\Throwable $th) {
+
+            throw new Exception($th->getMessage());
+        }
+    }
+
     public function listarAbonosDelMes()
     {
         $inicioMes = Carbon::now()->startOfMonth()->format('Y-m-d');
@@ -49,7 +89,8 @@ class ServicioAbonoVenta
 
         return AbonoVenta::with([
             'venta',
-            'operacion.cuenta'
+            'operacion.cuenta',
+            'venta.cliente'
         ])
             ->whereDate('fecha', $fechaFormateada)
             ->get();

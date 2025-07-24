@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EditProductoRequest;
 use App\Http\Requests\StoreProductoRequest;
+use App\Models\Capacidades;
+use App\Models\Marcas;
 use App\Models\Producto;
 use App\Services\ServicioProducto;
 use Exception;
@@ -14,15 +16,55 @@ class ControllerProducto extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function guardarMarca(Request $request)
+    {
+        if (!empty($request->marca)) {
+            foreach ($request->marca as $value) {
+                Marcas::create([
+                    "marca" => $value
+                ]);
+            }
+
+            return redirect()->back()->with([
+                "success-atributo" => "Marca(s) registrada(s) correctamente."
+            ]);
+        } else {
+            return redirect()->back()->withErrors([
+                "error-atributo" => "Debe ingresar al menos una marca para registrar."
+            ]);
+        }
+    }
+
+
+
+    public function guardarCapacidad(Request $request)
+    {
+        if (!empty($request->capacidad)) {
+            foreach ($request->capacidad as $value) {
+                Capacidades::create([
+                    'capacidad' => $value
+                ]);
+            }
+
+            return redirect()->back()->with([
+                'success-atributo' => 'Capacidad(es) registrada(s) correctamente.'
+            ]);
+        } else {
+            return redirect()->back()->withErrors([
+                'error-atributo' => 'Debe ingresar al menos una capacidad para registrar.'
+            ]);
+        }
+    }
     public function index()
     {
         $productos = Producto::paginate(50);
 
         $servicio = new ServicioProducto();
         $codigo =  "PR-" . $servicio->obtenerCodigo(Producto::max("id") + 1);
-
-
-        return view('producto.index', compact('productos', 'codigo'));
+        $marcas = Marcas::all();
+        $capacidades = Capacidades::all();
+        return view('producto.index', compact('capacidades', 'marcas', 'productos', 'codigo'));
     }
 
 
@@ -63,7 +105,10 @@ class ControllerProducto extends Controller
     {
         try {
             $servicio = new ServicioProducto();
-            $servicio->actualizar($id, $request->validated());
+            $data = $request->validated();
+            $data['sim'] = $request->has('sim') ? $request->sim : 'no';
+
+            $servicio->actualizar($id, $data);
             return redirect()->route("productos.index")
                 ->with('success_edit', 'Producto modificado correctamente.');
         } catch (\Exception $ex) {

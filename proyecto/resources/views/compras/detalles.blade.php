@@ -52,7 +52,7 @@
                         @foreach ($detallescompra as $item)
                             <tr>
                                 <td>{{ $item->producto->marca }} {{ $item->producto->modelo }}
-                                    {{ $item->producto->capacidad }} || {{ $item->imei }}</td>
+                                    {{ $item->producto->capacidad }} || {{ $item->imei }} || {{$item->color}}</td>
                                 <td>{{ $item->cantidad }}</td>
                                 <td>{{ $item->precio }}</td>
                                 <td>{{ $item->precio * $item->cantidad }}</td>
@@ -60,14 +60,7 @@
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <th colspan="3" class="text-right">Subtotal:</th>
-                            <th>S/ {{ $compra->total }}</th>
-                        </tr>
-                        <tr>
-                            <th colspan="3" class="text-right">IGV (18%):</th>
-                            <th>S/ 0.00</th>
-                        </tr>
+                      
                         <tr>
                             <th colspan="3" class="text-right">Total:</th>
                             <th>S/ {{ $compra->total }}</th>

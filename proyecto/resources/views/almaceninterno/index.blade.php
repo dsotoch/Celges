@@ -38,6 +38,11 @@
                 </div>
 
             </div>
+              @if (session('success'))
+                    <div class="alert alert-success mb-4 msj">
+                        {{ session('success') }}
+                    </div>
+                @endif
             <div class="card-body">
                 @if (session('success-delete'))
                     <div class="alert alert-success mb-4 msj">
@@ -58,6 +63,9 @@
                     🎨 <strong>Color:</strong> Color del producto (ej. rojo, azul, etc).<br>
                     🔢 <strong>Stock:</strong> Total de unidades agrupadas por producto, color y estado.<br>
                     🖥️<strong>Acciones:</strong> Ver Detalles de los Productos.<br>
+                    <strong class="badge bg-warning mt-1">Color</strong> Tablets.<br>
+                    <strong class="badge bg-primary mt-1">Color</strong> Otros.<br>
+
                 </div>
 
                 <hr>
@@ -124,8 +132,20 @@
                                                         $ids = $grupo->pluck('id');
                                                     @endphp
                                                     <tr role="row" class="{{ $loop->odd ? 'odd' : 'even' }}">
-                                                        <td
-                                                            class="sorting_1 {{ $primerItem->producto->tipo != 'CELULAR' ? 'badge bg-danger' : '' }}">
+                                                        @php
+
+                                                            $clase = '';
+                                                            switch ($primerItem->producto->tipo) {
+                                                                case 'TABLET':
+                                                                    $clase = 'bg-warning';
+                                                                    break;
+                                                                case 'OTRO':
+                                                                    $clase = 'bg-primary';
+                                                                    break;
+                                                            }
+
+                                                        @endphp
+                                                        <td class="sorting_1 badge {{ $clase }} ">
                                                             {{ $primerItem->producto->codigo }}</td>
                                                         <td>{{ $primerItem->producto->marca }}</td>
 
@@ -169,7 +189,6 @@
     </div>
 @endsection
 @section('scripts')
-    
     <script>
         function detalles(id) {
             $.ajax({
@@ -192,8 +211,6 @@
 
 
     <script>
-    
-
         if ($(".msj").length) {
             setTimeout(() => {
                 $(".msj").fadeOut();

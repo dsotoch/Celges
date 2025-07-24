@@ -7,6 +7,7 @@
         [5, 10, 15, "Todos"]
       ],
       "iDisplayLength": 10,
+      "order": [[0, "desc"]], 
       "language": {
         url: "../esdatatable.json"
       }

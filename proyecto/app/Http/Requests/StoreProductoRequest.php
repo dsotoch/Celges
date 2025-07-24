@@ -28,6 +28,7 @@ class StoreProductoRequest extends FormRequest
             'marca'      => 'required|string|max:100',
             'modelo'     => 'required|string|max:100',
             'capacidad'  => 'required|string|max:100',
+            'sim'   => 'nullable',
         ];
     }
 

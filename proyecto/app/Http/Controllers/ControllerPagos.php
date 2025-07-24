@@ -18,6 +18,47 @@ use Illuminate\Support\Facades\Log;
 
 class ControllerPagos extends Controller
 {
+
+    public function validar()
+    {
+        $servicioVentas = new ServicioVenta();
+
+        $ventasAprobacionPendiente = $servicioVentas->ventasAprobacionPendiente();
+
+        return view("pagos.validar", compact("ventasAprobacionPendiente"));
+    }
+
+    public function validarPago(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $servicioAbono = new ServicioAbonoVenta();
+            $servicioVenta = new ServicioVenta();
+
+            $servicioAbono->validarAbono($request->abono);
+
+            $restantes = $servicioAbono->listarAbonoPendienteVenta($request->ventaId);
+
+            if ($restantes == 0) {
+                $totalAbonos = $servicioAbono->listarTotalAbonosVenta($request->ventaId);
+                $totalVenta = $servicioVenta->obtenerPorId($request->ventaId)->total;
+
+                $estado = ($totalAbonos < $totalVenta) ? "Deuda" : "Pagado";
+
+                $servicioVenta->actualizar($request->ventaId, ['estado' => $estado]);
+
+                DB::commit();
+                return response()->json(["success" => "Se han validado todos los pagos correctamente."]);
+            }
+            DB::commit();
+            return response()->json(["success" => "Pago validado correctamente."]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error("Error al validar pago: " . $th->getMessage());
+            return response()->json(["error" => "Ocurrió un error al validar el pago."]);
+        }
+    }
     function agregarCerosDerecha($numero, $cantidadCeros = 5)
     {
         return str_pad($numero, strlen($numero) + $cantidadCeros, "0", STR_PAD_RIGHT);
@@ -25,6 +66,7 @@ class ControllerPagos extends Controller
 
     public function index()
     {
+        $servicioVentas = new ServicioVenta();
         $servicioCompras = new ServicioCompra();
         $servicioPagos = new ServicioPagos();
         $servicioServicios = new ServicioServicio();
@@ -307,15 +349,25 @@ class ControllerPagos extends Controller
             $tipos = $request->input('tipo', []);
 
             $total = is_array($montos) && !empty($montos) ? array_sum($montos) : 0.00;
+            $estado = "Esperando Aprobacion";
             if ($tipoVenta) {
                 $venta = $servicioVenta->obtenerPorId($ventaId);
+                if ($tipoVenta == "Credito") {
+                    $estado = "Deuda";
+                }
+                if ($tipoVenta == "Contado" || $tipoVenta == "Mixto") {
+                    if (!in_array("Transferencia", $tipos)) {
+                        $estado = $total >= $venta->total ? "Pagado" : "Deuda";
+                    }
+                }
                 $servicioVenta->actualizar($ventaId, [
                     "tipo_venta" => $tipoVenta,
                     "abono_inicial" => $total,
                     "saldo_pendiente" => max(0, $venta->total - $total),
                     "saldo_a_favor" => max(0, $total - $venta->total),
-                    "estado" => $total >= $venta->total ? "Pagado" : "Deuda",
+                    "estado" => $estado,
                 ]);
+
                 if ($tipoVenta != "Credito") {
                     foreach ($montos as $i => $monto) {
                         if (empty($monto)) continue;
@@ -333,6 +385,7 @@ class ControllerPagos extends Controller
                             'fecha' => now("America/Lima")->format("Y-m-d"),
                             'monto' => $monto,
                             'metodo_pago' => $tipos[$i] ?? null,
+                            'validado' => $tipos[$i] == "Efectivo" ? 'validado' : 'no',
                             'operacion_id' => $operacion->id,
                         ]);
                     }
@@ -383,6 +436,7 @@ class ControllerPagos extends Controller
                             'fecha' => now("America/Lima")->format("Y-m-d"),
                             'monto' => $pagoAplicado,
                             'metodo_pago' => $tipos[$i] ?? null,
+                            'validado' => 'validado',
                             'operacion_id' => $operacion->id,
                         ]);
 

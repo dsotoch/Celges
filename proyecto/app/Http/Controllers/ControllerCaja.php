@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Services\ServicioAbonoVenta;
 use App\Services\ServicioPagos;
-use App\Services\ServicioVenta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -63,7 +62,29 @@ class ControllerCaja extends Controller
             $pagosAgrupados[$metodo][$servicio] += $monto;
         }
 
-        return view("caja.index", compact("abonosPorMetodoCuenta", "pagosAgrupados"));
+        $abonosEfectivo = [];
+
+        if (isset($abonosPorMetodoCuenta['Efectivo'])) {
+            foreach ($abonos as $abono) {
+                if (($abono->metodo_pago ?? '') === 'Efectivo') {
+                    $abonosEfectivo[] = $abono;
+                }
+            }
+        }
+
+        // Obtener todos los pagos con método "Efectivo"
+        $pagosEfectivo = [];
+
+        if (isset($pagosAgrupados['Efectivo'])) {
+            foreach ($pagos as $pago) {
+                if (($pago->metodo_pago ?? '') === 'Efectivo') {
+                    $pago->nombre_persona = $pago->persona->nombres ?? 'Sin nombre';
+                    $pagosEfectivo[] = $pago;
+                }
+            }
+        }
+
+        return view("caja.index", compact("pagosEfectivo", "abonosEfectivo", "abonosPorMetodoCuenta", "pagosAgrupados"));
     }
 
     /**
@@ -78,7 +99,7 @@ class ControllerCaja extends Controller
 
         try {
             DB::table('configuraciones')->updateOrInsert(
-                ['id' => 1], 
+                ['id' => 1],
                 [
                     'numero1' => $request->telefono1,
                     'numero2' => $request->telefono2,

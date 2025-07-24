@@ -12,7 +12,8 @@ class Producto extends Model
         "marca",
         "modelo",
         "capacidad",
-        "persona_id"
+        "persona_id",
+        'sim'
     ];
     
     public function persona()
