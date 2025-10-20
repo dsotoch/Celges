@@ -417,7 +417,9 @@
                         <i class="fas fa-credit-card text-dark"></i> 
                         <strong>Método:</strong> ${abono.metodo_pago} <br>
                         <i class="fas fa-receipt text-secondary"></i> 
-                        <strong>N° Operacion:</strong> ${abono.operacion?.numero ?? 'N/A'}
+                        <strong>N° Operacion:</strong> ${abono.operacion?.numero ?? 'N/A'}<br>
+                        <span>🎫</span> 
+                        <strong>Cuenta Destino:</strong> ${abono.operacion?.cuenta?.banco ??''} ${abono.operacion?.cuenta?.tipo_cuenta??''} ${abono.operacion?.cuenta?.numero_cuenta ??''}
                     </div>
                     <span class="badge badge-pill badge-success">S/ ${parseFloat(abono.monto).toFixed(2)}</span>
                 </li>`;

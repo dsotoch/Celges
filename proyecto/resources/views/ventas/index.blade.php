@@ -64,9 +64,10 @@
             </div>
         </div>
         @hasanyrole('admin|vendedor')
-            <div class="d-flex"><button class="btn bg-orange boton" data-toggle="modal" data-target="#tablaModal">
-                    <i class="fas fa-plus-circle mr-2"></i> Generar Nueva venta
-                </button> </div>
+            <div class="d-flex"><a href="{{ route('cotizacion.index') }}">
+                    <button class="btn bg-orange boton">
+                        <i class="fas fa-plus-circle mr-2"></i> Generar Nueva venta
+                    </button></a> </div>
         @endhasanyrole
 
         <!---Modal Nueva Venta-->
@@ -304,7 +305,7 @@
                     <div class="overflow-auto">
 
 
-                        <div class="modal-content" id="mensajepadre">
+                        <div class="modal-content" id="mensajepadre" hidden>
                             <div class="modal-header bg-primary text-white">
                                 <h5 class="modal-title">Detalles Importantes</h5>
                                 <button type="button" class="close text-white"
@@ -348,14 +349,14 @@
                                             <br>
                                             <br>
                                             NÚMEROS DE CONTACTO:
-                                            <span>{{ $numeros['numero1'] }}</span><span>-{{ $numeros['numero2'] }}</span>
+                                            <span>{{ $numeros['numero1'] ?? '' }}</span><span>-{{ $numeros['numero2'] ?? '' }}</span>
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <th class="bg-blue-pad text-12 w-140px text-white ">CLIENTE</th>
-                                        <td class="bg-moke"><input type="text" id="cliente"
+                                        <td class="bg-moke"><input type="text" id="cliente" readonly
                                                 class="form-control no-border"><input type="hidden" id="id_cliente">
                                         </td>
                                         <th class="bg-blue-pad text-12 w-140px text-white">FECHA</th>
@@ -365,7 +366,7 @@
 
                                     <tr>
                                         <th class="bg-blue-pad text-12 w-140px text-white">DESTINO</th>
-                                        <td class="bg-moke"><input type="text" id="destino"
+                                        <td class="bg-moke"><input type="text" id="destino" readonly
                                                 class="form-control no-border"></td>
                                         <th class="bg-blue-pad text-12 w-140px text-white">DOCUMENTO</th>
                                         <td class="w-140px bg-moke" id="codigo">{{ $codigo }}</td>
@@ -405,7 +406,7 @@
 
                                     <tr>
                                         <td colspan="5">
-                                            <textarea class="form-control no-border auto-resize">
+                                            <textarea class="form-control no-border auto-resize" readonly>
 - Garantía de 6 meses en todos nuestros equipos, contada a partir de la fecha de compra.
                 </textarea>
                                         </td>
@@ -419,7 +420,7 @@
 
                                     <tr>
                                         <td colspan="5" class="text-12">
-                                            <textarea class="form-control no-border auto-resize">
+                                            <textarea class="form-control no-border auto-resize" readonly>
 - Cambio inmediato dentro de los 3 días siguientes a la compra, si el equipo está en su embalaje original.
                 </textarea>
                                         </td>
@@ -433,35 +434,35 @@
 
                                     <tr>
                                         <td colspan="5" class="text-12">
-                                            <textarea class="form-control no-border auto-resize">
+                                            <textarea class="form-control no-border auto-resize" readonly>
 - No se aceptan devoluciones de equipos.
                 </textarea>
                                         </td>
                                         <td class="text-12 bg-blue text-white">SALDO A FAVOR</td>
                                         <td class="bg-moke">
                                             <div class="montos text-12">S/
-                                                <input type="text" class="text-12" value="0.00" id="favor">
+                                                <input type="text" class="text-12" value="0.00" readonly id="favor">
                                             </div>
                                         </td>
                                     </tr>
 
                                     <tr>
                                         <td colspan="5" class="text-12">
-                                            <textarea class="form-control no-border auto-resize">
+                                            <textarea class="form-control no-border auto-resize" readonly>
 - No hacemos reintegro de dinero.
                 </textarea>
                                         </td>
                                         <td class="text-12 bg-blue text-white">SALDO PENDIENTE</td>
                                         <td class="bg-moke">
                                             <div class="montos text-12">S/
-                                                <input type="text" class="text-12" value="0.00" id="pendiente">
+                                                <input type="text" class="text-12" readonly value="0.00" id="pendiente">
                                             </div>
                                         </td>
                                     </tr>
 
                                     <tr>
                                         <td colspan="5" class="text-12">
-                                            <textarea class="form-control no-border auto-resize">
+                                            <textarea class="form-control no-border auto-resize" readonly>
 - Los precios pueden variar según disponibilidad de stock.
                 </textarea>
                                         </td>
@@ -478,7 +479,7 @@
                                         <td class="bg-moke">
                                             <div class="flex text-12 ">S/
                                                 <input type="text" class="text-12" value="0.00" id="totalregistro"
-                                                    readonly>
+                                                    >
                                             </div>
                                         </td>
                                     </tr>
@@ -503,22 +504,22 @@
                             <strong class=" text-danger text-12">IMPORTANTE: HORARIOS DE RECEPCION DE PEDIDOS Y
                                 PAGOS</strong>
 
-                            <textarea class="form-control no-border auto-resize mt-2">
+                            <textarea class="form-control no-border auto-resize mt-2" readonly>
 Para Asegurar una entrega rapida y eficiente a la empresa de carga, es importante tener en cuenta nuestros horarios de recepcion de pedidos y pagos:
                 </textarea>
-                            <textarea class="form-control no-border auto-resize">
+                            <textarea class="form-control no-border auto-resize" readonly>
 -Recepcion de pedidos: Desde las 10:00 am hasta las 05:30 pm
 
                 </textarea>
-                            <textarea class="form-control no-border auto-resize">
+                            <textarea class="form-control no-border auto-resize" readonly>
 -Pago de pedidos: Desde las 10:00 am hasta las 06:00 pm
 
                 </textarea>
-                            <textarea class="form-control no-border auto-resize">
+                            <textarea class="form-control no-border auto-resize" readonly>
 -Si tu pedido y  pago son  recibidos dentro de estos horarios, nos esforzaremos por enviar su pedido el mismo dia. De lo contrario, su pedido sera enviado el siguiente dia util.
 
                 </textarea>
-                            <textarea class="form-control no-border auto-resize mt-2">
+                            <textarea class="form-control no-border auto-resize mt-2" readonly>
 Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda o inquietud, no dude en contactarnos.
                 </textarea>
 
@@ -535,20 +536,23 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     <div class="card mt-4">
                         <div class="card-body d-flex justify-content-between align-items-center">
                             <!-- Utilidad -->
-                            <div>
-                                <strong class="text-success h5 mb-0">Utilidad: S/ <span
-                                        id="utilidad">0.00</span></strong>
-                            </div>
-
+                            <!-- <div>
+                                                                                                                                            <strong class="text-success h5 mb-0">Utilidad: S/ <span
+                                                                                                                                                    id="utilidad">0.00</span></strong>
+                                                                                                                                        </div>
+                                                                                                                                    -->
                             <!-- Botón Generar Venta -->
                             <div>
                                 <button class="btn " style="border: 1px solid black"
                                     onclick="$('#modalGenerar').modal('hide')" type="button">
                                     <i class="fas fa-times-circle"></i> Cancelar
                                 </button>
-                                <button class="btn btn-primary" id="btngenerarventa" type="button">
-                                    <i class="fas fa-check-circle"></i> Generar Venta
-                                </button>
+                                <a target="_blank" id="linkGenerarVenta" href="{{ route('ventas.pdf', ['id' => 0]) }}">
+                                    <button class="btn btn-primary" id="btngenerarventa" type="button">
+                                        <i class="fas fa-check-circle"></i> Generar Venta
+                                    </button>
+                                </a>
+
                             </div>
                         </div>
 
@@ -787,11 +791,13 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                                                         <!-- Botón Pago -->
                                                         @if ($vent->estado == 'Despachado')
-                                                            <button class="btn btn-primary"
-                                                                onclick="obtenerVenta('{{ $vent->id }}')"
-                                                                title="Imprimir Venta">
-                                                                <i class="fas fa-print"></i>
-                                                            </button>
+                                                            <a target="_blank"
+                                                                href="{{ route('ventas.pdf', ['id' => $vent->id]) }}">
+                                                                <button class="btn btn-primary" title="Imprimir Venta">
+                                                                    <i class="fas fa-print"></i>
+                                                                </button>
+                                                            </a>
+
                                                             <form
                                                                 action="{{ route('ventas.anular', ['id' => $vent->id]) }}"
                                                                 method="POST">
@@ -816,10 +822,17 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                                             title="Venta despachada"></i>
                                                                     </button>
                                                                 </form>
+                                                                <a target="_blank"
+                                                                    href="{{ route('ventas.pdf', ['id' => $vent->id]) }}">
+                                                                    <button class="btn btn-primary"
+                                                                        title="Imprimir Venta">
+                                                                        <i class="fas fa-print"></i>
+                                                                    </button>
+                                                                </a>
                                                                 <button class="btn btn-primary"
                                                                     onclick="obtenerVenta('{{ $vent->id }}')"
-                                                                    title="Imprimir Venta">
-                                                                    <i class="fas fa-print"></i>
+                                                                    title="Editar Venta">
+                                                                    <i class="fas fa-edit"></i>
                                                                 </button>
                                                             @else
                                                                 @if ($vent->estado != 'Pagado' && $vent->estado != 'Anulado' && $vent->estado != 'Deuda')
@@ -845,6 +858,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                                             <i class="fas fa-ban"></i>
                                                                         </button>
                                                                     </form>
+
+                                                                    <button class="btn btn-primary"
+                                                                        onclick="obtenerVenta('{{ $vent->id }}')"
+                                                                        title="Editar Venta">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </button>
                                                                 @endif
                                                                 @if ($vent->estado == 'Pagado' || $vent->estado == 'Deuda')
                                                                     <button id="btnCambiarEstado"
@@ -856,10 +875,17 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                                         <i class="fas fa-exchange-alt"></i>
                                                                     </button>
 
+                                                                    <a target="_blank"
+                                                                        href="{{ route('ventas.pdf', ['id' => $vent->id]) }}">
+                                                                        <button class="btn btn-primary"
+                                                                            title="Imprimir Venta">
+                                                                            <i class="fas fa-print"></i>
+                                                                        </button>
+                                                                    </a>
                                                                     <button class="btn btn-primary"
                                                                         onclick="obtenerVenta('{{ $vent->id }}')"
-                                                                        title="Imprimir Venta">
-                                                                        <i class="fas fa-print"></i>
+                                                                        title="Editar Venta">
+                                                                        <i class="fas fa-edit"></i>
                                                                     </button>
                                                                 @endif
                                                             @endif
@@ -898,7 +924,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
     <script>
         let cotizacionNumero = "";
         let totalventa = 0.00;
-
+        let idventaglobal = 0;
 
         function AnularVenta(event, codigoVenta) {
             event.preventDefault();
@@ -1355,12 +1381,26 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                         // Agregar a detalles de la venta
                         $("#detalles").append(`
-                    <tr>
-                        <td class="text-center">${cantidad}</td>
-                        <td class="text-center">${producto}</td>
-                        <td class="text-center">${precio.toFixed(2)}</td>
-                        <td class="text-center">${(precio * cantidad).toFixed(2)}</td>
-                    </tr>
+                         <tr>
+<td class="text-center tdcantidad">
+  <input type="number" class="canti text-center" data-id="${id}" value="${cantidad}">
+</td>
+        <td class="text-center">${producto}</td>
+        <td class="text-center">
+  <div class="inline-flex items-center gap-2">
+    <input class="costoregistro  text-center" data-nombre="${producto}" value="0" readonly />
+    <button class="btn-toggle" style="cursor:pointer;" ${registrado==1?'disabled':''} >✏️</button>
+  </div>
+</td>
+
+
+        <td class="text-center">${precio.toFixed(2)}</td>
+        <td class="text-center">${(cantidad * precio).toFixed(2)}</td>
+<td class="text-center" style="max-width: 20px; width: 20px; padding: 0;">
+  <button class="btn-eliminar" style="cursor:pointer;" data-id="${id}" data-nombre="${producto}">❌</button>
+</td>
+    </tr>
+                   
                 `);
 
 
@@ -1373,6 +1413,168 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 }
             });
         }
+        $("#detalles").on('keydown', '.canti', async function(e) {
+            if (e.key === "Enter" || e.keyCode === 13) {
+                e.preventDefault();
+                const $fila = $(this).closest("tr");
+                const id = $(this).data("id");
+                const ventaId = $(this).data("venta");
+                const ventaPadre = $(this).data("ventapadre");
+
+                const segundaColumna = $fila.find("td:eq(1) input");
+                const costoRegistro = $fila.find("td:eq(2) input");
+                const cst = costoRegistro.val();
+                const cantidad = $(this).val();
+                const $unitarioColumna = $fila.find("td:last").prev().prev();
+                const costo = parseFloat($unitarioColumna.text().trim()) || 0;
+                const subtotal = cantidad * costo;
+                const $ultimaColumna = $fila.find("td:last").prev();
+                if (!confirm(
+                        "¿Estás seguro de actualizar la cantidad?."
+                    )) {
+                    return;
+                }
+                const valor = parseFloat($ultimaColumna.text()) || 0;
+                if (cantidad > 0) {
+                    $ultimaColumna.text(subtotal.toFixed(2));
+                    if (await actualizarCantidad(id, ventaId, cantidad)) {
+                        await obtenerVenta(ventaPadre);
+                    }
+                } else {
+                    alert("⚠️ Cantidad Invalida");
+                }
+            }
+        });
+        window.document.addEventListener('click', async function(e) {
+            if (e.target.classList.contains('btn-eliminar')) {
+                const id = e.target.dataset.id;
+                const ventaId = e.target.dataset.venta;
+
+                const nombre = e.target.dataset.nombre;
+                if (confirm("¿Seguro de Eliminar el Producto?")) {
+                    if (eliminarProductodeBD(ventaId)) {
+                        e.target.closest('tr').remove();
+                        //await procesarLista(productos);
+                        await obtenerVenta(idventaglobal);
+                    } else {
+                        alert("⚠️ Ocurrió un error al eliminar el producto.");
+                    };
+                }
+
+
+
+            }
+        });
+
+        async function actualizarCantidad(id, ventaId, cantidad) {
+            try {
+                const url = `/ventas/actualizar-precios-producto/${ventaId}/${id}/${cantidad}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                return true;
+            } catch (error) {
+                return false;
+                console.error('Error al obtener los productos:', error);
+            }
+        }
+        async function eliminarProductodeBD(ventaId) {
+            try {
+                const url = `/ventas/eliminar-producto/${ventaId}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                return true;
+            } catch (error) {
+                return false;
+                console.error('Error al obtener los productos:', error);
+            }
+        }
+
+
+
+
+        async function procesarLista(productos) {
+            if (!productos || productos.length === 0) {
+                $("#mensaje_productos").hide().empty();
+                $("#imprimirMensaje").hide();
+                return;
+            }
+            await Promise.all(
+                productos.map(producto =>
+                    listarEnAlmacenInterno(
+                        producto.id,
+                        producto.color,
+                        producto.registrado,
+                        producto.cantidad,
+                        producto.nombre
+                    ).catch(error => {
+                        console.error(`⚠️ Error al procesar producto ${producto.id}:`, error);
+                    })
+                )
+            );
+
+        }
+        async function listarEnAlmacenInterno(producto_id, color, registrado, cantidad, nombre) {
+            let cuantos_almacen = 0;
+
+            $("#datos-productos tr").each(function() {
+                const dataset = this.dataset;
+
+                if (dataset.producto === nombre) {
+                    const cantidad = parseFloat(dataset.cantidad) || 0;
+                    cuantos_almacen += cantidad;
+                }
+            });
+            let diferencia = Number(cuantos_almacen);
+
+            if (Number(cantidad) > diferencia) {
+                let dif = Number(cantidad) - diferencia;
+                $("#mensaje_productos").removeClass("hidden").show();
+                $("#imprimirMensaje").removeClass("hidden").show();
+                $("#mensaje_productos").append(`
+    <p> Faltan ${dif} existencias para Despachar, para el producto ${nombre} </p>
+     <textarea class="autoexpand" rows="1" placeholder="Escribe una observación..."></textarea>
+    <hr>
+`);
+            } else {
+                $("#mensaje_productos").hide().empty();
+                $("#imprimirMensaje").hide();
+            }
+        }
+
+        function calcularsubtotal() {
+            let total = 0;
+
+            $("#detalles tr").each(function() {
+                let valorTexto = $(this).find("td").eq(4).text().trim();
+                let valor = parseFloat(valorTexto);
+                if (!isNaN(valor)) {
+                    total += valor;
+                }
+            });
+            let totalRegistro = 0.00;
+            $("#detalles tr").each(function() {
+                let valorTexto = $(this).find("td").eq(2).find("input").val().trim();
+                let valor = parseFloat(valorTexto);
+                if (!isNaN(valor)) {
+                    totalRegistro += valor;
+                }
+            });
+            $("#totalregistro").val(totalRegistro.toFixed(2));
+            const diferencia = total - totalRegistro;
+            $("#subtotal").val(diferencia.toFixed(2));
+            calcularTotal();
+        }
+
+
+
 
         async function obtenerProductosVenta(ventaId) {
             try {
@@ -1421,10 +1623,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         multiple size="5">
                     ${
                         item.almacen.map(prod => `
-                                                                                                                                                                                                                                            <option value="${prod.imei=="-"?prod.producto.id:prod.imei}">
-                                                                                                                                                                                                                                                ${prod.imei=="-"?prod.producto.marca +" "+ prod.producto.modelo:prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
-                                                                                                                                                                                                                                            </option>
-                                                                                                                                                                                                                                        `).join('')
+                                                                                                                                                                                                                                                                                                                                                                                                        <option value="${prod.imei=="-"?prod.producto.id:prod.imei}">
+                                                                                                                                                                                                                                                                                                                                                                                                            ${prod.imei=="-"?prod.producto.marca +" "+ prod.producto.modelo:prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
+                                                                                                                                                                                                                                                                                                                                                                                                        </option>
+                                                                                                                                                                                                                                                                                                                                                                                                    `).join('')
                     }
                 </select>
 
@@ -1479,59 +1681,62 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
         }
 
 
-
+        let productos = [];
 
         function obtenerVenta(id) {
             $("#btngenerarventa").html('<i class="fas fa-print"></i> Imprimir');
             $("#btngenerarventa").off("click");
-            $("#btngenerarventa").on("click", function(e) {
-                e.preventDefault();
-                $(this).prop("disabled", true); // ✅ ahora sí está bien
-                const cargando = $("<div>")
-                    .attr("id", "mensaje-cargando")
-                    .text("🖼️ Generando imagen, por favor espera...")
-                    .css({
-                        position: "fixed",
-                        top: "20px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        background: "#333",
-                        color: "#fff",
-                        padding: "10px 20px",
-                        borderRadius: "8px",
-                        zIndex: 9999,
-                        fontSize: "16px",
-                    });
+            let link = document.getElementById('linkGenerarVenta');
 
-                $("body").append(cargando);
-                const codigo = $("#codigo").text();
-                prepararParaCaptura();
-                html2canvas(document.getElementById('miDiv'), {
-                    scale: 3
-                }).then(function(canvas) {
-                    const imgData = canvas.toDataURL('image/png');
+            link.href = "{{ route('ventas.pdf', ['id' => ':id']) }}".replace(':id', id);
+            /* $("#btngenerarventa").on("click", function(e) {
+                            e.preventDefault();
+                            $(this).prop("disabled", true); // ✅ ahora sí está bien
+                            const cargando = $("<div>")
+                                .attr("id", "mensaje-cargando")
+                                .text("🖼️ Generando imagen, por favor espera...")
+                                .css({
+                                    position: "fixed",
+                                    top: "20px",
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    background: "#333",
+                                    color: "#fff",
+                                    padding: "10px 20px",
+                                    borderRadius: "8px",
+                                    zIndex: 9999,
+                                    fontSize: "16px",
+                                });
 
-                    const contenidoOriginal = document.body.innerHTML;
+                            $("body").append(cargando);
+                            const codigo = $("#codigo").text();
+                            prepararParaCaptura();
+                            html2canvas(document.getElementById('miDiv'), {
+                                scale: 3
+                            }).then(function(canvas) {
+                                const imgData = canvas.toDataURL('image/png');
 
-                    document.body.innerHTML = `<img id="captura" src="${imgData}" style="width:100%;">`;
+                                const contenidoOriginal = document.body.innerHTML;
 
-                    const imagen = document.getElementById('captura');
-                    imagen.onload = function() {
-                        setTimeout(() => {
-                            window.print();
+                                document.body.innerHTML = `<img id="captura" src="${imgData}" style="width:100%;">`;
 
-                            // Opcional: restaurar contenido original después de imprimir
-                            setTimeout(() => {
-                                document.body.innerHTML = contenidoOriginal;
-                            }, 1000);
-                        }, 300);
-                    };
-                });
+                                const imagen = document.getElementById('captura');
+                                imagen.onload = function() {
+                                    setTimeout(() => {
+                                        window.print();
+
+                                        // Opcional: restaurar contenido original después de imprimir
+                                        setTimeout(() => {
+                                            document.body.innerHTML = contenidoOriginal;
+                                        }, 1000);
+                                    }, 300);
+                                };
+                            });
 
 
 
-            });
-
+                        });
+            */
             function quitarCincoCerosFinal(numero) {
                 let str = numero.toString();
                 if (str.endsWith("00000")) {
@@ -1563,8 +1768,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                     $("#facturacion").html('');
                     $("#utlidad").html('');
-                    $("#codigo").html(''),
-                        console.log(respuesta.data);
+                    $("#codigo").html('');
                     let total_utilidades = 0;
                     // Llenar datos principales
                     $("#cliente").val(respuesta.data.cliente.nombres);
@@ -1577,13 +1781,18 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     $("#favor").val(Number(respuesta.data.saldo_a_favor).toFixed(2));
                     $("#pendiente").val(Number(respuesta.data.saldo_pendiente).toFixed(2));
                     $("#facturacion").val(Number(respuesta.data.comision_facturacion).toFixed(2));
-                    $("#utilidad").html(Number(respuesta.data.utilidad).toFixed(2));
+                    //$("#utilidad").html(Number(respuesta.data.utilidad).toFixed(2));
                     $("#codigo").html(respuesta.data.codigo);
                     $("#totalregistro").val(Number(respuesta.data.totalregistro).toFixed(2));
 
+                    const ventaPadre = respuesta.data.id;
+                    idventaglobal = ventaPadre;
                     // Iterar productos
                     respuesta.data.detalles.forEach(element => {
                         const cantidad = parseInt(element.cantidad);
+                        const id = element.producto.id;
+                        const ventaId = element.id;
+
                         const producto = element.producto.modelo + " " +
                             element.producto.marca + " " +
                             element.producto.capacidad + " " +
@@ -1595,13 +1804,28 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                             0); // si no hay, será 0
 
                         $("#detalles").append(`
-                    <tr>
-                        <td class="text-center">${cantidad}</td>
-                        <td class="text-center">${producto}</td>
-                        <td class="text-center">${precio_compra.toFixed(2)}</td>
-                        <td class="text-center">${(precio_compra * cantidad).toFixed(2)}</td>
-                    </tr>
+                        <tr>
+<td class="text-center tdcantidad">
+  <input type="number" class="canti text-center" data-id="${id}" data-venta="${ventaId}"   data-ventaPadre="${ventaPadre}"   value="${cantidad}">
+</td>
+        <td class="text-center">${producto}</td>
+    
+</td>
+
+
+        <td class="text-center">${precio_compra.toFixed(2)}</td>
+        <td class="text-center">${(cantidad * precio_compra).toFixed(2)}</td>
+<td class="text-center" style="max-width: 20px; width: 20px; padding: 0;">
+  <button class="btn-eliminar" style="cursor:pointer;" data-id="${id}" data-venta="${ventaId}" data-nombre="${producto}">❌</button>
+</td>
+    </tr>
+                 
                 `);
+
+
+                        agregarProducto(id, cantidad, precio_compra, element.registrado, element.color,
+                            producto);
+
                         const abonos = respuesta.data.abonos; // Array de objetos de abono
 
                         // Construye las filas dinámicamente
@@ -1672,6 +1896,20 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             });
         }
 
+        function agregarProducto(id, cantidad, precio, registrado, color, nombre) {
+            // Crear un objeto producto
+            let item = {
+                id: id,
+                cantidad: parseInt(cantidad),
+                color: color,
+                precio: parseFloat(precio),
+                registrado: parseInt(registrado),
+                nombre: nombre
+            };
+
+            // Agregarlo al arreglo
+            productos.push(item);
+        }
         document.getElementById('btnConfirmarVenta').addEventListener('click', function(event) {
             const selects = document.querySelectorAll('.select-imeis');
             let validado = true;
@@ -1739,8 +1977,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             }, 3000);
         }
         // Aplica el evento Enter a todos los campos
-        ["#envio", "#encomienda", "#favor", "#pendiente", "#facturacion"].forEach(selector => {
-            $(selector).on('keydown', function(e) {
+        ["#envio", "#encomienda", "#favor", "#pendiente", "#facturacion", "#totalregistro"].forEach(selector => {
+            $(selector).on('keydown', async function(e) {
                 if (e.key === "Enter") {
                     e.preventDefault();
 
@@ -1750,15 +1988,35 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     if (selector === "#facturacion") {
                         let subtotal = parseFloat($("#subtotal").val()) || 0;
                         valor = (valor / 100) * subtotal;
-                        $(this).val(valor.toFixed(2)); // Reemplazamos con el monto calculado
+                        $(this).val(valor.toFixed(2));
                     } else {
                         $(this).val(valor.toFixed(2)); // Redondeamos a 2 decimales
                     }
 
-                    calcularTotal();
+                    await actualizarCantidadDetalles(idventaglobal, selector, valor);
+                    await obtenerVenta(idventaglobal);
                 }
             });
         });
+
+
+        async function actualizarCantidadDetalles(id, ventaId, cantidad) {
+     
+            try {
+                const campo = ventaId.replace("#", "");
+                const url = `/ventas/actualizar-precios-productoinput/${id}/${campo}/${cantidad}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                return true;
+            } catch (error) {
+                return false;
+                console.error('Error al obtener los productos:', error);
+            }
+        }
 
         function cambiarEstadoImpreso() {
 
@@ -1776,6 +2034,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
             $("#total").val(total.toFixed(2));
         }
+        /*
         if ($("#id_cliente").val() == "") {
             $("#cliente").on("focus", function() {
                 $('#modalProveedor').appendTo('body').modal({
@@ -1788,6 +2047,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
         } else {
             $("#cliente").prop("readonly", true);
         }
+            */
 
         $("#nombres").on("keyup", function() {
             let valor = $(this).val().toUpperCase();
@@ -1801,56 +2061,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             location.reload();
 
         };
-        $("#generar-imagen").on("click", async function() {
-            if (!confirm(
-                    "¿Estás seguro de generar la imagen? La cotización se guardará automáticamente al continuar."
-                )) {
-                return;
-            }
 
-            // Mostrar mensaje de carga
-            const cargando = $("<div>")
-                .attr("id", "mensaje-cargando")
-                .text("🖼️ Generando imagen, por favor espera...")
-                .css({
-                    position: "fixed",
-                    top: "20px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    background: "#333",
-                    color: "#fff",
-                    padding: "10px 20px",
-                    borderRadius: "8px",
-                    zIndex: 9999,
-                    fontSize: "16px",
-                });
-
-            $("body").append(cargando);
-
-            const codigo = $("#codigo").text();
-
-            // Verifica si guardarCotizacion retorna false
-            if (await guardarCotizacion() === false) {
-                $("#mensaje-cargando").remove();
-                return;
-            }
-
-            prepararParaCaptura();
-
-            html2canvas(document.getElementById('miDiv'), {
-                scale: 3
-            }).then(function(canvas) {
-                let imgData = canvas.toDataURL('image/png');
-                let link = document.createElement('a');
-                link.download = 'cotizacion_' + codigo + '.png';
-                link.href = imgData;
-                link.click();
-
-                $("#mensaje-cargando").remove();
-                alert("✅ Imagen Generada y Cotización guardada Correctamente.");
-                location.reload();
-            });
-        });
 
         async function guardarCotizacion() {
             let respuesta = false;

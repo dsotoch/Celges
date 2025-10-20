@@ -52,7 +52,7 @@
                                                 </button>
                                                 <form action="{{ route('usuarios.destroy', $usuario) }}" method="POST"
                                                     class="d-inline">
-                                                    @csrf 
+                                                    @csrf
                                                     @method('DELETE')
                                                     <button class="btn btn-sm btn-danger"
                                                         onclick="return confirm('¿Eliminar usuario?')">
@@ -73,9 +73,15 @@
                     <div class="card mb-3">
                         <div class="card-header bg-primary text-white">Agregar/Editar Usuario</div>
                         <div class="card-body">
-                            <form method="POST" id="formUsuario" action="{{ route('usuarios.store') }}">
+                            <form method="POST" id="formUsuario" action="{{ route('usuarios.store') }}" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="id" id="usuario_id">
+                                <div class="form-group mb-2">
+                                    <label for="foto"><strong>Foto</strong></label>
+                                    <input type="file" class="form-control" name="foto" id="foto" 
+                                        accept="image/*">
+                                </div>
+
                                 <div class="mb-2">
                                     <label>Nombre</label>
                                     <input type="text" class="form-control" name="name" id="name" required>
@@ -90,12 +96,13 @@
                                         <option value="">Seleccione</option>
                                         <option value="admin">Admin</option>
                                         <option value="vendedor">Vendedor</option>
-                                        <option value="almacenero">Almacenero</option>
+                                        <option value="almacenero">Almacenero </option>
+
                                     </select>
                                 </div>
                                 <div class="mb-2">
                                     <label>Contraseña</label>
-                                    <input type="password" class="form-control" name="password" >
+                                    <input type="password" class="form-control" name="password">
                                 </div>
                                 <button type="submit" class="btn bg-orange">Guardar</button>
                             </form>
@@ -106,34 +113,32 @@
             </div>
         </div>
         <div class="col-md-12">
-            
+
             @foreach ($roles as $rol)
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-            <strong>{{ ucfirst($rol->name) }}</strong>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                @foreach ($permisos as $permiso)
-                    @if ($rol->hasPermissionTo($permiso->name))
-                        <div class="col-md-4 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       id="permiso_{{ $rol->id }}_{{ $permiso->id }}"
-                                       checked
-                                       disabled>
-                                <label class="form-check-label" for="permiso_{{ $rol->id }}_{{ $permiso->id }}">
-                                    {{ $permiso->name }}
-                                </label>
-                            </div>
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <strong>{{ ucfirst($rol->name) }}</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach ($permisos as $permiso)
+                                @if ($rol->hasPermissionTo($permiso->name))
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                id="permiso_{{ $rol->id }}_{{ $permiso->id }}" checked disabled>
+                                            <label class="form-check-label"
+                                                for="permiso_{{ $rol->id }}_{{ $permiso->id }}">
+                                                {{ $permiso->name }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
                         </div>
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    </div>
-@endforeach
+                    </div>
+                </div>
+            @endforeach
 
         </div>
 

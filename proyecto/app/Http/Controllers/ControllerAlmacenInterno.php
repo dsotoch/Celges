@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AlmacenInterno;
 use App\Services\ServicioAlmacenInterno;
 use App\Services\ServicioVenta;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class ControllerAlmacenInterno extends Controller
@@ -19,17 +20,27 @@ class ControllerAlmacenInterno extends Controller
 
         $ids = $request->input('id');
         $precios = $request->input('precio');
+        $colores = $request->input("color");
 
         foreach ($ids as $index => $id) {
             $precioLimpio = floatval(str_replace(',', '', $precios[$index]));
+            $color = $colores[$index];
 
-            $servicioAlmacen->actualizar($id, [
-                'precio_compra' => $precioLimpio
-            ]);
+            $data = [
+                'precio_compra' => $precioLimpio,
+            ];
+
+            // Solo agregar 'color' si cumple la condición
+            if (!empty($color) && $color !== '-') {
+                $data['color'] = $color;
+            }
+
+            $servicioAlmacen->actualizar($id, $data);
         }
 
         return redirect()->back()->with('success', 'Precios actualizados correctamente.');
     }
+
     public function index()
     {
         $servicio = new ServicioAlmacenInterno();
@@ -41,6 +52,21 @@ class ControllerAlmacenInterno extends Controller
     /**
      * Show the form for creating a new resource.
      */
+
+    public function exportarPDF()
+    {
+        $almaceninterno = AlmacenInterno::with('producto')->get();
+
+        $agrupados = collect($almaceninterno)->groupBy(function ($item) {
+            return $item->producto_id . '-' . strtolower($item->color) . '-' . ($item->registrado ? '1' : '0');
+        });
+
+        $pdf = Pdf::loadView('pdf.almacen', compact('agrupados'))
+            ->setPaper('a4', 'landscape');
+
+        // Descargar directamente
+        return $pdf->download('inventario.pdf');
+    }
     public function listarProductosPorId($id)
     {
         $servicioVenta = new ServicioVenta();

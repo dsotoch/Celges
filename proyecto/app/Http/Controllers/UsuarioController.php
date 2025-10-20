@@ -34,8 +34,9 @@ class UsuarioController extends Controller
         ]);
 
         $credentials = $request->only('email', 'password');
+        $remember = $request->has('remember');
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
             // Redireccionar según el rol
@@ -44,14 +45,15 @@ class UsuarioController extends Controller
             } elseif (Auth::user()->hasRole('vendedor')) {
                 return redirect()->route('ventas.index');
             } elseif (Auth::user()->hasRole('almacenero')) {
-                return redirect()->route('productos.index');
+                return redirect()->route('almaceninterno.index');
             } else {
-                return redirect()->route('home');
+                return redirect()->route('almaceninterno.index');
             }
         }
 
         return back()->with('error', 'Credenciales incorrectas.');
     }
+
     public function logout(Request $request)
     {
         Auth::logout(); // Cierra la sesión del usuario
@@ -62,49 +64,61 @@ class UsuarioController extends Controller
         return redirect()->route('login')->with('success', '✅ Sesión cerrada correctamente.');
     }
     public function store(Request $request)
-    {
-        // Verifica si ya existe un usuario con ese email
-        $userExistente = User::where("email", $request->email)->first();
+{
+    // Verifica si ya existe un usuario con ese email
+    $userExistente = User::where("email", $request->email)->first();
 
-        if ($userExistente) {
-            // Si se está actualizando, permitir si el email pertenece al mismo usuario
-            if (!$request->id || $userExistente->id != $request->id) {
-                return redirect()->back()->withErrors(['error' => '🔴 El Email ya se encuentra registrado.']);
-            }
+    if ($userExistente) {
+        if (!$request->id || $userExistente->id != $request->id) {
+            return redirect()->back()->withErrors(['error' => '🔴 El Email ya se encuentra registrado.']);
         }
-
-        if ($request->id) {
-            // ACTUALIZAR
-            $user = User::findOrFail($request->id);
-            $user->name = $request->name;
-            $user->email = $request->email;
-
-            if ($request->filled('password')) {
-                $user->password = bcrypt($request->password);
-            }
-
-            $user->rol = $request->role;
-            $user->save();
-
-            // Sincroniza roles (quita los anteriores y asigna el nuevo)
-            $user->syncRoles([$request->role]);
-        } else {
-            if (!$request->filled('password')) {
-                return redirect()->back()->withErrors(['error' => '🔴 Ingresa Una Contraseña.']);
-            }
-
-            // CREAR
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                "rol" => $request->role
-            ]);
-
-            // Asigna el rol
-            $user->assignRole($request->role);
-        }
-
-        return redirect()->back()->with('success', '✅ Usuario guardado correctamente.');
     }
+
+    // Procesar imagen si se ha subido
+    $ruta = null;
+    if ($request->hasFile('foto')) {
+        $archivo = $request->file('foto');
+        $nombreFoto = time() . '_' . $archivo->getClientOriginalName();
+        $ruta = $archivo->storeAs('usuarios', $nombreFoto, 'public'); // Ruta relativa a storage/app/public
+    }
+
+    if ($request->id) {
+        // ACTUALIZAR
+        $user = User::findOrFail($request->id);
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->password);
+        }
+
+        $user->rol = $request->role;
+
+        if ($ruta) {
+            $user->foto = $ruta;
+        }
+
+        $user->save();
+        $user->syncRoles([$request->role]);
+
+    } else {
+        // CREAR
+        if (!$request->filled('password')) {
+            return redirect()->back()->withErrors(['error' => '🔴 Ingresa Una Contraseña.']);
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'rol' => $request->role,
+            'foto' => $ruta,
+        ]);
+
+        $user->assignRole($request->role);
+    }
+
+    return redirect()->back()->with('success', '✅ Usuario guardado correctamente.');
+}
+
 }

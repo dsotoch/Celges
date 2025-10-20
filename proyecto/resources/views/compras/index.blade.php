@@ -46,6 +46,7 @@
                     </button>
                 </div>
 
+
                 <!---Inicio Modal registrar recurso--->
                 <div class="modal fade" id="modalCompra" tabindex="-1" role="dialog" aria-labelledby="modalCompraLabel"
                     aria-hidden="true">
@@ -640,6 +641,15 @@
                 <!--Fin Modal editar producto -->
 
             </div>
+            <div class="col-12 text-center mt-3">
+                <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                    <input type="search" id="input_imei" class="form-control w-auto" placeholder="Ingrese el imei...">
+                    <button class="btn btn-primary rounded" id="buscar">
+                        <i class="fas fa-plus-circle mr-1"></i>
+                        Buscar
+                    </button>
+                </div>
+            </div>
             <div class="card-body">
                 @if (session('success-delete'))
                     <div class="alert alert-success mb-4 msj">
@@ -682,6 +692,10 @@
                                                         style="width: 54.6406px;">N° Documento</th>
                                                     <th class="sorting" tabindex="0" aria-controls="order-listing"
                                                         rowspan="1" colspan="1"
+                                                        aria-label="Ship to: activate to sort column ascending"
+                                                        style="width: 54.6406px;">Proveedor</th>
+                                                    <th class="sorting" tabindex="0" aria-controls="order-listing"
+                                                        rowspan="1" colspan="1"
                                                         aria-label="Base Price: activate to sort column ascending"
                                                         style="width: 77.5156px;">Fecha Compra</th>
                                                     <th class="sorting" tabindex="0" aria-controls="order-listing"
@@ -700,6 +714,8 @@
                                                     <tr role="row" class="{{ $loop->odd ? 'odd' : 'even' }}">
                                                         <td class="sorting_1">{{ $item->numero }}</td>
                                                         <td>{{ $item->numero_documento }}</td>
+                                                        <td>{{ $item->persona->nombres }}</td>
+
                                                         <td>{{ $item->fecha_compra }}</td>
                                                         <td>{{ $item->total }}</td>
                                                         <td class="d-flex gap-2 align-items-center">
@@ -757,6 +773,95 @@
         </div>
 
     </div>
+    <div id="modalResultado" class="modal"
+        style="
+    display:none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+">
+        <div class="modal-content"
+            style="
+        background-color: #fff;
+        margin: 5% auto;
+        padding: 20px 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 450px;
+        max-height: 80vh;              /* 🔹 límite de altura */
+        overflow-y: auto;              /* 🔹 scroll vertical interno */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: aparecer 0.3s ease-out;
+    ">
+            <span id="cerrarModal" class="cerrar"
+                style="
+            color: #888;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        ">&times;</span>
+
+            <h5
+                style="
+            text-align: center;
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007BFF;
+            padding-bottom: 8px;
+        ">
+                Resultado de búsqueda</h5>
+
+            <div id="resultado"
+                style="
+            font-size: 15px;
+            color: #333;
+            line-height: 1.6;
+            overflow-wrap: break-word;
+        ">
+                <!-- Aquí se mostrará el resultado -->
+            </div>
+        </div>
+
+        <style>
+            @keyframes aparecer {
+                from {
+                    transform: translateY(-30px);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .cerrar:hover {
+                color: #007BFF !important;
+            }
+
+            /* 🔹 Scroll bonito */
+            .modal-content::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .modal-content::-webkit-scrollbar-thumb {
+                background: #007BFF;
+                border-radius: 10px;
+            }
+
+            .modal-content::-webkit-scrollbar-thumb:hover {
+                background: #0056b3;
+            }
+        </style>
+    </div>
 @endsection
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
@@ -777,6 +882,69 @@
     @endif
 
     <script>
+        document.getElementById('buscar').addEventListener('click', async () => {
+            const imei = document.getElementById('input_imei').value.trim();
+            const resultadoDiv = document.getElementById('resultado');
+            const modal = document.getElementById('modalResultado');
+
+            if (!imei) {
+                alert('Por favor, ingrese un IMEI.');
+                return;
+            }
+
+            resultadoDiv.innerHTML = 'Buscando...';
+            modal.style.display = 'flex';
+
+            try {
+                const response = await fetch(`/compras/buscar/${encodeURIComponent(imei)}`);
+                if (!response.ok) throw new Error('Error al obtener los datos');
+
+                const data = await response.json();
+
+                // Aquí puedes personalizar cómo se muestra el resultado
+                if (data && data.data) {
+                    const detalle = data.data;
+                    const compra = detalle.compra;
+                    const persona = compra ? compra.persona : null;
+
+                    resultadoDiv.innerHTML = `
+        <h6>📱 Detalle del Producto</h6>
+        <p><strong>IMEI:</strong> ${detalle.imei}</p>
+        <p><strong>Color:</strong> ${detalle.color}</p>
+        <p><strong>Precio:</strong> S/ ${detalle.precio}</p>
+        <p><strong>Cantidad:</strong> ${detalle.cantidad}</p>
+        <hr>
+        <h6>🧾 Detalle de la Compra</h6>
+        <p><strong>N° Compra:</strong> ${compra.numero}</p>
+        <p><strong>Tipo:</strong> ${compra.tipo_compra}</p>
+        <p><strong>Fecha:</strong> ${compra.fecha_compra}</p>
+        <p><strong>Documento:</strong> ${compra.tipo_documento} - ${compra.numero_documento}</p>
+        <p><strong>Estado:</strong> ${compra.estado}</p>
+        <hr>
+        <h6>👤 Proveedor</h6>
+        <p><strong>Nombre:</strong> ${persona ? persona.nombres : 'Sin datos'}</p>
+        <p><strong>Teléfono:</strong> ${persona ? persona.telefono : '-'}</p>
+        <p><strong>Dirección:</strong> ${persona ? persona.direccion : '-'}</p>
+    `;
+                } else {
+                    resultadoDiv.innerHTML = `<p>No se encontraron resultados para este IMEI.</p>`;
+                }
+            } catch (error) {
+                resultadoDiv.innerHTML = '<p style="color:red;">Ocurrió un error en la búsqueda.</p>';
+                console.error(error);
+            }
+        });
+
+        // Cerrar modal al hacer clic en la “x” o fuera del contenido
+        document.getElementById('cerrarModal').addEventListener('click', () => {
+            document.getElementById('modalResultado').style.display = 'none';
+        });
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modalResultado');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+
         $("#tipo_compra").on("change", function() {
             const valor = $(this).val();
             console.log(valor);
@@ -946,7 +1114,11 @@
             allowEmptyOption: true
         });
         document.getElementById('imei').addEventListener('input', function() {
-            $("#btnagregar").click();
+            const imei = this.value.trim();
+
+            if (imei.length === 15) {
+                $("#btnagregar").click();
+            }
         });
         $("#producto_id").on("change", function() {
             const tipo = $('#producto_id option:selected').data('tipo')?.toString().toUpperCase();
@@ -963,16 +1135,16 @@
                 if (sim === "si") {
                     $("#cantidad").prop("readonly", true);
                     $("#imei").prop("readonly", false);
-                                $("#imei").val("");
-            $("#imei").focus();
+                    $("#imei").val("");
+                    $("#imei").focus();
 
                 }
             } else if (tipo === "CELULAR") {
-                            $("#imei").val("");
+                $("#imei").val("");
 
                 $("#cantidad").prop("readonly", true);
                 $("#imei").prop("readonly", false);
-                            $("#imei").focus();
+                $("#imei").focus();
 
             }
         });
@@ -1026,9 +1198,24 @@
         }
 
         function eliminarItem(imeiBuscado) {
-            detallesProductos = detallesProductos.filter(item => item.imei !== imeiBuscado);
-            actualizarListaVisual();
+            const itemEncontrado = detallesProductos.find(item => item.imei === imeiBuscado);
+
+            if (itemEncontrado) {
+                const subtotal = parseFloat(itemEncontrado.precio) * parseInt(itemEncontrado.cantidad);
+                total_compra -= subtotal;
+
+                // Evita que se asigne NaN
+                if (isNaN(total_compra)) total_compra = 0;
+
+                $("#total").val(total_compra.toFixed(2));
+
+                // Eliminar el item
+                detallesProductos = detallesProductos.filter(item => item.imei !== imeiBuscado);
+
+                actualizarListaVisual();
+            }
         }
+
 
         function actualizarListaVisual() {
             $('#detalles_productos').empty();

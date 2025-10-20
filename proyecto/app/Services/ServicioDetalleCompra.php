@@ -18,7 +18,25 @@ class ServicioDetalleCompra
     {
         return DetalleCompra::with(['producto', 'compra'])->where("compra_id", $id)->get();
     }
-
+    public function eliminarYGuardar(Collection $almacen, string $compraId)
+    {
+        try {
+            DetalleCompra::where("compra_id", $compraId)->delete();
+            foreach ($almacen as $almc) {
+                $this->crear([
+                    "producto_id"   => $almc->producto_id,
+                    "compra_id"     => $compraId,
+                    "imei"          => $almc->imei ?? "-",
+                    "color"         => $almc->color ?? "-",
+                    "precio"         =>    $almc->precio_compra ?? 0,
+                    "cantidad"      => $almc->cantidad ?? 1,
+                    "registrado"    => $almc->registrado ?? 0,
+                ]);
+            }
+        } catch (\Throwable $th) {
+            throw new \Exception("Error al eliminar y guardar: " . $th->getMessage());
+        }
+    }
     public function crear(array $data): DetalleCompra
     {
         try {

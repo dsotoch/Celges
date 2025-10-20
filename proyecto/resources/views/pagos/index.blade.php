@@ -45,249 +45,108 @@
                             <a class="nav-link" id="gastos-tab" data-toggle="tab" href="#gastos" role="tab">Gastos
                                 Fijos</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="gastos-tab-otros" data-toggle="tab" href="#otros" role="tab">Otros
+                                Gastos</a>
+                        </li>
                     </ul>
 
-                    <div class="tab-content pt-3" id="myTabContent">
-                        <!-- Proveedores -->
-                        <div class="tab-pane fade show active" id="proveedores" role="tabpanel">
-                            <table class="table table-bordered datatable">
-                                <thead>
-                                    <tr>
-                                        <th>Proveedor</th>
-                                        <th>Monto Total</th>
-                                        <th>Pagado</th>
-                                        <th>Pendiente</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    <div class="tab-pane fade show active" id="proveedores" role="tabpanel">
+                        <div class="accordion" id="proveedoresAccordion">
+                            @php
+                                $proveedores = $compras->groupBy('persona.id');
+                            @endphp
 
-                                    @forelse ($compras as $compra)
-                                        <tr>
-                                            <td>{{ $compra->persona->nombres }}</td>
-                                            <td>{{ number_format($compra->total, 2) }}</td>
-                                            <td>{{ number_format($pagos[$compra->id]->sum('monto_pagado'), 2) }}</td>
-                                            <td>{{ number_format($compra->total - $pagos[$compra->id]->sum('monto_pagado'), 2) }}
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-success btnregistrarpago" title="Pagar"
-                                                    data-toggle="modal" data-target="#registroPagoModal"
-                                                    data-id="{{ $compra->id }}" data-cliente="{{ $compra->persona->id }}"
-                                                    data-total="{{ $compra->total - $pagos[$compra->id]->sum('monto_pagado') }}">
-                                                    <i class="fas fa-money-bill-wave"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted">No hay Deudas Pendientes.
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                            @forelse ($proveedores as $idProveedor => $comprasProveedor)
+                                @php
+                                    $proveedor = $comprasProveedor->first()->persona;
+                                    $totalProveedor = $comprasProveedor->sum('total');
+                                    $totalPagado = $comprasProveedor->sum(
+                                        fn($c) => $pagos[$c->id]->sum('monto_pagado'),
+                                    );
+                                    $saldo = $totalProveedor - $totalPagado;
+                                @endphp
 
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- Modal  registrar Pago -->
-                        <div class="modal fade " id="registroPagoModal" tabindex="-1" role="dialog"
-                            aria-labelledby="modalLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-
-                                <div class="modal-content">
-                                    <div class="modal-header bg-orange text-white">
-                                        <h5 class="modal-title" id="modalLabel"><i
-                                                class="fas fa-money-check-alt mr-2"></i>Registrar
-                                            Pagos. Total: <span id="n_ventapago"></span></h5>
-                                        <button type="button" class="close text-white" data-dismiss="modal"
-                                            aria-label="Cerrar">
-                                            <span aria-hidden="true" class="text-white">&times;</span>
-                                        </button>
-                                    </div>
-                                    <form action="{{ route('pagos.create') }}" method="post">
-                                        @csrf
-                                        <input type="hidden" name="cliente_id" id="cliente_id">
-                                        <input type="hidden" name="compra_id" id="compra_id">
-
-                                        <div class="modal-body">
-
-                                            <!-- Método de Pago -->
-                                            <div class="form-group metodo_pago">
-                                                <label for="metodo_pago"><i
-                                                        class="fas fa-credit-card mr-1 text-black"></i>Método
-                                                    de Pago</label>
-                                                <select class="form-control" id="metodo_pago">
-                                                    <option value="">Seleccione un método</option>
-                                                    <option value="Transferencia">Transferencia</option>
-
-                                                    <option value="Efectivo">Efectivo</option>
-                                                </select>
-                                            </div>
-                                            <!-- Banco -->
-                                            <div class="form-group oculto banco">
-                                                <label for="banco"><i
-                                                        class="fas fa-university mr-1 text-black"></i>Banco</label>
-                                                <select class="form-control" id="banco">
-                                                    <option value="">Seleccione un banco</option>
-                                                    @foreach ($cuentasbancos as $item)
-                                                        <option value="{{ $item->id }}">
-                                                            {{ $item->banco }}--{{ $item->tipo_cuenta }}--{{ $item->moneda }}--{{ $item->titular }}
-                                                        </option>
-                                                    @endforeach
-
-                                                </select>
-                                            </div>
-
-                                            <!-- N° de Operación -->
-                                            <div class="form-group oculto operacion">
-                                                <label for="numero_operacion"><i
-                                                        class="fas fa-receipt mr-1 text-black"></i>N° de
-                                                    Operación</label>
-                                                <input type="text" class="form-control" id="numero_operacion">
-                                            </div>
-
-                                            <!-- Monto -->
-                                            <div class="form-group oculto monto">
-                                                <label for="monto"><i class="fas fa-coins mr-1 text-black"></i>Monto
-                                                    (S/)</label>
-                                                <input type="number" step="0.01" class="form-control" name="monto"
-                                                    id="monto">
-                                            </div>
-
-                                            <hr>
-                                            <div class="oculto detallespagos">
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <h5 class="mb-0">💳 Detalles de Pago</h5>
-                                                    <button class="btn btn-primary" type="button"
-                                                        id="btnagregarPago">Agregar</button>
-                                                </div>
-
-                                                <div class="card" id="cuerpopagos">
-
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button type="submit" class="btn btn-success"
-                                                onclick="return GuardarPagos(event);">
-                                                <i class="fas fa-save mr-1"></i>Guardar
+                                <div class="card mb-2">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">
+                                            <button class="btn btn-link text-left toggle-collapse" type="button"
+                                                data-target="collapseProveedor{{ $idProveedor }}">
+                                                {{ $proveedor->nombres }}
                                             </button>
+                                        </h5>
+                                        <div>
+                                            <span class="badge badge-info">Total: S/
+                                                {{ number_format($totalProveedor, 2) }}</span>
+                                            <span class="badge badge-success">Pagado: S/
+                                                {{ number_format($totalPagado, 2) }}</span>
+                                            <span class="badge badge-warning">Saldo: S/
+                                                {{ number_format($saldo, 2) }}</span>
                                         </div>
-                                    </form>
-                                </div>
+                                    </div>
 
-                            </div>
+                                    <div id="collapseProveedor{{ $idProveedor }}" class="collapse-panel"
+                                        style="display: none;">
+                                        <div class="card-body">
+                                            <table class="table table-sm table-bordered mb-0">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>Compra</th>
+                                                        <th>Producto</th>
+                                                        <th>Total</th>
+                                                        <th>Pagado</th>
+                                                        <th>Saldo</th>
+                                                        <th>Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($comprasProveedor as $compra)
+                                                        <tr>
+                                                            <td>
+                                                                {{ $compra->numero }}
+                                                            </td>
+                                                            <td>
+                                                                @if ($compra->detalle && $compra->detalle->count())
+                                                                    <ul class="mb-0 ps-3">
+                                                                        @foreach ($compra->detalle as $detalle)
+                                                                            <li>{{ $detalle->producto->marca }}
+                                                                                {{ $detalle->producto->modelo }}
+                                                                                {{ $detalle->producto->capacidad }}
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                            <td>S/ {{ number_format($compra->total, 2) }}</td>
+                                                            <td>S/
+                                                                {{ number_format($pagos[$compra->id]->sum('monto_pagado'), 2) }}
+                                                            </td>
+                                                            <td>S/
+                                                                {{ number_format($compra->total - $pagos[$compra->id]->sum('monto_pagado'), 2) }}
+                                                            </td>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-success btnregistrarpago"
+                                                                    title="Pagar" data-toggle="modal"
+                                                                    data-target="#registroPagoModal"
+                                                                    data-id="{{ $compra->id }}"
+                                                                    data-cliente="{{ $compra->persona->id }}"
+                                                                    data-total="{{ $compra->total - $pagos[$compra->id]->sum('monto_pagado') }}">
+                                                                    <i class="fas fa-money-bill-wave"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-center text-muted">No hay deudas pendientes.</p>
+                            @endforelse
                         </div>
-
-
-                        <!-- Gastos Fijos -->
-                        <div class="tab-pane fade" id="gastos" role="tabpanel">
-
-                            <form method="POST" action="{{ route('pagos.crearservicio') }}">
-                                @csrf
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <label for="servicio">Servicio:</label>
-                                        <select name="servicio" id="servicio" class="form-control" required>
-                                            <option value="">-- Selecciona un servicio --</option>
-                                            @foreach ($servicios->slice(2) as $item)
-                                                <option value="{{ $item->id }}" title="{{ $item->descripcion }}">
-                                                    {{ $item->nombre }}</option>
-                                            @endforeach
-
-                                            <!-- Agrega más servicios si es necesario -->
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        <label for="nota">Nota:</label>
-                                        <textarea name="nota" id="nota" class="form-control" rows="3"
-                                            placeholder="Escribe una descripción del gasto..."></textarea>
-                                    </div>
-                                    <br>
-                                    <div class="col-md-6">
-                                        <label for="fecha">Fecha de Pago:</label>
-                                        <input type="date" id="fecha" name="fecha" class="form-control"
-                                            required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="monto">Monto:</label>
-                                        <input type="number" id="monto" name="monto" min="0"
-                                            step="0.01" class="form-control" required>
-                                    </div>
-                                </div>
-                                @if (session('success_servicio'))
-                                    <div class="alert alert-success mb-2 mt-2 msj">
-                                        {{ session('success_servicio') }}
-                                    </div>
-                                @endif
-                                @if ($errors->has('error_servicio'))
-                                    <div class="alert alert-danger mb-2 mt-2 msj">
-                                        <ul class="mb-0">
-                                            <li>{{ $errors->first('error_servicio') }}</li>
-                                        </ul>
-                                    </div>
-                                @endif
-
-
-                                <div class="text-end mb-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Guardar Gasto
-                                    </button>
-                                </div>
-                            </form>
-                            <hr>
-                            <!-- Tabla de gastos -->
-                            <table class="table table-bordered datatable">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo de Gasto</th>
-                                        <th>Descripción</th>
-                                        <th>Monto</th>
-                                        <th>Fecha</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($pendientes as $gasto)
-                                        <tr>
-                                            <td>{{ $gasto->servicio->nombre }}</td>
-                                            <td>{{ $gasto->nota ?? $gasto->servicio->descripcion }}</td>
-                                            <td>{{ number_format($gasto->monto_pagado, 2) }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($gasto->fecha_pago)->format('Y-m-d') }}</td>
-                                            <td class="d-flex center gap-2">
-                                                <button class="btn btn-sm btn-success btnregistrarpagoServicio"
-                                                    title="Pagar" data-toggle="modal" data-target="#registroPagoModal"
-                                                    data-id="{{ $gasto->id }}"
-                                                    data-total="{{ $gasto->monto_pagado }}">
-
-                                                    <i class="fas fa-money-bill-wave"></i>
-                                                </button>
-                                                <form action="{{ route('pagos.destroy', ['id' => $gasto->id]) }}"
-                                                    method="post">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-danger" title="Eliminar Registro"
-                                                        onclick="return EliminarPago(event);">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-
-
-
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted">No hay gastos registrados.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
                     </div>
                 </div>
 
@@ -295,6 +154,29 @@
         </div>
     @endsection
     @section('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const buttons = document.querySelectorAll('.toggle-collapse');
+
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const targetId = btn.getAttribute('data-target');
+                        const target = document.getElementById(targetId);
+
+                        if (!target) return;
+
+                        document.querySelectorAll('.collapse-panel').forEach(panel => {
+                            if (panel.id !== targetId) {
+                                panel.style.display = 'none';
+                            }
+                        });
+
+                        // Alternar visibilidad del panel actual
+                        target.style.display = target.style.display === 'none' ? 'block' : 'none';
+                    });
+                });
+            });
+        </script>
         <script src="{{ asset('melody/data-table.js') }}"></script>
         @if (session('success_servicio'))
             <script>
@@ -330,22 +212,28 @@
                     "⚠️ ¿Estás seguro de guardar los Pagos. Revisa bien los datos antes de confirmar.?");
                 let total = 0.00;
                 const tabGastos = document.getElementById("gastos");
+                const tabGastosOtros = document.getElementById("otros");
+                let pestañaActiva = null;
 
                 if (tabGastos.classList.contains("show") && tabGastos.classList.contains("active")) {
+                    pestañaActiva = "gastos";
                     total = totaldeudaServicio;
-
+                } else if (tabGastosOtros.classList.contains("show") && tabGastosOtros.classList.contains("active")) {
+                    pestañaActiva = "otros";
+                    total = totaldeudaServicio; // puedes cambiar esta variable según tu lógica
                 } else {
                     total = totaldeuda;
                 }
                 if (confirmacion) {
-                    let response = await calcularPagos(total);
+                    let response = await calcularPagos(total, pestañaActiva);
                     if (response == "ok") {
                         event.target.closest("form").submit();
 
                     }
                 }
             }
-            async function calcularPagos(total) {
+
+            async function calcularPagos(total, tipo) {
                 let divpagos = $("#cuerpopagos");
                 let totalmontos = 0.00;
                 let montos = divpagos.find("[name='monto[]']");
@@ -354,8 +242,12 @@
                     const valor = parseFloat($(this).val()) || 0;
                     totalmontos += valor;
                 });
-                const tabGastos = document.getElementById("gastos");
 
+                let tabGastos = document.getElementById("gastos");
+                if (tipo == "otros") {
+                    let tabGastos = document.getElementById("otros");
+
+                }
 
                 if (totalmontos === 0.00) {
                     alert("💰 Ingresa un monto válido. No hay detalles de pago.");
@@ -388,6 +280,7 @@
 
                 return "ok";
             }
+
 
             let totaldeudaServicio = 0.00;
             $(".btnregistrarpagoServicio").on("click", function() {

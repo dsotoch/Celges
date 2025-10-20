@@ -3,18 +3,69 @@
 namespace App\Services;
 
 use App\Models\AlmacenInterno;
+use App\Models\Producto;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
 class ServicioAlmacenInterno
 {
+    public function clonarYActualizar($compraId, $productoId, $datos, $registrado)
+    {
+        $base = AlmacenInterno::where('compra_id', $compraId)
+            ->where('producto_id', $productoId)
+            ->where('registrado', $registrado)
+            ->first();
+
+        if (!$base) {
+            throw new \Exception("No se puede clonar porque no hay base.");
+        }
+
+        $clon = $base->replicate();
+        $clon->cantidad = 1;
+        $clon->fill($datos);
+        $clon->save();
+    }
+     public function listarProductosDeCompra(string $compraId)
+    {
+        return AlmacenInterno::where('compra_id', $compraId)->get();
+    }
+    public function actualizarProductoDisponible($compraId, $productoId, $datos, $registrado)
+    {
+        $producto = Producto::find($productoId);
+
+        if (!$producto) {
+            return false;
+        }
+
+        if ($producto->tipo == 'CELULAR') {
+            $almacen = AlmacenInterno::where('compra_id', $compraId)
+                ->where('producto_id', $productoId)
+                ->where('registrado', $registrado)
+                ->where('imei', '-')
+                ->first();
+        } else {
+            // Para otros productos, tomar el primero disponible
+            $almacen = AlmacenInterno::where('compra_id', $compraId)
+                ->where('producto_id', $productoId)
+                ->where('registrado', $registrado)
+                ->first();
+        }
+
+        if ($almacen) {
+            $almacen->update($datos);
+            return true;
+        }
+
+        return false;
+    }
+
     public function listar()
     {
         return AlmacenInterno::with(['compra', 'producto'])->get();
     }
     public function buscarPorProductoYDescripcion($productoId, $descripcion)
     {
-        return AlmacenInterno::with("compra", "compra.persona","producto")->where('producto_id', $productoId)
+        return AlmacenInterno::with("compra", "compra.persona", "producto")->where('producto_id', $productoId)
             ->where('registrado', $descripcion)->where("cantidad", ">", "0")
             ->get();
     }

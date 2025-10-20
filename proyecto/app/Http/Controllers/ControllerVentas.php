@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cotizacion;
 use App\Models\CuentaBancaria;
+use App\Models\DetalleVenta;
 use App\Models\Persona;
 use App\Models\Producto;
 use App\Models\Venta;
@@ -12,6 +13,7 @@ use App\Services\ServicioAlmacenInterno;
 use App\Services\ServicioDetalleVentas;
 use App\Services\ServicioPersona;
 use App\Services\ServicioVenta;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -23,6 +25,206 @@ class ControllerVentas extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function pdf(string $id)
+    {
+        $venta = Venta::find($id);
+        $numeros = DB::table('configuraciones')
+            ->select('numero1', 'numero2')
+            ->first();
+
+        $pdf = Pdf::setOption(['isRemoteEnabled' => true])->loadView('pdf.invoice', compact('venta', 'numeros'))
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->stream('Invoice_' . $venta->id . '.pdf');
+    }
+
+    public function eliminarproducto($venta)
+    {
+        $detalleVenta = DetalleVenta::where("id", $venta)->first();
+
+        if (!$detalleVenta) {
+            return response()->json(['error' => 'Producto no encontrado'], 404);
+        }
+        $subtotal = $detalleVenta->subtotal;
+        $idventa = $detalleVenta->venta_id;
+        $detalleVenta->delete();
+
+        Venta::find($idventa)->decrement('subtotal', $subtotal);
+
+        $ventas = Venta::find($idventa);
+
+
+        $nota = $ventas->nota ?? "";
+        $facturacion = floatval($ventas->comision_facturacion ?? 0);
+        $envio = floatval($ventas->envio ?? 0);
+        $encomienda = floatval($ventas->encomienda ?? 0);
+        $favor = floatval($ventas->favor ?? 0);
+        $gastoenvio = floatval($ventas->gasto_envio ?? 0);
+        $totalregistro = floatval($ventas->totalregistro ?? 0);
+
+        $total = $ventas->subtotal + $envio + $encomienda + $gastoenvio + $totalregistro + $facturacion;
+
+        if ($nota != "-") {
+            $total -= $favor;
+        }
+
+        $venta2 = Venta::with('abonos')->findOrFail($idventa);
+
+        $totalAbonos = $venta2->abonos->sum('monto');
+
+        $ventas->update([
+            'total' => $total,
+            'saldo_pendiente' => max(0, $total - $totalAbonos),
+        ]);
+        return response()->json(['success' => 'Producto eliminado correctamente'], 200);
+    }
+    public function actualizarpreciosProductos($venta, $id, $cantidad)
+    {
+        // Obtener el detalle de la venta
+        $detalleVenta = DetalleVenta::find($venta);
+
+        if (!$detalleVenta) {
+            return response()->json(['error' => 'Producto no encontrado'], 404);
+        }
+
+        // Actualizar el subtotal del producto según la nueva cantidad
+        $nuevoSubtotal = $detalleVenta->precio_unitario * $cantidad;
+        $detalleVenta->update([
+            "cantidad" => $cantidad,
+            "subtotal" => $nuevoSubtotal,
+        ]);
+
+        // Recalcular el subtotal general de la venta
+        $subtotalGeneral = DetalleVenta::where("venta_id", $detalleVenta->venta_id)->sum("subtotal");
+
+        // Obtener la venta
+        $venta = Venta::find($detalleVenta->venta_id);
+
+        if (!$venta) {
+            return response()->json(['error' => 'Venta no encontrada'], 404);
+        }
+
+
+
+        $facturacion = floatval($venta->comision_facturacion ?? 0);
+        $nota = $venta->nota ?? "";
+        $envio = floatval($venta->envio ?? 0);
+        $encomienda = floatval($venta->encomienda ?? 0);
+        $favor = floatval($venta->favor ?? 0);
+        $gastoenvio = floatval($venta->gasto_envio ?? 0);
+        $totalregistro = floatval($venta->total_registro ?? 0);
+
+        $total = $subtotalGeneral + $envio + $encomienda + $gastoenvio + $totalregistro;
+
+        $porcentaje = 0;
+        $nuevofacturacion = 0;
+        if ($facturacion > 0) {
+            $porcentaje = ($venta->total / $facturacion) * 100;
+            $nuevofacturacion = $total * $porcentaje;
+            $total += $nuevofacturacion;
+        }
+
+        if ($nota != "-") {
+            $total -= $favor;
+        }
+
+        // Obtener la venta con sus abonos
+        $venta2 = Venta::with('abonos')->findOrFail($venta->id);
+
+        // Sumar todos los abonos registrados de esa venta
+        $totalAbonos = $venta2->abonos->sum('monto');
+
+        // Actualizar los valores de la venta
+        $venta->update([
+            'subtotal' => $subtotalGeneral,
+            'total' => $total,
+            'comision_facturacion' => $nuevofacturacion,
+            'saldo_pendiente' => max(0, $total - $totalAbonos),
+        ]);
+
+
+        return response()->json([
+            'success' => 'Datos actualizados correctamente',
+
+        ], 200);
+    }
+
+    public function actualizarprecioporinput($venta, $input, $cantidad)
+    {
+
+
+
+        $subtotalGeneral = DetalleVenta::where("venta_id", $venta)->sum("subtotal");
+
+        // Obtener la venta
+        $ventas = Venta::find($venta);
+
+        if (!$ventas) {
+            return response()->json(['error' => 'Venta no encontrada'], 404);
+        }
+
+
+
+        $nota = $ventas->nota ?? "";
+        $facturacion = floatval($ventas->comision_facturacion ?? 0);
+
+        $envio = floatval($ventas->envio ?? 0);
+        $encomienda = floatval($ventas->encomienda ?? 0);
+        $favor = floatval($ventas->favor ?? 0);
+        $gastoenvio = floatval($ventas->gasto_envio ?? 0);
+        $totalregistro = floatval($ventas->totalregistro ?? 0);
+
+
+
+        switch ($input) {
+            case 'envio':
+                $total = $subtotalGeneral + $cantidad + $encomienda + $gastoenvio + $totalregistro + $facturacion;
+                $ventas->update([
+                    'envio' => $cantidad,
+                ]);
+                break;
+            case 'encomienda':
+                $total = $subtotalGeneral + $envio + $cantidad + $gastoenvio + $totalregistro + $facturacion;
+                $ventas->update([
+                    'gasto_envio' => $cantidad,
+                ]);
+                break;
+            case 'facturacion':
+                $total = $subtotalGeneral + $envio + $encomienda + $gastoenvio + $totalregistro + $cantidad;
+                $ventas->update([
+                    'comision_facturacion' => $cantidad,
+                ]);
+                break;
+            case 'totalregistro':
+                $total = $subtotalGeneral + $envio + $encomienda + $gastoenvio + $cantidad + $facturacion;
+                $ventas->update([
+                    'totalregistro' => $cantidad,
+                ]);
+                break;
+        }
+
+
+        if ($nota != "-") {
+            $total -= $favor;
+        }
+
+        $venta2 = Venta::with('abonos')->findOrFail($venta);
+
+        $totalAbonos = $venta2->abonos->sum('monto');
+
+        $ventas->update([
+            'total' => $total,
+            'saldo_pendiente' => max(0, $total - $totalAbonos),
+        ]);
+
+
+        return response()->json([
+            'success' => 'Datos actualizados correctamente',
+
+        ], 200);
+    }
+
     public function index()
     {
         $servicio = new ServicioPersona();
@@ -58,20 +260,20 @@ class ControllerVentas extends Controller
             throw new Exception($th->getMessage());
         }
     }
-    public function create(Request $request)
+    public function create(string $id)
     {
         try {
             DB::beginTransaction();
-            $cotizacion = Cotizacion::with("productos")->findOrFail($request->cotizacion);
-            $subtotal    = $request->subtotal ?? 0;
-            $envio       = $request->envio ?? 0;
-            $encomienda  = $request->encomienda ?? 0;
-            $facturacion = $request->facturacion ?? 0;
-            $favor       = $request->favor ?? 0;
+            $cotizacion = Cotizacion::with("productos")->findOrFail($id);
+            $subtotal    = $cotizacion->subtotal ?? 0;
+            $envio       = $cotizacion->envio ?? 0;
+            $encomienda  = $cotizacion->encomienda ?? 0;
+            $facturacion = $cotizacion->facturacion ?? 0;
+            $favor       = $cotizacion->favor ?? 0;
             $saldoFavorUsado = $favor;
 
             $suma = $subtotal + $envio + $encomienda + $facturacion;
-            if ($request->total == $suma) {
+            if ($cotizacion->total == $suma) {
                 $saldoFavorUsado = 0;
             }
             if ($saldoFavorUsado > 0) {
@@ -85,15 +287,15 @@ class ControllerVentas extends Controller
             }
 
             $cotizacion->update([
-                'destino'     => $request->destino,
-                'total'       => $request->total,
-                'subtotal'    => $request->subtotal,
-                'envio'       => $request->envio,
-                'encomienda'  => $request->encomienda,
-                'totalregistro'=> $request->totalregistro,
+                'destino'     => $cotizacion->destino,
+                'total'       => $cotizacion->total,
+                'subtotal'    => $cotizacion->subtotal,
+                'envio'       => $cotizacion->envio,
+                'encomienda'  => $cotizacion->encomienda,
+                'totalregistro' => $cotizacion->totalregistro,
                 'favor'       => $saldoFavorUsado,
-                'pendiente'   => $request->pendiente,
-                'facturacion' => $request->facturacion,
+                'pendiente'   => $cotizacion->pendiente,
+                'facturacion' => $cotizacion->facturacion,
                 'estado' => "Generado",
             ]);
 
@@ -110,7 +312,7 @@ class ControllerVentas extends Controller
                     'producto_id' => $value->producto_id,
                     'imei' => "***",
                     'descripcion' => $value->registrado,
-                    'color'=>$value->color,
+                    'color' => $value->color,
                     'precio_unitario' => $value->precio,
                     'cantidad' => $value->cantidad,
                     'subtotal' => $value->cantidad * $value->precio,
@@ -125,7 +327,7 @@ class ControllerVentas extends Controller
                 );
             }
             DB::commit();
-            return response()->json(["success" => true, "mensaje" => "Venta Registrada Correctamente"], 201);
+            return $ventaservicio->id;
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json(["success" => false, "mensaje" => $th], 500);

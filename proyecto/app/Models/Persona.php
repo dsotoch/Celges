@@ -25,8 +25,12 @@ class Persona extends Model
     {
         return $this->belongsTo(Tipo::class);
     }
-     public function pago()
+    public function pago()
     {
         return $this->hasMany(Pagos::class);
+    }
+    public function venta()
+    {
+        return $this->hasMany(Venta::class,'cliente_id');
     }
 }

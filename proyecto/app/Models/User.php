@@ -61,4 +61,7 @@ class User extends Authenticatable
     public function getEstadoActivoAtribute(){
         return $this->activo;
     }
+    public function caja(){
+        return $this->hasMany(Caja::class);
+    }
 }

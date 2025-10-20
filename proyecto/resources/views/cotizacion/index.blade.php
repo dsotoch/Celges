@@ -2,6 +2,34 @@
 @section('estilos')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .costoregistro.editando {
+            border: 2px solid #2196f3;
+            background-color: #e8f0fe;
+        }
+
+        input :read-only {
+            background-color: #b4bbc7;
+            cursor: not-allowed;
+
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            /* hace que parezca deshabilitado */
+            background-color: #ccc;
+            /* gris claro */
+            color: #666;
+            /* texto más apagado */
+            border-color: #bbb;
+            /* bordes más suaves */
+            box-shadow: none;
+            /* elimina sombras si las tiene */
+            transform: none;
+            /* evita efectos hover */
+        }
+    </style>
 @endsection
 @section('pagina')
     <div class="content-wrapper ">
@@ -18,7 +46,6 @@
             <div>
                 <div class="border border-danger text-danger p-3 mb-2 hidden blink" id="mensaje_productos">
                     <p><b>Cliente:</b> <span id="mensajecliente"></span></p>
-                    <p class="mt-2"><b>Numero:</b> <span>{{ $codigo }}</span></p>
                     <p class="mt-2"><b>Fecha:</b> <span>{{ now('America/Lima')->format('Y-m-d') }}</span></p>
 
 
@@ -54,14 +81,15 @@
                                 <br>
                                 <br>
                                 NÚMEROS DE CONTACTO:
-                                <span>{{ $numeros['numero1'] }}</span><span>-{{ $numeros['numero2'] }}</span>
+                                <span>{{ $numeros['numero1'] ?? '' }}</span><span>-{{ $numeros['numero2'] ?? '' }}</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <th class="bg-blue-pad text-12 w-140px text-white ">CLIENTE</th>
-                            <td class="bg-moke"><input type="text" id="cliente" class="form-control no-border"></td>
+                            <td class="bg-moke"><input type="text" id="cliente" readonly
+                                    class="form-control no-border"></td>
                             <input type="hidden" id="idcliente">
                             <th class="bg-blue-pad text-12 w-140px text-white">FECHA</th>
                             <td class="w-140px bg-moke">{{ now()->format('Y-m-d') }}</td>
@@ -69,7 +97,8 @@
 
                         <tr>
                             <th class="bg-blue-pad text-12 w-140px text-white">DESTINO</th>
-                            <td class="bg-moke"><input type="text" id="destino" class="form-control no-border"></td>
+                            <td class="bg-moke"><input type="text" id="destino" readonly
+                                    class="form-control no-border"></td>
                             <th class="bg-blue-pad text-12 w-140px text-white">DOCUMENTO</th>
                             <td class="w-140px bg-moke" id="codigo">#{{ $codigo }}</td>
                         </tr>
@@ -569,26 +598,38 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 precio = parseFloat(precio);
                 color = color;
 
-                await listarEnAlmacenInterno(id, color, registrado, cantidad);
+                await listarEnAlmacenInterno(id, color, registrado, cantidad, producto);
 
                 $("#detalles").append(`
     <tr>
-        <td class="text-center" class='tdcantidad'>${cantidad}</td>
-        <td class="text-center"><input class='form-control no-border' style='text-align:center;' type='text' value='${producto}'/></td>
-        <td class="text-center"><input  class='costoregistro text-center' value='0.00'/></td>
+<td class="text-center tdcantidad">
+  <input type="number" class="canti text-center" data-id="${id}" value="${cantidad}">
+</td>
+        <td class="text-center"><input class='form-control' style='text-align:center;' type='text' value='${producto}'/></td>
+        <td class="text-center">
+  <div class="inline-flex items-center gap-2">
+    <input class="costoregistro  text-center" data-nombre="${producto}" value="0" readonly />
+    <button class="btn-toggle" style="cursor:pointer;" ${registrado==1?'disabled':''} >✏️</button>
+  </div>
+</td>
+
 
         <td class="text-center">${precio.toFixed(2)}</td>
         <td class="text-center">${(cantidad * precio).toFixed(2)}</td>
+<td class="text-center" style="max-width: 20px; width: 20px; padding: 0;">
+  <button class="btn-eliminar" style="cursor:pointer;" data-id="${id}" data-nombre="${producto}">❌</button>
+</td>
     </tr>
 `);
-                let diferencia = precio - precio_compra;
+                let diferencia = (precio - precio_compra) * cantidad;
                 total_utilidades += cantidad * diferencia;
                 $("#tb_utilidades").append(`
     <tr>
-        <td class="text-center">${producto}</td>
+        <td class="text-center" data-id="${id}" data-cantidad="${cantidad}" data-precio="${precio}" data-preciocompra="${precio_compra}">${producto}</td>
         <td class="text-center">${precio_compra.toFixed(2)}</td>
         <td class="text-center">${diferencia.toFixed(2)}</td>
         <td class="text-center">${(cantidad * diferencia).toFixed(2)}</td>
+        
     </tr>
 `);
                 $("#pie-tabla").html(`
@@ -599,7 +640,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 `);
 
 
-                agregarProducto(id, cantidad, precio, registrado, color);
+                agregarProducto(id, cantidad, precio, registrado, color, producto);
                 calcularsubtotal();
                 cantidad = "";
                 precio = "";
@@ -611,13 +652,58 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 color = "";
 
             }
-            $("#detalles").on('keydown', '.costoregistro', function(e) {
+
+            $(document).on("click", ".btn-toggle", function() {
+                const td = $(this).closest("td");
+                const input = td.find(".costoregistro");
+
+                const editando = !input.prop("readonly");
+
+                if (editando) {
+                    input.prop("readonly", true).removeClass("editando");
+                    $(this).text("✏️");
+                } else {
+                    input.prop("readonly", false).addClass("editando").focus();
+                    $(this).text("❌");
+                }
+            });
+
+            $("#detalles").on('keydown', '.canti', async function(e) {
                 if (e.key === "Enter" || e.keyCode === 13) {
                     e.preventDefault();
                     const $fila = $(this).closest("tr");
+                    const id = $(this).data("id");
+                    const segundaColumna = $fila.find("td:eq(1) input");
+                    const costoRegistro = $fila.find("td:eq(2) input");
+                    const cst = costoRegistro.val();
+                    const cantidad = $(this).val();
+                    const $unitarioColumna = $fila.find("td:last").prev().prev();
+                    const costo = parseFloat($unitarioColumna.text().trim()) || 0;
+                    const subtotal = cantidad * costo;
+                    const $ultimaColumna = $fila.find("td:last").prev();
 
-                    const primerTD = $(this).closest("tr").children("td").first();
-                    const cantidad = primerTD.text();
+                    const valor = parseFloat($ultimaColumna.text()) || 0;
+                    if (cantidad > 0) {
+                        $ultimaColumna.text(subtotal.toFixed(2));
+                        actualizarCantidad(id, cantidad);
+                        await procesarLista(productos);
+                        recorrerUtilidades(segundaColumna.val(), "cantidad", 0, cantidad);
+                    } else {
+                        alert("⚠️ Cantidad Invalida");
+                    }
+                    calcularsubtotal();
+                }
+            });
+
+            $("#detalles").on('keydown', '.costoregistro', function(e) {
+                if (e.key === "Enter" || e.keyCode === 13) {
+                    e.preventDefault();
+                    const nombre = $(this).data("nombre");
+
+                    const $fila = $(this).closest("tr");
+                    const segundaColumna = $fila.find("td:eq(1) input");
+                    const primerInput = $(this).closest("tr").find("td input").first();
+                    const cantidad = primerInput.val();
                     const costo = parseFloat($(this).val()) || 0;
                     const subtotal = cantidad * costo;
                     const subTotalActual = $(this).closest("td").next();
@@ -625,12 +711,20 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     const totalActual = parseFloat(tdActual.text()) || 0;
 
                     const total = totalActual + subtotal;
-
+                    let texto = segundaColumna.val().trim();
                     if (costo > 0) {
                         tdActual.text(total.toFixed(2));
                         $(this).val(subtotal);
-
+                        texto = texto.replace("LIBRE", "REGISTRADO");
+                        segundaColumna.val(texto);
+                        recorrerUtilidades(nombre, "registro", costo);
+                        $(this).closest("td").css({
+                            "pointer-events": "none", // bloquea clics y eventos
+                            "opacity": "0.6", // se ve deshabilitado
+                            "user-select": "none" // no permite seleccionar texto
+                        });
                     } else {
+                        segundaColumna.val(texto);
                         tdActual.text((parseFloat(subTotalActual.text()) * cantidad).toFixed(2));
 
 
@@ -639,13 +733,139 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 }
             });
 
-            async function listarEnAlmacenInterno(producto_id, color, registrado, cantidad) {
+            function recorrerUtilidades(nombre, tipo = "", monto = 0, cantidad = 1) {
+                const nombreBuscado = nombre.trim().toLowerCase();
+                let utili = parseFloat($("#utilidades").text()) || 0; // valor actual de utilidades
+                let total = 0;
+
+                $("#tb_utilidades tr").each(function() {
+                    const primeraColumna = $(this).find("td:first, th:first").text().trim()
+                        .toLowerCase();
+                    const $primeraColumnas = $(this).find("td:first"); // o th:first si aplica
+
+                    const id = $primeraColumnas.data("id");
+
+                    const precio = $primeraColumnas.data("precio");
+                    const precioCompra = $primeraColumnas.data("preciocompra")
+
+                    if (primeraColumna === nombreBuscado) {
+                        // Obtener valor de la última columna
+                        const ultimaColumna = $(this).find("td:last").text().trim();
+                        const valorUltimaColumna = parseFloat(ultimaColumna) || 0;
+
+                        if (tipo === "registro") {
+                            const $penultimaColumna = $(this).find("td:eq(-2)");
+                            const $ultimaColumna = $(this).find("td:last");
+                            const $penultima = $penultimaColumna.prev();
+                            const primera = $penultima.prev();
+
+                            // 🧩 1️⃣ Obtener el texto numérico de ambas columnas
+                            const textoPenultima = $penultima.text().trim();
+                            const textoUltima = $penultimaColumna.text().trim();
+
+                            // 🧮 2️⃣ Convertir a número (si no hay valor, usar 0)
+                            const precioProducto = parseFloat(textoPenultima) || 0;
+                            const costoProducto = parseFloat(textoUltima) || 0;
+
+                            // 💰 3️⃣ Calcular nuevos valores
+                            const nuevoCosto = costoProducto + monto - 25; // ejemplo de ajuste total
+                            const nuevoPrecio = precioProducto + 25; // ejemplo de ajuste unitario
+                            // 🖊️ 4️⃣ Actualizar la tabla
+                            $penultima.text(nuevoPrecio.toFixed(2));
+                            $penultimaColumna.text(nuevoCosto.toFixed(2));
+                            $ultimaColumna.text(nuevoCosto.toFixed(2));
+
+
+                            const valor = parseFloat($(this).find("td:last").text().trim()) || 0;
+                            total += valor;
+                            const texto = nombre.replace("LIBRE", "REGISTRADO");
+                            primera.text(texto);
+                            $("#utilidades").text(total.toFixed(2));
+
+                        } else {
+                            if (tipo == "cantidad") {
+                                const $penultimaColumna = $(this).find("td:eq(-2)");
+                                const $ultimaColumna = $(this).find("td:last");
+                                const $penultima = $penultimaColumna.prev();
+                                const primera = $penultima.prev();
+
+                                const textoPenultima = $penultima.text().trim();
+                                const textoUltima = $penultimaColumna.text().trim();
+
+                                const precioProducto = parseFloat(textoPenultima) || 0;
+                                const costoProducto = parseFloat(textoUltima) || 0;
+                                utilidadactual = costoProducto;
+                                const nuevoCosto = utilidadactual * cantidad;
+                                $penultimaColumna.text(nuevoCosto.toFixed(2));
+                                $ultimaColumna.text(nuevoCosto.toFixed(2));
+
+
+                                const valor = parseFloat($(this).find("td:last").text().trim()) || 0;
+                                total += valor;
+
+                                $("#utilidades").text(total.toFixed(2));
+
+                            } else {
+                                utili -= valorUltimaColumna;
+
+                                // Actualizar el texto del elemento utilidades
+                                $("#utilidades").text(utili.toFixed(2));
+                                $(this).remove();
+                            }
+
+                        }
+
+                    }
+                });
+            }
+
+            window.document.addEventListener('click', async function(e) {
+                if (e.target.classList.contains('btn-eliminar')) {
+                    const id = e.target.dataset.id;
+                    const nombre = e.target.dataset.nombre;
+                    // Eliminar la fila visualmente
+                    e.target.closest('tr').remove();
+                    eliminarProductoPorId(id);
+
+                    // Procesar la lista actualizada
+                    await procesarLista(productos);
+                    calcularsubtotal();
+                    recorrerUtilidades(nombre);
+
+                }
+            });
+
+
+            async function procesarLista(productos) {
+                if (!productos || productos.length === 0) {
+                    $("#mensaje_productos").hide().empty();
+                    $("#imprimirMensaje").hide();
+                    return;
+                }
+                await Promise.all(
+                    productos.map(producto =>
+                        listarEnAlmacenInterno(
+                            producto.id,
+                            producto.color,
+                            producto.registrado,
+                            producto.cantidad,
+                            producto.nombre
+                        ).catch(error => {
+                            console.error(`⚠️ Error al procesar producto ${producto.id}:`, error);
+                        })
+                    )
+                );
+
+            }
+
+
+            async function listarEnAlmacenInterno(producto_id, color, registrado, cantidad, nombre) {
                 let cuantos_almacen = 0;
 
                 $("#datos-productos tr").each(function() {
                     const dataset = this.dataset;
 
-                    if (dataset.producto === producto) {
+                    if (dataset.producto === nombre) {
                         const cantidad = parseFloat(dataset.cantidad) || 0;
                         cuantos_almacen += cantidad;
                     }
@@ -657,25 +877,57 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     $("#mensaje_productos").removeClass("hidden").show();
                     $("#imprimirMensaje").removeClass("hidden").show();
                     $("#mensaje_productos").append(`
-    <p> Faltan ${dif} existencias para Despachar, para el producto ${producto} </p>
+    <p> Faltan ${dif} existencias para Despachar, para el producto ${nombre} </p>
+     <textarea class="autoexpand" rows="1" placeholder="Escribe una observación..."></textarea>
     <hr>
 `);
+                } else {
+                    $("#mensaje_productos").hide().empty();
+                    $("#imprimirMensaje").hide();
                 }
             }
+            $(document).on("input", ".autoexpand", function() {
+                this.style.height = "auto"; // resetea el alto
+                this.style.height = (this.scrollHeight) + "px"; // ajusta al contenido
+            });
 
-            function agregarProducto(id, cantidad, precio, registrado, color) {
+            function agregarProducto(id, cantidad, precio, registrado, color, nombre) {
                 // Crear un objeto producto
                 let item = {
                     id: id,
                     cantidad: parseInt(cantidad),
                     color: color,
                     precio: parseFloat(precio),
-                    registrado: parseInt(registrado)
+                    registrado: parseInt(registrado),
+                    nombre: nombre
                 };
 
                 // Agregarlo al arreglo
                 productos.push(item);
             }
+
+            function eliminarProductoPorId(id) {
+
+                const index = productos.findIndex(producto => Number(producto.id) === Number(id));
+
+                if (index !== -1) {
+                    productos.splice(index, 1);
+                } else {
+                    console.warn("⚠️ No se encontró un producto con el ID:", id);
+                }
+
+            }
+
+            function actualizarCantidad(id, nuevaCantidad) {
+                const producto = productos.find(p => Number(p.id) === Number(id));
+                if (producto) {
+                    producto.cantidad = Number(nuevaCantidad) || 0;
+                } else {
+                    console.warn("⚠️ No se encontró un producto con el ID:", id);
+                }
+            }
+
+
 
             function calcularsubtotal() {
                 let total = 0;
@@ -716,7 +968,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     if (favor >= totalsinSaldoFavor) {
                         total = 0.00;
                     } else {
-                        total = subtotal + envio - favor + encomienda + facturacion + totalRegistro;
+                        total = subtotal + envio - favor + encomienda + facturacion + totalregistro;
                     }
 
                 } else {
@@ -793,9 +1045,13 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             });
 
             $("#generar-imagen").on("click", async function() {
+                if (document.getElementById("idcliente").value == "") {
+                    alert("⚠️Por favor Seleccione el Cliente");
+                    return;
+                }
 
                 if (!confirm(
-                        "¿Estás seguro de generar la imagen? La cotización se guardará automáticamente al continuar."
+                        "¿Estás seguro de generar el Pdf? La cotización se guardará automáticamente al continuar."
                     )) {
                     return;
                 }
@@ -818,24 +1074,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                 $("body").append(cargando);
                 const codigo = $("#codigo").text();
-                if (await guardarCotizacion() == false) {
-                    $("#mensaje-cargando").remove();
+                await guardarCotizacion();
+                $("#mensaje-cargando").remove();
 
-                    return;
-                }
-                prepararParaCaptura();
-                html2canvas(document.getElementById('miDiv'), {
-                    scale: 3
-                }).then(function(canvas) {
-                    let imgData = canvas.toDataURL('image/png');
-                    let link = document.createElement('a');
-                    link.download = 'cotizacion_' + codigo + '.png';
-                    link.href = imgData;
-                    link.click();
-                    $("#mensaje-cargando").remove();
-                    alert("✅ Imagen Generada y Cotización guardada Correctamente.");
-                    location.reload();
-                });
+
 
             });
 
@@ -852,7 +1094,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     favor: $("#favor").val(),
                     pendiente: $("#pendiente").val(),
                     facturacion: $("#facturacion").val(),
-                    totalregistro:$("#totalregistro").val(),
+                    totalregistro: $("#totalregistro").val(),
                     nota: $("#mensaje_productos").text(),
                     total: $("#total").val(),
                     utilidad: $("#utilidades").text(),
@@ -872,7 +1114,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(response) {
-                            respuesta = true;
+                            window.open("/ventas/generar-pdf/" + response.venta, "_blank");
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
                         },
                         error: function(xhr) {
                             console.error("❌ Error al guardar la cotización:", xhr);
@@ -883,14 +1128,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                             } else {
                                 alert("❌ Error al guardar. Revisa la consola.");
                             }
-                            respuesta = false;
                         }
                     });
                 } catch (error) {
                     respuesta = false;
                 }
 
-                return respuesta;
             }
 
 

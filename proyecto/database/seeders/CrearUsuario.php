@@ -13,10 +13,13 @@ class CrearUsuario extends Seeder
      */
     public function run(): void
     {
-        User::create([
+        User::truncate();
+
+        $user=User::create([
             "email"=>"Admin@jamb.com",
             "name"=>"AdministradorJamb",
             "password"=>bcrypt("admin123")
         ]);
+        $user->assignRole('admin');
     }
 }

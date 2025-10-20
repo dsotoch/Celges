@@ -17,6 +17,6 @@ class CuentaBancaria extends Model
         "activo"
     ];
     public function operacion(){
-        return $this->hasMany(Operacion::class);
+        return $this->hasMany(Operacion::class,"cuenta_id");
     }
 }

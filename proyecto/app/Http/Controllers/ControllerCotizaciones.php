@@ -51,7 +51,7 @@ class ControllerCotizaciones extends Controller
                 'total' => $request->total,
                 'utilidad' => $request->utilidad ?? 0,
                 'envio' => $request->envio ?? 0,
-                'totalregistro'=>$request->totalregistro ?? 0,
+                'totalregistro' => $request->totalregistro ?? 0,
                 'encomienda' => $request->encomienda ?? 0,
                 'facturacion' => $request->facturacion ?? 0,
                 'favor' => $request->favor ?? 0,
@@ -76,9 +76,12 @@ class ControllerCotizaciones extends Controller
             );
 
             DB::commit();
+            $controllerVenta = new ControllerVentas();
+            $venta= $controllerVenta->create($cotizacion->id);
+
             return response()->json([
                 'message' => 'Cotización guardada correctamente',
-                'cotizacion_id' => $cotizacion->id
+                'venta' => $venta
             ], 201);
         } catch (\Exception $e) {
             Log::error($e->getMessage());

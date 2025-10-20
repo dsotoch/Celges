@@ -19,6 +19,8 @@ Route::get('/', function () {
 })->name("login");
 Route::get('/home', [ControllerReportes::class, 'index'])->name("dashboard.admin")->middleware("auth");
 Route::get('/reportes', [ControllerReportes::class, 'reportes'])->name("dashboard.reportes")->middleware("auth");
+Route::post('/reportes-cliente', [ControllerReportes::class, 'reportescliente'])->name("reportes.generar")->middleware("auth");
+Route::post('/reportes-proveedor', [ControllerReportes::class, 'reportesProveedor'])->name("reportes.generarpro")->middleware("auth");
 
 Route::post('/configuraciones', [ControllerCaja::class, 'createConfiguraciones'])->middleware("auth");
 
@@ -58,9 +60,12 @@ Route::prefix('compras')
         Route::get('/',             'index')->name('compras.index');         // Mostrar lista de compras
         Route::get('/saldo-favor/{id}',             'ListarSaldoFavorCliente')->name('compras.saldoFavor');         // Mostrar lista de compras
         Route::post('/guardar',     'store')->name('compras.store')->middleware(['permission:crear compras']);         // Guardar nueva compra
+        Route::get('/buscar/{imei}', 'buscarPorImei')->name('compras.buscar');
         Route::get('/{id}',         'show')->name('compras.show')->middleware(['permission:ver compras']);           // Ver detalle de una compra
         Route::put('/edit/{id}',    'update')->name('compras.update')->middleware(['permission:editar compras']);      // Actualizar compra
         Route::delete('/{id}',      'destroy')->name('compras.destroy')->middleware(['permission:editar compras']);     // Eliminar compra
+        Route::put('/modificar-detalle/{id}',    'updatedetalle')->name('compras.updatedetalle')->middleware(['permission:editar compras']);      // Actualizar compra
+
     })->middleware("auth");
 Route::prefix('almaceninterno')
     ->controller(ControllerAlmacenInterno::class)
@@ -71,13 +76,19 @@ Route::prefix('almaceninterno')
         Route::get('/productos/{id}', 'listarProductosPorId')->name("almaceninterno.productoporid");
         Route::delete('/{id}',      'destroy')->name('almaceninterno.destroy');    // Eliminar
         Route::put('/modificar-precios',      'modificarPrecio')->name('almaceninterno.update');    // Eliminar
-
+        Route::get('/almacen/pdf', 'exportarPDF')->name('almaceninterno.pdf');
     })->middleware("auth");
 
 Route::prefix('ventas')
     ->controller(ControllerVentas::class)
     ->group(function () {
-        Route::get('/todas',         'index')->name('ventas.index');          // Ver detalle
+        Route::get('/todas',         'index')->name('ventas.index');
+        Route::get('/generar-pdf/{id}',         'pdf')->name('ventas.pdf');
+
+        Route::get('/eliminar-producto/{venta}',         'eliminarproducto')->name('ventas.eliminar');
+
+        Route::get('/actualizar-precios-producto/{venta}/{id}/{cantidad}',         'actualizarpreciosProductos')->name('ventas.actualizarprecios');
+        Route::get('/actualizar-precios-productoinput/{venta}/{input}/{cantidad}',         'actualizarprecioporinput')->name('ventas.actualizarprecioporinput');
 
         // Route::get('/',             'index')->name('ventas.index');        // Mostrar lista
         Route::post('/guardar',     'store')->name('ventas.store')->middleware(['permission:crear ventas']);      // Guardar nuevo registro
@@ -104,7 +115,7 @@ Route::prefix('caja')
         Route::post('/guardar',     'store')->name('caja.store');        // Guardar nuevo registro
         Route::get('/{id}',         'show')->name('caja.show');          // Ver detalle
         Route::put('/editar/{id}',      'update')->name('caja.update');    // Eliminar
-
+        Route::post('/cerrar',             'cerrar')->name('caja.cerrar');
     })->middleware("auth");
 Route::prefix('cuentasbancarias')
     ->controller(ControllerCuentaBancaria::class)
@@ -113,12 +124,14 @@ Route::prefix('cuentasbancarias')
         Route::post('/guardar',     'store')->name('cuentasbancarias.store')->middleware(['permission:crear cuentasbancarias']);        // Guardar nuevo registro
         Route::put('/editar/{id}', 'update')->name('cuentasbancarias.update')->middleware(['permission:editar cuentasbancarias']);
         Route::delete('/delete/{id}', 'destroy')->name('cuentasbancarias.destroy')->middleware(['permission:eliminar cuentasbancarias']);   // Eliminar
+        Route::get('/pdf/{inicio}/{fin}',             'pdf')->name('cuentasbancarias.pdf')->middleware("auth");        // Mostrar lista
+
     })->middleware("auth");
 Route::prefix('pagos')
     ->controller(ControllerPagos::class)
     ->group(function () {
         Route::get('/',             'index')->name('pagos.index');
-        Route::get('/validar-pagos',             'validar')->name('pagos.validar');        // Mostrar lista
+        Route::get('/validar-pago-view', 'validar')->name('pagos.validarindex');        // Mostrar lista
         Route::post('/guardar',     'store')->name('pagos.store');        // Guardar nuevo registro
         Route::post('/guardar-pago-compra',  'createPagoCompra')->name('pagos.create');        // Guardar nuevo registro
         Route::post('/guardar-pago-servicio',  'createPagoServicio')->name('pagos.crearservicio');        // Guardar nuevo registro

@@ -8,21 +8,42 @@
         <h4 class="mb-4">📊 Reporte de Ventas</h4>
 
         <!-- Filtros -->
-        <form id="filtroForm" class="form-inline mb-4" method="GET" action="{{ route('dashboard.reportes') }}">
-            <button type="submit" name="semana" value="1" class="btn btn-primary mr-2">Última Semana</button>
+        <div class="d-flex">
+            <form id="filtroForm" class="form-inline mb-4" method="GET" action="{{ route('dashboard.reportes') }}">
+                <button type="submit" name="semana" value="1" class="btn btn-primary mr-2">Última Semana</button>
 
-            <div class="form-group mr-2">
-                <label for="desde" class="mr-2">Desde:</label>
-                <input type="date" class="form-control" name="desde" id="desde" value="{{ request('desde') }}">
-            </div>
+                <div class="form-group mr-2">
+                    <label for="desde" class="mr-2">Desde:</label>
+                    <input type="date" class="form-control" name="desde" id="desde" value="{{ request('desde') }}">
+                </div>
 
-            <div class="form-group mr-2">
-                <label for="hasta" class="mr-2">Hasta:</label>
-                <input type="date" class="form-control" name="hasta" id="hasta" value="{{ request('hasta') }}">
-            </div>
+                <div class="form-group mr-2">
+                    <label for="hasta" class="mr-2">Hasta:</label>
+                    <input type="date" class="form-control" name="hasta" id="hasta" value="{{ request('hasta') }}">
+                </div>
+                <div class="form-group mr-2">
+                    <label for="estado" class="mr-2">Estado:</label>
+                    <select name="estado" id="estado" class="form-control">
+                        <option value="todos" {{ request('estado') == '' ? 'selected' : '' }}>TODOS</option>
+                        <option value="Empacado" {{ request('estado') == 'Empacado' ? 'selected' : '' }}>Empacado</option>
+                        <option value="Deuda" {{ request('estado') == 'Deuda' ? 'selected' : '' }}>Deuda</option>
+                        <option value="Anulado" {{ request('estado') == 'Anulado' ? 'selected' : '' }}>Anulado</option>
+                        <option value="Pendiente" {{ request('estado') == 'Pendiente' ? 'selected' : '' }}>Pendiente
+                        </option>
+                        <option value="Despachado" {{ request('estado') == 'Despachado' ? 'selected' : '' }}>Despachado
+                        </option>
+                        <option value="Esperando Aprobacion"
+                            {{ request('estado') == 'Esperando Aprobacion' ? 'selected' : '' }}>Esperando Aprobacion
+                        </option>
 
-            <button type="submit" class="btn btn-success">Filtrar</button>
-        </form>
+
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">Filtrar</button>
+            </form>
+            <a href="{{ route('dashboard.reportes') }}"><button class="btn btn-danger"> Quitar Filtros</button> </a>
+        </div>
 
 
         <!-- Tabla de ventas -->
@@ -53,7 +74,8 @@
                         <td colspan="4" class="text-right font-weight-bold">
                             <i class="fas fa-cash-register text-success mr-1"></i> MONTO TOTAL:
                         </td>
-                        <td colspan="1" class=" text-white text-center" style="font-size: 18px; background-color: orangered">
+                        <td colspan="1" class=" text-white text-center"
+                            style="font-size: 18px; background-color: orangered">
                             <span id="totalVentas">0.00</span>
                         </td>
                     </tr>

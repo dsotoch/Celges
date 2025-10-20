@@ -42,6 +42,24 @@
                                     placeholder="Banco, titular, número de cuenta...">
                             </div>
                         </div>
+                        <div class="form-group p-3 border rounded bg-white shadow-sm">
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label">Desde:</label>
+                                    <input type="date" id="fecha_inicio" class="form-control" required>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label">Hasta:</label>
+                                    <input type="date" id="fecha_fin" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="button" id="pdf" class="btn btn-danger">
+                                    <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+                                </button>
+                            </div>
+                        </div>
                         <div class="alert alert-info d-flex align-items-center"
                             style="background-color: #bcdcff; color: #000;">
                             <i class="fas fa-info-circle mr-2"></i>
@@ -94,7 +112,8 @@
                                                     @endif
                                                 </form>
 
-                                                <form action="{{ route('cuentasbancarias.destroy', ['id' => $item->id]) }}" method="POST">
+                                                <form action="{{ route('cuentasbancarias.destroy', ['id' => $item->id]) }}"
+                                                    method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button class="btn btn-sm btn-danger" title="Eliminar"><i
@@ -215,6 +234,22 @@
 @endsection
 @section('scripts')
     <script>
+        document.getElementById('pdf').addEventListener('click', function() {
+            const inicio = document.getElementById('fecha_inicio').value;
+            const fin = document.getElementById('fecha_fin').value;
+            if (!inicio || !fin) {
+                alert('Por favor selecciona ambas fechas.');
+                return;
+            }
+
+            if (new Date(inicio) > new Date(fin)) {
+                alert('La fecha inicial no puede ser mayor que la fecha final.');
+                return;
+            }
+
+            window.location.href = `/cuentasbancarias/pdf/${inicio}/${fin}`;
+            
+        });
         document.getElementById("buscar").addEventListener("keyup", function() {
             let filtro = this.value.toLowerCase();
             let filas = document.querySelectorAll("#tablaCuentas tbody tr");

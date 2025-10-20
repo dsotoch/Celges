@@ -103,7 +103,7 @@
                                                     <input type="text" name="nombres" id="nombres"
                                                         class="form-control @error('nombres') is-invalid @enderror"
                                                         value="{{ old('nombres') }}"
-                                                        placeholder="Ingrese nombre del proveedor">
+                                                        placeholder="Ingrese nombre del Cliente">
                                                     @error('nombres')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -513,6 +513,57 @@
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
 
+                                                            <button class="btn btn-danger btnReportes"
+                                                                data-id="{{ $item->id }}">Reportes</button>
+                                                            <div class="modal fade" id="modalReportes" tabindex="-1"
+                                                                role="dialog" aria-labelledby="modalReportesLabel"
+                                                                aria-hidden="true">
+                                                                <div class="modal-dialog" role="document">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header bg-danger text-white">
+                                                                            <h5 class="modal-title"
+                                                                                id="modalReportesLabel">Generar Reporte
+                                                                            </h5>
+                                                                            <button type="button"
+                                                                                class="close text-white"
+                                                                                data-dismiss="modal" aria-label="Cerrar">
+                                                                                <span aria-hidden="true">&times;</span>
+                                                                            </button>
+                                                                        </div>
+
+                                                                        <form action="{{ route('reportes.generar') }}"
+                                                                            method="POST" target="_blank">
+                                                                            @csrf
+                                                                            <input type="hidden" name="idcliente"
+                                                                                id="idcliente">
+                                                                            <div class="modal-body">
+                                                                                <div class="form-group">
+                                                                                    <label for="desde">Desde:</label>
+                                                                                    <input type="date"
+                                                                                        class="form-control"
+                                                                                        name="desde" id="desde"
+                                                                                        required>
+                                                                                </div>
+                                                                                <div class="form-group">
+                                                                                    <label for="hasta">Hasta:</label>
+                                                                                    <input type="date"
+                                                                                        class="form-control"
+                                                                                        name="hasta" id="hasta"
+                                                                                        required>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="modal-footer">
+                                                                                <button type="button"
+                                                                                    class="btn btn-secondary"
+                                                                                    data-dismiss="modal">Cancelar</button>
+                                                                                <button type="submit"
+                                                                                    class="btn btn-danger">Generar</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
 
                                                         </td>
                                                     </tr>
@@ -550,12 +601,22 @@
     @endif
 
     <script>
+        const btnrep = document.querySelectorAll(".btnReportes");
+        btnrep.forEach((e) => {
+            e.addEventListener("click", function(t) {
+                const idcliente = t.target.dataset.id;
+                $('#modalReportes').modal('show');
+                $('#idcliente').val(idcliente);
+            });
+        });
+
         if ($(".msj").length) {
             setTimeout(() => {
                 $(".msj").fadeOut();
 
             }, 3000);
         }
+
         function eliminar(event, nombre) {
             event.preventDefault();
 

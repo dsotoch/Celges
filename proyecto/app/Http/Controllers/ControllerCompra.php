@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\EditCompraRequest;
 use App\Http\Requests\StoreCompraRequest;
 use App\Models\Compra;
+use App\Models\DetalleCompra;
 use App\Models\Persona;
 use App\Models\Producto;
 use App\Services\ServicioAlmacenInterno;
@@ -16,12 +17,20 @@ use App\Services\ServicioPagos;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ControllerCompra extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    public function buscarPorImei($imei) {
+
+        $detallescompra=DetalleCompra::with(['compra','compra.persona'])->where('imei',$imei)->first();
+        return response()->json(["data"=>$detallescompra]);
+    }
+
     public function index()
     {
         $compras = Compra::paginate(50);
@@ -67,7 +76,7 @@ class ControllerCompra extends Controller
             }
 
 
-          
+
 
             // Crear compra
             $servicio = new ServicioCompra();
@@ -96,6 +105,64 @@ class ControllerCompra extends Controller
                 ->withErrors(['general' => $ex->getMessage()])
                 ->withInput()
                 ->with('show_modal', true);
+        }
+    }
+
+    public function updatedetalle(Request $request, string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $servicio = new ServicioCompra();
+            $servicioalmacen = new ServicioAlmacenInterno();
+            $servicioDetalleCompra = new ServicioDetalleCompra();
+
+            $compra = $servicio->obtenerPorId($id);
+            if ($compra->estado == "anulado") {
+                throw new Exception("La compra ya ha sido anulada. No se puede modificar.");
+            }
+
+            $servicio->actualizar($id, ["total" => $request->total]);
+            foreach ($request->productos as $key => $producto) {
+                $productoId = explode('-', $key)[0];
+                $imei = $producto['imei'] ?? '-';
+                $color = $producto['color'];
+                $precio = $producto['precio'];
+                $registrado = $producto['registrado'] ?? '0';
+                $cantidad = $producto['cantidad'];
+
+                // Buscar el primer registro sin IMEI y actualizarlo
+                $actualizado = $servicioalmacen->actualizarProductoDisponible($id, $productoId, [
+                    "imei" => $imei,
+                    "color" => $color,
+                    "cantidad" => $cantidad,
+                    "precio_compra" => $precio,
+                    'registrado' => $registrado
+                ], $registrado);
+                // Si no se pudo actualizar (porque no había registros sin IMEI), clonar uno nuevo
+                if (!$actualizado) {
+                    $servicioalmacen->clonarYActualizar($id, $productoId, [
+                        "imei" => $imei,
+                        "color" => $color,
+                        "precio_compra" => $precio,
+
+                    ], $registrado);
+                }
+            }
+
+
+            $productosAlmacen = $servicioalmacen->listarProductosDeCompra($id);
+            $servicioDetalleCompra->eliminarYGuardar($productosAlmacen, $id);
+
+            DB::commit();
+
+            return redirect()->route('compras.index')
+                ->with('success_detalle', 'Compra modificada correctamente.');
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            Log::error("Error al modificar la compra: " . $ex->getMessage());
+            return redirect()->back()
+                ->withErrors(['error_detalle' => $ex->getMessage()]);
         }
     }
 

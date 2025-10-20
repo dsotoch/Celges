@@ -24,6 +24,7 @@
                                 <th>Registrado</th>
                                 <th>Stock</th>
                                 <th>IMEI</th>
+                                <th>Color</th>
                                 <th>Precio Compra</th>
                             </tr>
                         </thead>
@@ -43,6 +44,12 @@
                                     </td>
                                     <td>{{ $item->cantidad }}</td>
                                     <td>{{ $item->imei }}</td>
+                                    <td>
+                                        <input type="text" name="color[]" class="form-control"
+                                            value="{{ $item->color }}"
+                                            @if (!empty($item->color) && $item->color != '-') readonly @endif>
+                                    </td>
+
                                     <td><input type="text" name="precio[]" class="form-control"
                                             value="{{ number_format($item->precio_compra, 2) }}"></td>
 
@@ -53,7 +60,7 @@
                         </tbody>
                     </table>
                     <div class="text-end mt-3 mb-2">
-                        <button type="submit" class="btn bg-orange">Modificar Precio</button>
+                        <button type="submit" class="btn bg-orange">Modificar</button>
                     </div>
                 </form>
             </div>

@@ -17,6 +17,160 @@
                 <div class="card-header bg-orange text-white">
                     <h5 class="mb-0">📦 Control Diario de Caja</h5>
                 </div>
+                @if (session('success'))
+                    <div class="alert alert-success msj mb-4 msj">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger msj mb-4 msj">
+                        {{ session('error') }}
+                    </div>
+                @endif
+                <div class="container mt-5">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title mb-3 text-primary fw-bold">
+                                        Aperturar Caja
+                                    </h5>
+
+                                    {{-- Mostrar estado actual --}}
+                                    @if ($caja)
+                                        <p class="mb-3">
+                                            Estado actual:
+                                            @if ($caja->estado === 'abierta')
+                                                <span class="badge bg-success">Abierta</span>
+                                            @else
+                                                <span class="badge bg-secondary">Cerrada</span>
+                                            @endif
+                                        </p>
+                                    @else
+                                        <p class="mb-3 text-muted">No hay registros de caja aún.</p>
+                                    @endif
+
+                                    <form action="{{ route('caja.store') }}" method="POST">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label for="montoInicial" class="form-label fw-semibold">
+                                                Monto Inicial de la Caja
+                                            </label>
+                                            <small class="d-block text-muted mb-2">
+                                                Es el dinero con el que comienzas el día. Se usa como base para calcular el
+                                                saldo final.
+                                            </small>
+                                            <input type="number" class="form-control text-center" id="montoInicial"
+                                                name="monto_inicial" placeholder="Ingrese monto inicial" min="0"
+                                                step="0.01" value="{{ $caja?->monto_final }}"
+                                                {{ $caja?->estado == 'abierta' ? 'readonly' : '' }}>
+                                        </div>
+
+
+                                        @if ($caja?->estado == 'abierta')
+                                            <button id="btnCerrar" class="btn btn-danger w-100">
+                                                <i class="fas fa-cash-register me-2"></i> Cerrar Caja
+                                            </button>
+                                        @else
+                                            <button id="btnAperturar" class="btn btn-success w-100">
+                                                <i class="fas fa-cash-register me-2"></i> Aperturar Caja
+                                            </button>
+                                        @endif
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="container mt-2">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h4 id="btnhistor" style="cursor:pointer;"
+                                class="card-title text-center mb-4 text-primary font-weight-bold">Historial
+                                de
+                                Cajas 👁️</h4>
+
+                            <table style="display:none;" id="histor"
+                                class="table table-hover table-striped align-middle">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Fecha Apertura</th>
+                                        <th>Fecha Cierre</th>
+
+                                        <th>Usuario</th>
+                                        <th>Monto Inicial</th>
+                                        <th>Monto Final</th>
+                                        <th>Diferencia</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($cajas as $index => $c)
+                                        <!-- Fila principal -->
+                                        <tr class="fila-caja" data-target="#detalle{{ $index }}">
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($c->fecha_apertura)->format('d/m/Y H:i') }}
+                                            </td>
+                                            @if ($c->estado == 'abierta')
+                                                <td><span class="text-danger font-weight-bold">Caja
+                                                        actualmente abierta</span>
+                                                </td>
+                                            @else
+                                                <td>{{ \Carbon\Carbon::parse($c->fecha_cierre)->format('d/m/Y H:i') }}
+                                                </td>
+                                            @endif
+
+                                            <td>{{ $c->persona->name ?? '—' }}</td>
+                                            <td>S/ {{ number_format($c->monto_inicial, 2) }}</td>
+                                            <td>S/ {{ number_format($c->monto_final, 2) }}</td>
+                                            @php
+                                                $diferencia = $c->monto_final - $c->monto_inicial;
+                                            @endphp
+                                            <td class="{{ $diferencia >= 0 ? 'text-success' : 'text-danger' }}">
+                                                S/ {{ number_format($diferencia, 2) }}
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge badge-{{ $c->estado == 'abierta' ? 'success' : 'secondary' }}">
+                                                    {{ ucfirst($c->estado) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Fila de detalles -->
+                                        <tr id="detalle{{ $index }}" class="collapse bg-light">
+                                            <td colspan="6" class="p-4">
+                                                <div>
+                                                    <p><strong>Fecha Apertura:</strong>
+                                                        {{ $c->fecha_apertura }}</p>
+                                                    <p><strong>Fecha Cierre:</strong>
+                                                        {{ $c->fecha_cierre ?? 'Aún abierta' }}</p>
+                                                    <p><strong>Observación:</strong>
+                                                        {{ $c->observacion ?? '—' }}</p>
+                                                    @if ($c->estado == 'abierta')
+                                                        <span class="text-danger font-weight-bold">Caja
+                                                            actualmente abierta</span>
+                                                    @else
+                                                        <span class="text-muted">Caja cerrada</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">No hay registros
+                                                de cajas.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+
                 <div class="card-body">
                     <div class="row">
                         <div class="d-flex align-items-center ml-4 mb-3">
@@ -228,8 +382,29 @@
                                             {{ number_format($totalSalidas, 2) }}</strong></p>
                                     <p><strong>Total Salidas:</strong> <strong class="text-primary">S/
                                             {{ number_format($totalGastos, 2) }}</strong></p>
-                                    <p><strong>Saldo Diario:</strong> <strong style="color: orangered">S/
-                                            {{ number_format($totalSalidas - $totalGastos, 2) }}</strong></p>
+                                    @if ($caja?->estado == 'abierta')
+                                        <p>
+                                            <strong>Saldo Diario:</strong>
+                                            <strong
+                                                style="color: {{ $caja?->monto_final + $totalSalidas - $totalGastos < 0 ? 'orangered' : 'green' }}">
+                                                S/
+                                                {{ number_format($caja?->monto_final + $totalSalidas - $totalGastos, 2) }}
+                                            </strong>
+                                            <input type="hidden"
+                                                value="{{ number_format($caja?->monto_final + $totalSalidas - $totalGastos, 2) }}"
+                                                id="monto_final">
+                                        </p>
+                                    @else
+                                        <p>
+                                            <strong>Saldo Diario:</strong>
+                                            <strong
+                                                style="color: {{ $totalSalidas - $totalGastos < 0 ? 'orangered' : 'green' }}">
+                                                S/ {{ number_format($totalSalidas - $totalGastos, 2) }}
+                                            </strong>
+
+                                        </p>
+                                    @endif
+
                                 </div>
                             </div>
                         </div>
@@ -240,5 +415,60 @@
         </div>
     @endsection
     @section('scripts')
+        <script>
+            if ($(".msj").length) {
+                setTimeout(() => {
+                    $(".msj").fadeOut();
+
+                }, 4000);
+            }
+            document.addEventListener("DOMContentLoaded", () => {
+                const button = document.getElementById("btnhistor");
+                const cont = document.getElementById("histor");
+                button.addEventListener("click", () => {
+                    if (cont.style.display === "none" || !cont.style.display) {
+                        cont.style.display = "block";
+                    } else {
+                        cont.style.display = "none";
+                    }
+                });
+
+                const btnCerrar = document.getElementById("btnCerrar");
+
+                btnCerrar.addEventListener("click", async () => {
+                    if (!confirm("¿Seguro que deseas cerrar la caja?")) return;
+
+                    const montoFinal = parseFloat(document.getElementById("monto_final").value) || 0;
+
+                    try {
+                        const response = await fetch("/caja/cerrar", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                                    .getAttribute("content")
+                            },
+                            body: JSON.stringify({
+                                monto_final: montoFinal
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            alert(`✅ ${data.message}\nSaldo final: S/ ${data.monto_final}`);
+                            location.reload();
+                        } else {
+                            alert(`❌ Error: ${data.message || "Intenta nuevamente."}`);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert("Error de conexión con el servidor.");
+                    }
+                });
+            });
+        </script>
+
+
         <script src="{{ asset('melody/data-table.js') }}"></script>
     @endsection

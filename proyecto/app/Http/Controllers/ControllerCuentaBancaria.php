@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBancosRequest;
 use App\Models\CuentaBancaria;
 use App\Services\ServicioCuentaBancaria;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -13,6 +14,23 @@ class ControllerCuentaBancaria extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function pdf($inicio, $fin)
+    {
+        $cuentas = CuentaBancaria::where('activo', 1)
+            ->whereHas('operacion', function ($query) use ($inicio, $fin) {
+                $query->whereBetween('fecha', [$inicio, $fin]);
+            })
+            ->with(['operacion' => function ($query) use ($inicio, $fin) {
+                $query->whereBetween('fecha', [$inicio, $fin]);
+            }])
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.cuentas', compact('cuentas','inicio','fin'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('cuentasbancarias.pdf');
+    }
     public function index()
     {
         $cuentas = CuentaBancaria::all();

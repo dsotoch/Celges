@@ -14,6 +14,7 @@ class Pagos extends Model
         'operacion_id',
         'persona_id',
         'nota',
+        
     ];
 
     public function servicio(){

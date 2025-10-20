@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Compra;
 use App\Models\Cotizacion;
+use App\Models\Pagos;
+use App\Models\Persona;
+use App\Models\User;
+use App\Models\Venta;
 use App\Services\ServicioAbonoVenta;
 use App\Services\ServicioPagos;
 use App\Services\ServicioVenta;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -152,7 +158,7 @@ class ControllerReportes extends Controller
         ];
     }
 
-     public function reportes(Request $request)
+    public function reportes(Request $request)
     {
         $servicioVentas = new ServicioVenta();
         $ventas = $servicioVentas->listarActivas();
@@ -166,7 +172,85 @@ class ControllerReportes extends Controller
         if ($request->filled('desde') && $request->filled('hasta')) {
             $ventas = $ventas->whereBetween('fecha', [$request->desde, $request->hasta]);
         }
-
+        if ($request->filled('estado') && $request->estado !== 'todos') {
+            $ventas = $ventas->where('estado', $request->estado);
+        }
         return view("reportes", compact("ventas"));
+    }
+
+    public function reportescliente(Request $request)
+    {
+
+        $cliente = Persona::findOrFail($request->idcliente);
+
+        $desde = $request->filled('desde')
+            ? Carbon::parse($request->desde)->format('Y-m-d')
+            : Carbon::now()->startOfMonth()->format('Y-m-d');
+
+        $hasta = $request->filled('hasta')
+            ? Carbon::parse($request->hasta)->format('Y-m-d')
+            : Carbon::now()->format('Y-m-d');
+
+        $ventas = Venta::with(['detalles', 'detalles.producto'])
+            ->where('cliente_id', $request->idcliente)
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->get();
+
+
+        // 4️⃣ Preparar los datos
+        $data = [
+            'cliente' => $cliente,
+            'ventas' => $ventas,
+            'fecha_inicio' => $request->desde,
+            'fecha_fin' => $request->hasta,
+        ];
+
+        // 5️⃣ Generar el PDF
+        $pdf = Pdf::loadView('pdf.reporte_cliente', $data)
+            ->setPaper('A4', 'portrait');
+
+        // 6️⃣ Mostrar el PDF en navegador
+        return $pdf->stream('Reporte_' . $cliente->nombre . '.pdf');
+    }
+    public function reportesProveedor(Request $request)
+    {
+
+        $cliente = Persona::findOrFail($request->idcliente);
+
+        $desde = $request->filled('desde')
+            ? Carbon::parse($request->desde)->format('Y-m-d')
+            : Carbon::now()->startOfMonth()->format('Y-m-d');
+
+        $hasta = $request->filled('hasta')
+            ? Carbon::parse($request->hasta)->format('Y-m-d')
+            : Carbon::now()->format('Y-m-d');
+
+        $ventas = Compra::with(['detalle', 'detalle.producto'])
+            ->where('persona_id', $request->idcliente)
+            ->whereBetween('fecha_compra', [$desde, $hasta])
+            ->get();
+
+        // Obtener los IDs de las compras
+        $idsCompras = $ventas->pluck('id');
+
+        // Buscar pagos cuya 'nota' coincida con esos IDs
+        $pagos = Pagos::whereIn('nota', $idsCompras)->get();
+
+
+        // 4️⃣ Preparar los datos
+        $data = [
+            'cliente' => $cliente,
+            'ventas' => $ventas,
+            'fecha_inicio' => $request->desde,
+            'fecha_fin' => $request->hasta,
+            'pagos' => $pagos
+        ];
+
+        // 5️⃣ Generar el PDF
+        $pdf = Pdf::loadView('pdf.reporte_proveedor', $data)
+            ->setPaper('A4', 'portrait');
+
+        // 6️⃣ Mostrar el PDF en navegador
+        return $pdf->stream('Reporte_' . $cliente->nombre . '.pdf');
     }
 }

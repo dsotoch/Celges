@@ -11,6 +11,8 @@
         href="https://jamb.pe/wp-content/uploads/2020/08/JAMB-TEHNOLOGY-CALIDAD-Y-GARANTIA-A-TU-SERVICIO-01.svg" />
     <link rel="stylesheet" href="{{ asset('melody/all.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('melody/style.css') }}" />
+  
+
     @yield('estilos')
     <!-- Archivos que estás desarrollando con Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -22,10 +24,10 @@
         <!-- partial:partials/_navbar.html -->
         <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row default-layout-navbar">
             <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-                <a class="navbar-brand brand-logo" href="index-2.html"><img
+                <a class="navbar-brand brand-logo" href="#" onclick="location.reload(); return false;"><img
                         src="https://jamb.pe/wp-content/uploads/2020/08/JAMB-TEHNOLOGY-CALIDAD-Y-GARANTIA-A-TU-SERVICIO-01.svg"
                         alt="logo" /></a>
-                <a class="navbar-brand brand-logo-mini" href="index-2.html"><img
+                <a class="navbar-brand brand-logo-mini" href="#" onclick="location.reload(); return false;"><img
                         src="https://jamb.pe/wp-content/uploads/2020/08/JAMB-TEHNOLOGY-CALIDAD-Y-GARANTIA-A-TU-SERVICIO-01.svg"
                         alt="logo" /></a>
             </div>
@@ -82,7 +84,7 @@
         <div class="container-fluid page-body-wrapper">
             <!-- partial:partials/_settings-panel.html -->
             <div class="theme-setting-wrapper">
-                @if (Route::currentRouteName() == 'cotizacion.index')
+                @if (Route::currentRouteName() == 'cotizacion.index' )
                     <div id="settings-trigger" style="cursor: pointer"><i class="fas fa-sliders-h"></i> </div>
                 @endif
                 <div id="theme-settings" class="settings-panel">
@@ -114,7 +116,7 @@
 
                         <!-- Generar Imagen -->
                         <button class="btn btn-success w-100  settings-heading" id="generar-imagen">
-                            <i class="fas fa-image"></i> Generar Imagen
+                            <i class="fas fa-image"></i> Generar PDF
                         </button>
                     </div>
                 </div>
@@ -176,12 +178,12 @@
                                 <span class="menu-title">Caja</span>
                             </a>
                         </li>
-                        <li class="nav-item">
+                       <!-- <li class="nav-item">
                             <a class="nav-link" href="{{ route('cotizacion.index') }}">
                                 <i class="fas fa-file-invoice menu-icon"></i>
                                 <span class="menu-title">Cotizaciones</span>
                             </a>
-                        </li>
+                        </li>--->
                     @endhasanyrole
                     @hasanyrole('admin|vendedor|almacenero')
                         <li class="nav-item">
@@ -201,7 +203,7 @@
                     @endhasanyrole
                     @hasanyrole('admin')
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('pagos.validar') }}">
+                            <a class="nav-link" href="{{ route('pagos.validarindex') }}">
                                 <i class="fas fa-money-bill menu-icon"></i>
                                 <span class="menu-title">Validar Pagos</span>
                             </a>
@@ -249,7 +251,14 @@
                             </a>
                         </li>
                     @endhasanyrole
-
+                    @hasanyrole('admin|vendedor')
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('proveedores.tipoclientes') }}">
+                                <i class="fas fa-users menu-icon"></i> <!-- Icono cambiado -->
+                                <span class="menu-title">Clientes</span>
+                            </a>
+                        </li>
+                    @endhasanyrole
                     @hasanyrole('admin|vendedor|almacenero')
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('cuentasbancarias.index') }}">

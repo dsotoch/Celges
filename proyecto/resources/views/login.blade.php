@@ -68,7 +68,15 @@
                 <input type="password" name="password" class="form-control" required placeholder="••••••••">
             </div>
 
-            <button type="submit" class="btn btn-orange btn-block">Ingresar</button>
+            <div class="form-check mt-3">
+                <input type="checkbox" class="form-check-input" id="remember" name="remember"
+                    {{ old('remember') ? 'checked' : '' }} checked>
+                <label class="form-check-label text-muted" for="remember">
+                    <i class="fas fa-user-lock mr-1"></i> Recuérdame
+                </label>
+            </div>
+
+            <button type="submit" style="margin-top: 10px;" class="btn btn-orange btn-block">Ingresar</button>
         </form>
 
         <p class="mt-4 text-muted">© 2025 JAMB Technology</p>

@@ -37,6 +37,11 @@
                     </div>
                 </div>
 
+                <div class="m-2 p-3">
+
+                    <a href="{{ route('almaceninterno.pdf') }}" target="_blank"><button class="btn btn-danger">Generar Pdf</button></a>
+                </div>
+
             </div>
               @if (session('success'))
                     <div class="alert alert-success mb-4 msj">

@@ -75,7 +75,7 @@ class ServicioCuentas
 
     public function detallesCuentas(string $id)
     {
-        return Cuentas::with("venta", "venta.abonos", "venta.abonos.operacion")->whereRelation("venta", "cliente_id", "=", $id)->get();
+        return Cuentas::with("venta", "venta.abonos", "venta.abonos.operacion","venta.abonos.operacion.cuenta")->whereRelation("venta", "cliente_id", "=", $id)->get();
     }
 
     public function obtenerCodigo(int $numeroActual): string
