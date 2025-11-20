@@ -6,6 +6,7 @@ use App\Http\Requests\StoreRequestCotizacion;
 use App\Models\AlmacenInterno;
 use App\Models\Cotizacion;
 use App\Models\Persona;
+use App\Models\Venta;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,8 +18,8 @@ class ControllerCotizaciones extends Controller
      */
     public function index()
     {
-        $maxId = Cotizacion::max("id") ?? 0;
-        $codigo = "COT" . str_pad($maxId + 1, 4, "0", STR_PAD_LEFT);
+        $maxId = Venta::max("id") ?? 0;
+        $codigo = "VENT" . str_pad($maxId + 1, 4, "0", STR_PAD_LEFT);
         $cotizaciones = Cotizacion::all();
         $numeros = (array) DB::table('configuraciones')->select('numero1', 'numero2')->first();
 

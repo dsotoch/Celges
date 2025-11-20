@@ -44,10 +44,11 @@
         <div class="overflow-auto">
 
             <div>
-                <div class="border border-danger text-danger p-3 mb-2 hidden blink" id="mensaje_productos">
+                <div class="border border-danger text-danger p-3 mb-2  blink" id="mensaje_productosgeneral">
                     <p><b>Cliente:</b> <span id="mensajecliente"></span></p>
+                    <p><b>Numero:</b> #{{ $codigo }}</p>
                     <p class="mt-2"><b>Fecha:</b> <span>{{ now('America/Lima')->format('Y-m-d') }}</span></p>
-
+                    <div id="mensaje_productos" class="hidden"></div>
 
                 </div>
                 <button class="hidden" id="imprimirMensaje"
@@ -453,6 +454,9 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             });
         });
 
+        let total_utilidades = 0.00;
+
+
         $(document).ready(function() {
             let restarsaldo = false;
             const body = $('body');
@@ -468,7 +472,6 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             let producto = "";
             let registrado = '';
             let precio_compra = "";
-            let total_utilidades = 0.00;
             let color = "";
             // Selección de fila
             $('.selectable-row').on('click', function() {
@@ -570,6 +573,11 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     alert("Este Producto ya esta Agregado en la Cotización");
                     return;
                 }
+                const cl = document.getElementById("cliente");
+                if (cl.value == "") {
+                    alert("⚠️Primero Seleccione el Cliente.");
+                    return;
+                }
                 enviarTabla();
             });
 
@@ -605,11 +613,11 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 <td class="text-center tdcantidad">
   <input type="number" class="canti text-center" data-id="${id}" value="${cantidad}">
 </td>
-        <td class="text-center"><input class='form-control' style='text-align:center;' type='text' value='${producto}'/></td>
+        <td class="text-center"><input class='form-control name'  data-id='${id}'  data-nombre='${producto}' style='text-align:center;' type='text' value='${producto}'/></td>
         <td class="text-center">
   <div class="inline-flex items-center gap-2">
-    <input class="costoregistro  text-center" data-nombre="${producto}" value="0" readonly />
-    <button class="btn-toggle" style="cursor:pointer;" ${registrado==1?'disabled':''} >✏️</button>
+    <input class="costoregistro  text-center"  data-id="${id}" data-nombre="${producto}" value="0" readonly />
+    <button class="btn-toggle"  style="cursor:pointer;" ${registrado==1?'disabled':''} >✏️</button>
   </div>
 </td>
 
@@ -622,13 +630,13 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
     </tr>
 `);
                 let diferencia = (precio - precio_compra) * cantidad;
-                total_utilidades += cantidad * diferencia;
+                total_utilidades += diferencia;
                 $("#tb_utilidades").append(`
     <tr>
         <td class="text-center" data-id="${id}" data-cantidad="${cantidad}" data-precio="${precio}" data-preciocompra="${precio_compra}">${producto}</td>
         <td class="text-center">${precio_compra.toFixed(2)}</td>
+        <td class="text-center">${(diferencia/cantidad).toFixed(2)}</td>
         <td class="text-center">${diferencia.toFixed(2)}</td>
-        <td class="text-center">${(cantidad * diferencia).toFixed(2)}</td>
         
     </tr>
 `);
@@ -640,7 +648,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 `);
 
 
-                agregarProducto(id, cantidad, precio, registrado, color, producto);
+                agregarProducto(id, cantidad, precio_compra, precio, registrado, color, producto);
                 calcularsubtotal();
                 cantidad = "";
                 precio = "";
@@ -650,23 +658,133 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 precio_compra = "";
                 diferencia = "";
                 color = "";
+                let total = 0;
+                $("#tb_utilidades tr").each(function() {
+                    const texto = $(this).find("td:last").text().trim();
+                    const numero = parseFloat(texto.match(
+                        /-?\d+(\.\d+)?/));
+                    total += numero || 0;
+                });
+
+
+                $("#utilidades").text(total.toFixed(2));
+                total = 0;
 
             }
 
             $(document).on("click", ".btn-toggle", function() {
                 const td = $(this).closest("td");
                 const input = td.find(".costoregistro");
+                const id = input.attr("data-id");
 
+                const nombre = input.attr("data-nombre");
+                let nombreoriginal = input.attr("data-nombreoriginal");
+                if (typeof nombreoriginal === "undefined" || nombreoriginal === null) {
+                    nombreoriginal = nombre;
+                }
                 const editando = !input.prop("readonly");
-
+                const tdNombreproducto = td.prev("td").find("input");
                 if (editando) {
+                    input.val("0");
                     input.prop("readonly", true).removeClass("editando");
                     $(this).text("✏️");
+                    actualizarNombreProducto(id, nombreoriginal, "", 0);
+                    let texto = tdNombreproducto.val().trim().replace("REGISTRADO", "LIBRE");
+                    tdNombreproducto.val(texto);
+                    tdNombreproducto.attr("data-nombre", texto);
+                    resetearUtilidades(nombre, nombreoriginal);
+                    procesarCostoRegistro(input);
+
                 } else {
                     input.prop("readonly", false).addClass("editando").focus();
                     $(this).text("❌");
                 }
             });
+            $("#detalles").on('keydown', '.name', async function(e) {
+                if (e.key === "Enter" || e.keyCode === 13) {
+                    e.preventDefault();
+                    const reemplaso = this.value;
+                    const id = $(this).attr("data-id");
+                    const nombre = $(this).attr("data-nombre");
+                    const nuevoNombre = reemplazarSoloColor(nombre, reemplaso, id);
+                    this.value = nuevoNombre;
+                    cambiarNombreUtilidades(nombre, nuevoNombre);
+                    $(this).attr("data-nombre", nuevoNombre);
+                    const td = $(this).closest("td");
+                    const tdnext = td.next("td").find("input");
+                    tdnext.attr("data-nombre", nuevoNombre);
+                    tdnext.attr("data-nombreoriginal", nuevoNombre);
+
+                }
+            });
+
+            function reemplazarSoloColor(nombreOriginal, nuevoTexto, id) {
+                const colores = [
+                    "rojo", "azul", "verde", "negro", "blanco", "gris",
+                    "amarillo", "morado", "rosado", "celeste", "plomo",
+                    "naranja", "marrón", "beige", "vino", "turquesa",
+                    "fucsia", "dorado", "plateado", "lila", "ocre",
+                    "crema", "chocolate", "perla", "lavanda", "mostaza",
+                    "cian", "magenta", "café", "arena", "esmeralda",
+                    "coral", "carbón", "jade", "menta", "púrpura",
+                    "petróleo", "azul marino", "azul cielo", "verde oliva",
+                    "verde limón", "gris oscuro", "gris claro", "blanco hueso",
+                    "negro mate", "rojo vino", "azul eléctrico", "rojo coral",
+                    "verde menta", "rosa pastel", "azul pastel", "verde esmeralda",
+                    "dorado viejo", "plata metálico", "bronce", "antracita",
+                    "caqui", "terracota", "granate", "lavanda claro", "oliva",
+                    "azul rey", "azul zafiro", "verde bosque", "naranja fuerte"
+                ];
+
+                const original = nombreOriginal.toLowerCase().trim();
+                const nuevo = nuevoTexto.toLowerCase().trim();
+
+                // Detectar colores en ambos textos
+                const colorOriginal = colores.find(c => original.includes(c));
+                const colorNuevo = colores.find(c => nuevo.includes(c));
+
+                // Caso válido: ambos tienen color y solo cambió el color
+                if (colorOriginal && colorNuevo && colorNuevo !== colorOriginal) {
+                    const restoOriginal = original.replace(colorOriginal, "").replace(/\s+/g, " ").trim();
+                    const restoNuevo = nuevo.replace(colorNuevo, "").replace(/\s+/g, " ").trim();
+
+                    if (restoOriginal === restoNuevo) {
+                        // ✅ Solo cambió el color
+                        const resultado = nombreOriginal.replace(new RegExp(colorOriginal, "i"), colorNuevo);
+                        actualizarNombreProducto(id, resultado, colorNuevo);
+                        return resultado;
+                    } else {
+                        alert("⚠️ Solo puedes cambiar el color, no el resto del nombre.");
+                        return nombreOriginal;
+                    }
+                }
+
+                // Si no se detecta cambio de color válido
+                alert("⚠️ Solo se permite modificar el color del producto.");
+                return nombreOriginal;
+            }
+
+
+
+            function cambiarNombreUtilidades(nombreBuscado, reemplaso) {
+                let filaEncontrada = false;
+
+                $("#tb_utilidades tr").each(function() {
+                    const primeraColumna = $(this).find("td:first, th:first").text().trim().toLowerCase();
+
+                    if (primeraColumna === nombreBuscado.toLowerCase()) {
+                        filaEncontrada = true;
+                        $(this).find("td:first, th:first").text(reemplaso);
+
+
+                    }
+                });
+
+                if (!filaEncontrada) {
+                    console.warn("⚠️ No se encontró ninguna fila con el nombre:", nombreBuscado);
+                }
+            }
+
 
             $("#detalles").on('keydown', '.canti', async function(e) {
                 if (e.key === "Enter" || e.keyCode === 13) {
@@ -676,6 +794,12 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     const segundaColumna = $fila.find("td:eq(1) input");
                     const costoRegistro = $fila.find("td:eq(2) input");
                     const cst = costoRegistro.val();
+                    if (cst > 0) {
+                        alert(
+                            "⚠️ Para actualizar la cantidad, borra toda la operación de costo de registro, luego lo vuelves agregar."
+                        );
+                        return;
+                    }
                     const cantidad = $(this).val();
                     const $unitarioColumna = $fila.find("td:last").prev().prev();
                     const costo = parseFloat($unitarioColumna.text().trim()) || 0;
@@ -695,11 +819,16 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 }
             });
 
-            $("#detalles").on('keydown', '.costoregistro', function(e) {
+            $("#detalles").on('keydown', '.costoregistro', async function(e) {
                 if (e.key === "Enter" || e.keyCode === 13) {
                     e.preventDefault();
-                    const nombre = $(this).data("nombre");
+                    $(this).blur();
+                    if (!$(this).attr("data-nombreoriginal")) {
+                        $(this).attr("data-nombreoriginal", $(this).attr("data-nombre"));
+                    }
+                    const id = $(this).attr("data-id");
 
+                    const nombreOriginal = $(this).attr("data-nombreoriginal");
                     const $fila = $(this).closest("tr");
                     const segundaColumna = $fila.find("td:eq(1) input");
                     const primerInput = $(this).closest("tr").find("td input").first();
@@ -715,23 +844,128 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     if (costo > 0) {
                         tdActual.text(total.toFixed(2));
                         $(this).val(subtotal);
-                        texto = texto.replace("LIBRE", "REGISTRADO");
+                        texto = nombreOriginal.replace("LIBRE", "REGISTRADO");
+                        $(this).attr("data-nombre", texto);
                         segundaColumna.val(texto);
-                        recorrerUtilidades(nombre, "registro", costo);
-                        $(this).closest("td").css({
+                        segundaColumna.attr("data-nombre", texto);
+                        actualizarNombreProducto(id, texto, "", 1);
+                        recorrerUtilidades(nombreOriginal, "registro", costo);
+                        $(this).css({
                             "pointer-events": "none", // bloquea clics y eventos
                             "opacity": "0.6", // se ve deshabilitado
                             "user-select": "none" // no permite seleccionar texto
                         });
+                        await procesarLista(productos);
+
                     } else {
-                        segundaColumna.val(texto);
+                        segundaColumna.val(nombreOriginal);
                         tdActual.text((parseFloat(subTotalActual.text()) * cantidad).toFixed(2));
-
-
+                        actualizarNombreProducto(id, nombreOriginal);
                     }
+
                     calcularsubtotal();
                 }
             });
+
+            function procesarCostoRegistro(input) {
+                if (!$(this).data("nombreoriginal")) {
+                    $(this).data("nombreoriginal", $(this).data("nombre"));
+                }
+                const $fila = $(input).closest("tr");
+                const segundaColumna = $fila.find("td:eq(1) input");
+                const primerInput = $fila.find("td input").first();
+                const cantidad = parseFloat(primerInput.val()) || 0;
+                const costo = parseFloat($(input).val()) || 0;
+                const subtotal = cantidad * costo;
+
+                const subTotalActual = $(input).closest("td").next();
+                const tdActual = subTotalActual.next();
+                const totalActual = parseFloat(tdActual.text()) || 0;
+
+                const total = totalActual + subtotal;
+                let texto = segundaColumna.val().trim();
+
+                if (costo > 0) {
+                    tdActual.text(total.toFixed(2));
+                    $(input).val(subtotal);
+                    texto = texto.replace("REGISTRADO", "LIBRE");
+                    $(input).data("nombre", texto);
+                    segundaColumna.val(texto);
+                    recorrerUtilidades(nombre, "registro", costo);
+
+                    $(input).css({
+                        "pointer-events": "none",
+                        "opacity": "0.6",
+                        "user-select": "none"
+                    });
+                } else {
+                    segundaColumna.val(texto);
+                    tdActual.text((parseFloat(subTotalActual.text()) * cantidad).toFixed(2));
+                }
+
+                calcularsubtotal();
+            }
+
+            function resetearUtilidades(nombre, original) {
+
+                const nombreBuscado = nombre.trim().toLowerCase();
+                let total = 0;
+                let filaEncontrada = false;
+
+                $("#tb_utilidades tr").each(function(index) {
+                    const primeraColumna = $(this).find("td:first, th:first").text().trim()
+                        .toLowerCase();
+
+                    // Si el nombre coincide, eliminamos la fila y volvemos a crearla
+                    if (primeraColumna === nombreBuscado) {
+                        filaEncontrada = true;
+
+                        $(this).remove();
+
+                        let pr = buscarProductoPorNombre(original);
+
+                        if (pr) {
+                            let diferencia = (pr.precio - pr.precio_compra) * pr.cantidad;
+                            $("#tb_utilidades").append(`
+                    <tr>
+                        <td class="text-center" data-id="${pr.id}" data-cantidad="${pr.cantidad}" data-precio="${pr.precio}" data-preciocompra="${pr.precio_compra}">
+                            ${pr.nombre}
+                        </td>
+                        <td class="text-center">${pr.precio_compra.toFixed(2)}</td>
+                        <td class="text-center">${(diferencia / pr.cantidad).toFixed(2)}</td>
+                        <td class="text-center">${diferencia.toFixed(2)}</td>
+                    </tr>
+                `);
+
+
+
+                        } else {
+                            console.warn(
+                                "⚠️ No se encontró el producto con el nombre original:",
+                                original);
+                        }
+                    }
+                });
+
+                if (!filaEncontrada) {
+                    console.warn(`⚠️ No se encontró ninguna fila con el nombre: "${nombreBuscado}"`);
+                }
+
+                // Recalcular total de utilidades
+                $("#tb_utilidades tr").each(function() {
+                    const texto = $(this).find("td:last").text().trim();
+                    const numero = parseFloat(texto.match(
+                        /-?\d+(\.\d+)?/));
+                    total += numero || 0;
+                });
+
+
+                $("#utilidades").text(total.toFixed(2));
+
+            }
+
+
+
 
             function recorrerUtilidades(nombre, tipo = "", monto = 0, cantidad = 1) {
                 const nombreBuscado = nombre.trim().toLowerCase();
@@ -741,7 +975,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 $("#tb_utilidades tr").each(function() {
                     const primeraColumna = $(this).find("td:first, th:first").text().trim()
                         .toLowerCase();
-                    const $primeraColumnas = $(this).find("td:first"); // o th:first si aplica
+                    const $primeraColumnas = $(this).find(
+                        "td:first"); // o th:first si aplica
 
                     const id = $primeraColumnas.data("id");
 
@@ -756,61 +991,105 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         if (tipo === "registro") {
                             const $penultimaColumna = $(this).find("td:eq(-2)");
                             const $ultimaColumna = $(this).find("td:last");
-                            const $penultima = $penultimaColumna.prev();
-                            const primera = $penultima.prev();
+                            const $preciocompra = $penultimaColumna.prev();
+                            const primera = $preciocompra.prev();
 
                             // 🧩 1️⃣ Obtener el texto numérico de ambas columnas
-                            const textoPenultima = $penultima.text().trim();
-                            const textoUltima = $penultimaColumna.text().trim();
+                            const textoPrecioCompra = $preciocompra.text().trim();
+                            const textoUtilidadIndividual = $penultimaColumna.text().trim();
+                            const textoUltima = $ultimaColumna.text().trim();
 
                             // 🧮 2️⃣ Convertir a número (si no hay valor, usar 0)
-                            const precioProducto = parseFloat(textoPenultima) || 0;
-                            const costoProducto = parseFloat(textoUltima) || 0;
+                            const precioProducto = parseFloat(textoPrecioCompra) || 0;
+                            const totalUtilidad = parseFloat(textoUltima) || 0;
+                            const utilidadIndividual = parseFloat(
+                                textoUtilidadIndividual) || 0;
 
-                            // 💰 3️⃣ Calcular nuevos valores
-                            const nuevoCosto = costoProducto + monto - 25; // ejemplo de ajuste total
-                            const nuevoPrecio = precioProducto + 25; // ejemplo de ajuste unitario
+                            const cantidad_productos = (utilidadIndividual == 0 &&
+                                    totalUtilidad == 0) ?
+                                1 : totalUtilidad / utilidadIndividual;
+
+                            // 💰 3️⃣ Calcular nuevos valores con depuración
+
+
+                            const nuevoCosto = (utilidadIndividual * cantidad_productos) + (
+                                (monto - 25) *
+                                cantidad_productos);
+
+
+
+                            const nuevoPrecio = (precioProducto) +
+                                (25);
                             // 🖊️ 4️⃣ Actualizar la tabla
-                            $penultima.text(nuevoPrecio.toFixed(2));
-                            $penultimaColumna.text(nuevoCosto.toFixed(2));
-                            $ultimaColumna.text(nuevoCosto.toFixed(2));
+                            $preciocompra
+                                .html(`<span style="color:red; font-weight:bold;">
+              ${nuevoPrecio.toFixed(2)} ( x ${cantidad_productos} unidades)
+           </span>`);
+                            $ultimaColumna
+                                .html(`<span style="color:red; font-weight:bold;">
+              ${nuevoCosto.toFixed(2)} ( ${((monto - 25) *
+                                cantidad_productos)} utilidad adicional por costo de registro)
+           </span>`);
+
+                            $("#tb_utilidades tr").each(function() {
+                                const texto = $(this).find("td:last").text().trim();
+                                const numero = parseFloat(texto.match(
+                                    /-?\d+(\.\d+)?/));
+                                total += numero || 0;
+                            });
 
 
-                            const valor = parseFloat($(this).find("td:last").text().trim()) || 0;
-                            total += valor;
+                            $("#utilidades").text(total.toFixed(2));
+                            total = 0;
                             const texto = nombre.replace("LIBRE", "REGISTRADO");
                             primera.text(texto);
-                            $("#utilidades").text(total.toFixed(2));
 
                         } else {
                             if (tipo == "cantidad") {
                                 const $penultimaColumna = $(this).find("td:eq(-2)");
                                 const $ultimaColumna = $(this).find("td:last");
-                                const $penultima = $penultimaColumna.prev();
-                                const primera = $penultima.prev();
+                                const $preciocompra = $penultimaColumna.prev();
+                                const primera = $preciocompra.prev();
 
-                                const textoPenultima = $penultima.text().trim();
-                                const textoUltima = $penultimaColumna.text().trim();
+                                // 🧩 1️⃣ Obtener el texto numérico de ambas columnas
+                                const textoPrecioCompra = $preciocompra.text().trim();
+                                const textoUtilidadIndividual = $penultimaColumna.text().trim();
+                                const textoUltima = $ultimaColumna.text().trim();
 
-                                const precioProducto = parseFloat(textoPenultima) || 0;
-                                const costoProducto = parseFloat(textoUltima) || 0;
-                                utilidadactual = costoProducto;
-                                const nuevoCosto = utilidadactual * cantidad;
-                                $penultimaColumna.text(nuevoCosto.toFixed(2));
-                                $ultimaColumna.text(nuevoCosto.toFixed(2));
+                                // 🧮 2️⃣ Convertir a número (si no hay valor, usar 0)
+                                const precioProducto = parseFloat(textoPrecioCompra) || 0;
+                                const totalUtilidad = parseFloat(textoUltima) || 0;
+                                const utilidadIndividual = parseFloat(
+                                    textoUtilidadIndividual) || 0;
 
 
-                                const valor = parseFloat($(this).find("td:last").text().trim()) || 0;
-                                total += valor;
+
+
+                                const nuevoCosto = utilidadIndividual * cantidad;
+                                $ultimaColumna.text(nuevoCosto);
+
+                                $("#tb_utilidades tr").each(function() {
+                                    const texto = $(this).find("td:last").text().trim();
+                                    const numero = parseFloat(texto.match(
+                                        /-?\d+(\.\d+)?/));
+                                    total += numero || 0;
+                                });
+
 
                                 $("#utilidades").text(total.toFixed(2));
+                                total = 0;
 
                             } else {
-                                utili -= valorUltimaColumna;
-
-                                // Actualizar el texto del elemento utilidades
-                                $("#utilidades").text(utili.toFixed(2));
                                 $(this).remove();
+                                $("#tb_utilidades tr").each(function() {
+                                    const texto = $(this).find("td:last").text().trim();
+                                    const numero = parseFloat(texto.match(
+                                        /-?\d+(\.\d+)?/));
+                                    total += numero || 0;
+                                });
+
+                                $("#utilidades").text(total.toFixed(2));
+                                total = 0;
                             }
 
                         }
@@ -819,21 +1098,23 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 });
             }
 
+
             window.document.addEventListener('click', async function(e) {
                 if (e.target.classList.contains('btn-eliminar')) {
+                    const fila = e.target.closest("tr");
                     const id = e.target.dataset.id;
-                    const nombre = e.target.dataset.nombre;
-                    // Eliminar la fila visualmente
-                    e.target.closest('tr').remove();
-                    eliminarProductoPorId(id);
+                    const registro = fila.querySelector(".name");
 
-                    // Procesar la lista actualizada
+                    let nombreoriginal = registro ? registro.value : null;
+                    fila.remove();
+                    eliminarProductoPorId(id);
                     await procesarLista(productos);
                     calcularsubtotal();
-                    recorrerUtilidades(nombre);
+                    recorrerUtilidades(nombreoriginal);
 
                 }
             });
+
 
 
             async function procesarLista(productos) {
@@ -851,7 +1132,9 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                             producto.cantidad,
                             producto.nombre
                         ).catch(error => {
-                            console.error(`⚠️ Error al procesar producto ${producto.id}:`, error);
+                            console.error(
+                                `⚠️ Error al procesar producto ${producto.id}:`,
+                                error);
                         })
                     )
                 );
@@ -859,7 +1142,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             }
 
 
-            async function listarEnAlmacenInterno(producto_id, color, registrado, cantidad, nombre) {
+            async function listarEnAlmacenInterno(producto_id, color, registrado, cantidad,
+                nombre) {
                 let cuantos_almacen = 0;
 
                 $("#datos-productos tr").each(function() {
@@ -874,27 +1158,78 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
                 if (Number(cantidad) > diferencia) {
                     let dif = Number(cantidad) - diferencia;
+                    let observacionesPrevias = [];
+                    $("#mensaje_productos textarea").each(function() {
+                        observacionesPrevias.push($(this).val());
+                    });
                     $("#mensaje_productos").removeClass("hidden").show();
                     $("#imprimirMensaje").removeClass("hidden").show();
+
                     $("#mensaje_productos").append(`
-    <p> Faltan ${dif} existencias para Despachar, para el producto ${nombre} </p>
-     <textarea class="autoexpand" rows="1" placeholder="Escribe una observación..."></textarea>
-    <hr>
+    <div class="bloque-faltante" style="position: relative; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px;">
+        <span style="background-color:yellow;color:black;">EXISTENCIAS FALTANTES</span>
+        <p style="margin: 5px 0;">${dif} ${nombre}</p>
+        <textarea class="autoexpand" rows="1" style="color:black;width:100%;" placeholder="Escribe una observación..."></textarea>
+        <span class="eliminar-bloque" 
+              style="position:absolute;top:5px;right:8px;cursor:pointer;font-weight:bold;color:red;font-size:18px;">
+              ✖
+        </span>
+    </div>
 `);
+
+
+                    $("#mensaje_productos textarea").each(function(index) {
+                        if (observacionesPrevias[index]) {
+                            $(this).val(observacionesPrevias[index]);
+                        }
+                    });
                 } else {
                     $("#mensaje_productos").hide().empty();
                     $("#imprimirMensaje").hide();
                 }
             }
+            $(document).on("click", ".eliminar-bloque", function() {
+                $(this).closest(".bloque-faltante").remove();
+            });
+
             $(document).on("input", ".autoexpand", function() {
                 this.style.height = "auto"; // resetea el alto
                 this.style.height = (this.scrollHeight) + "px"; // ajusta al contenido
             });
 
-            function agregarProducto(id, cantidad, precio, registrado, color, nombre) {
+            function buscarProductoPorNombre(nombreBuscado) {
+
+                if (!nombreBuscado) {
+                    console.warn("⚠️ Nombre buscado no proporcionado o es null/undefined");
+                    return null;
+                }
+
+                const nombre = nombreBuscado.trim().toLowerCase();
+
+                if (!Array.isArray(productos)) {
+                    return null;
+                }
+
+                const productoEncontrado = productos.find(p => {
+                    if (!p || typeof p.nombre !== "string") {
+                        return false;
+                    }
+                    const nombreProducto = p.nombre.trim().toLowerCase();
+                    const coincide = nombreProducto === nombre;
+
+
+                    return coincide;
+                });
+
+                return productoEncontrado || null;
+            }
+
+
+            function agregarProducto(id, cantidad, precio_compra, precio, registrado, color, nombre) {
                 // Crear un objeto producto
                 let item = {
                     id: id,
+                    precio_compra: parseInt(precio_compra),
                     cantidad: parseInt(cantidad),
                     color: color,
                     precio: parseFloat(precio),
@@ -927,7 +1262,23 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 }
             }
 
+            function actualizarNombreProducto(id, nuevonombre, color = "", registrado = null) {
+                const producto = productos.find(p => Number(p.id) === Number(id));
+                if (producto) {
+                    producto.nombre = nuevonombre || "";
+                    if (color && color.trim() !== "") {
+                        producto.color = color.trim();
+                    }
 
+                    if (registrado !== null && registrado !== undefined && registrado !== "") {
+                        producto.registrado = registrado;
+                    }
+
+
+                } else {
+                    console.warn("⚠️ No se encontró un producto con el ID:", id);
+                }
+            }
 
             function calcularsubtotal() {
                 let total = 0;
@@ -964,7 +1315,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 let facturacion = parseFloat($("#facturacion").val()) || 0;
                 let total = 0.00;
                 if (restarsaldo) {
-                    let totalsinSaldoFavor = subtotal + envio + encomienda + facturacion + totalregistro;
+                    let totalsinSaldoFavor = subtotal + envio + encomienda + facturacion +
+                        totalregistro;
                     if (favor >= totalsinSaldoFavor) {
                         total = 0.00;
                     } else {
@@ -994,7 +1346,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                             $(this).val(valor.toFixed(
                                 2)); // Reemplazamos con el monto calculado
                         } else {
-                            $(this).val(valor.toFixed(2)); // Redondeamos a 2 decimales
+                            $(this).val(valor.toFixed(
+                                2)); // Redondeamos a 2 decimales
                         }
 
                         calcularTotal();
@@ -1013,8 +1366,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                     // Copiar estilos esenciales manualmente
                     const computed = getComputedStyle(el);
                     const estilosClaves = [
-                        "font", "color", "backgroundColor", "padding", "margin", "border",
-                        "borderRadius", "display", "width", "height", "textAlign", "whiteSpace"
+                        "font", "color", "backgroundColor", "padding", "margin",
+                        "border",
+                        "borderRadius", "display", "width", "height", "textAlign",
+                        "whiteSpace"
                     ];
 
                     estilosClaves.forEach(prop => {
@@ -1114,7 +1469,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(response) {
-                            window.open("/ventas/generar-pdf/" + response.venta, "_blank");
+                            window.open("/ventas/generar-pdf/" + response.venta,
+                                "_blank");
                             setTimeout(() => {
                                 location.reload();
                             }, 2000);
@@ -1122,7 +1478,8 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         error: function(xhr) {
                             console.error("❌ Error al guardar la cotización:", xhr);
                             if (xhr.responseJSON) {
-                                console.error("📄 Respuesta JSON:", xhr.responseJSON);
+                                console.error("📄 Respuesta JSON:", xhr
+                                    .responseJSON);
                                 alert("Error: " + (xhr.responseJSON.message ||
                                     "Error desconocido."));
                             } else {
@@ -1144,7 +1501,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                 alert("💢Ingresa el Cliente");
                 return;
             }
-            html2canvas(document.getElementById('mensaje_productos'), {
+            html2canvas(document.getElementById('mensaje_productosgeneral'), {
                 scale: 3
             }).then(function(canvas) {
                 let imgData = canvas.toDataURL('image/png');

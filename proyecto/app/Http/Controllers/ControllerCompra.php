@@ -25,10 +25,41 @@ class ControllerCompra extends Controller
      * Display a listing of the resource.
      */
 
-    public function buscarPorImei($imei) {
+    public function updatecolor(Request $request)
+    {
+        $servicioAlmacen = new ServicioDetalleCompra();
 
-        $detallescompra=DetalleCompra::with(['compra','compra.persona'])->where('imei',$imei)->first();
-        return response()->json(["data"=>$detallescompra]);
+        $ids = $request->input('id');
+        $precios = $request->input('precio');
+        $colores = $request->input("color");
+
+        foreach ($ids as $index => $id) {
+            $precioLimpio = floatval(str_replace(',', '', $precios[$index]));
+            $color = $colores[$index];
+
+            $data = [
+                'precio' => $precioLimpio,
+            ];
+
+            // Solo agregar 'color' si cumple la condición
+            if (!empty($color) && $color !== '-') {
+                $data['color'] = $color;
+            }
+
+            $servicioAlmacen->actualizar($id, $data);
+        }
+        $detalle =DetalleCompra::find($ids[0]);
+        $compra_id = $detalle->compra_id;
+
+        $data = $servicioAlmacen->obtenerDetallesCompra($compra_id);
+
+        return redirect()->route('compras.index')->with('success-delete', 'Precios actualizados correctamente.');
+    }
+    public function buscarPorImei($imei)
+    {
+
+        $detallescompra = DetalleCompra::with(['compra', 'compra.persona'])->where('imei', $imei)->first();
+        return response()->json(["data" => $detallescompra]);
     }
 
     public function index()

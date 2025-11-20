@@ -65,6 +65,7 @@ Route::prefix('compras')
         Route::put('/edit/{id}',    'update')->name('compras.update')->middleware(['permission:editar compras']);      // Actualizar compra
         Route::delete('/{id}',      'destroy')->name('compras.destroy')->middleware(['permission:editar compras']);     // Eliminar compra
         Route::put('/modificar-detalle/{id}',    'updatedetalle')->name('compras.updatedetalle')->middleware(['permission:editar compras']);      // Actualizar compra
+        Route::put('/modificar-compra',    'updatecolor')->name('compras.updatecolor')   ;   // Actualizar compra
 
     })->middleware("auth");
 Route::prefix('almaceninterno')

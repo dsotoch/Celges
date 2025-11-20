@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Compra;
 use App\Models\DetalleCompra;
 use Exception;
 use Illuminate\Support\Collection;
@@ -9,6 +10,22 @@ use Illuminate\Support\Facades\Log;
 
 class ServicioDetalleCompra
 {
+
+    public function obtenerDetallesCompra($id)
+    {
+        
+        $detalles = DetalleCompra::with(['producto', 'compra'])
+            ->where('compra_id', $id)
+            ->get();
+
+        $total = $detalles->sum(function ($item) {
+            return $item->precio * $item->cantidad;
+        });
+
+        Compra::where('id', $id)->update(['total' => $total]);
+
+    }
+
     public function listar()
     {
         return DetalleCompra::with(['producto', 'compra'])->get();

@@ -441,7 +441,8 @@
                                         <td class="text-12 bg-blue text-white">SALDO A FAVOR</td>
                                         <td class="bg-moke">
                                             <div class="montos text-12">S/
-                                                <input type="text" class="text-12" value="0.00" readonly id="favor">
+                                                <input type="text" class="text-12" value="0.00" readonly
+                                                    id="favor">
                                             </div>
                                         </td>
                                     </tr>
@@ -455,7 +456,8 @@
                                         <td class="text-12 bg-blue text-white">SALDO PENDIENTE</td>
                                         <td class="bg-moke">
                                             <div class="montos text-12">S/
-                                                <input type="text" class="text-12" readonly value="0.00" id="pendiente">
+                                                <input type="text" class="text-12" readonly value="0.00"
+                                                    id="pendiente">
                                             </div>
                                         </td>
                                     </tr>
@@ -478,8 +480,7 @@
                                         <td class="text-12 bg-blue text-white p-2">REGISTRO DE EQUIPO</td>
                                         <td class="bg-moke">
                                             <div class="flex text-12 ">S/
-                                                <input type="text" class="text-12" value="0.00" id="totalregistro"
-                                                    >
+                                                <input type="text" class="text-12" value="0.00" id="totalregistro">
                                             </div>
                                         </td>
                                     </tr>
@@ -537,10 +538,10 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                         <div class="card-body d-flex justify-content-between align-items-center">
                             <!-- Utilidad -->
                             <!-- <div>
-                                                                                                                                            <strong class="text-success h5 mb-0">Utilidad: S/ <span
-                                                                                                                                                    id="utilidad">0.00</span></strong>
-                                                                                                                                        </div>
-                                                                                                                                    -->
+                                                                                                                                                                    <strong class="text-success h5 mb-0">Utilidad: S/ <span
+                                                                                                                                                                            id="utilidad">0.00</span></strong>
+                                                                                                                                                                </div>
+                                                                                                                                                            -->
                             <!-- Botón Generar Venta -->
                             <div>
                                 <button class="btn " style="border: 1px solid black"
@@ -788,6 +789,19 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
                                                     <td>{{ $vent->total }}</td>
                                                     <td>{{ $vent->estado }}</td>
                                                     <td class="d-flex center gap-2">
+                                                        @if ($vent->estado == 'Anulado')
+                                                            <form
+                                                                action="{{ route('ventas.destroy', ['id' => $vent->id]) }}"
+                                                                method="post">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" id="btndelete"
+                                                                    class="btn btn-danger btn-sm" title="Eliminar Venta">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+
+                                                            </form>
+                                                        @endif
 
                                                         <!-- Botón Pago -->
                                                         @if ($vent->estado == 'Despachado')
@@ -1594,6 +1608,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
         }
         let i = 0;
 
+
         function mostrarDetallesVenta(data) {
             const contenedor = document.getElementById('detallesVenta');
             contenedor.innerHTML = ''; // Limpiar contenido anterior
@@ -1601,85 +1616,133 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             data.forEach((item, index) => {
                 const card = document.createElement('div');
                 card.className = 'col-md-6 mb-3';
-
                 const cardId = `card-${index}`;
 
                 card.innerHTML = `
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">${item.producto_nombre}</h5>
-                <p class="card-text">
-                    <strong>Registrado:</strong> ${item.descripcion == 1 ? "SI" : "NO"}<br>
-                    <strong>Cantidad Solicitada:</strong> ${item.cantidad}
-                </p>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">${item.producto_nombre}</h5>
+                    <p class="card-text">
+                        <strong>Registrado:</strong> ${item.descripcion == 1 ? "SI" : "NO"}<br>
+                        <strong>Cantidad Solicitada:</strong> ${item.cantidad}
+                    </p>
 
-                <label><strong>Seleccionar IMEIs💢Productos desde almacén:</strong></label>
-                <select class="form-control select-imeis" 
-                        data-producto-id="${item.producto_id}" 
+                    <label><strong>Seleccionar IMEIs💢Productos desde almacén:</strong></label>
+                    <input type="text" class="form-control mb-2 buscador-imei" placeholder="Escanea o escribe el IMEI para buscar...">
+                    
+                    <select class="form-control select-imeis"
+                        data-producto-id="${item.producto_id}"
                         data-descripcion="${item.descripcion}"
                         data-productonombre="${item.producto_nombre} ${item.descripcion==1?'REGISTRADO':''}"
-                        data-cantidad="${item.cantidad}" 
+                        data-cantidad="${item.cantidad}"
                         data-card-id="${cardId}"
                         multiple size="5">
-                    ${
-                        item.almacen.map(prod => `
-                                                                                                                                                                                                                                                                                                                                                                                                        <option value="${prod.imei=="-"?prod.producto.id:prod.imei}">
-                                                                                                                                                                                                                                                                                                                                                                                                            ${prod.imei=="-"?prod.producto.marca +" "+ prod.producto.modelo:prod.imei} | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
-                                                                                                                                                                                                                                                                                                                                                                                                        </option>
-                                                                                                                                                                                                                                                                                                                                                                                                    `).join('')
-                    }
-                </select>
+                        ${
+                            item.almacen.map(prod => `
+                                                <option value="${prod.imei == '-' ? prod.producto.id : prod.imei}">
+                                                    ${prod.imei == '-' ? `${prod.producto.marca} ${prod.producto.modelo}` : prod.imei}
+                                                    | Color: ${prod.color} | Proveedor: ${prod.compra.persona.nombres}
+                                                </option>
+                                            `).join('')
+                        }
+                    </select>
 
-                <div class="mt-2">
-                    <p class="seleccionados text-info mb-1"><strong>IMEIs💢Productos seleccionados:</strong> <span class="imeis-text">Ninguno</span></p>
-                    <div class="hidden-inputs"></div>
+                    <div class="mt-2">
+                        <p class="seleccionados text-info mb-1">
+                            <strong>IMEIs💢Productos seleccionados:</strong> 
+                            <span class="imeis-text">Ninguno</span>
+                        </p>
+                        <div class="hidden-inputs"></div>
+                    </div>
                 </div>
             </div>
-        </div>
         `;
 
                 contenedor.appendChild(card);
 
-                // Selección y manejo de cambios
-                const select = card.querySelector('select');
+                // Variables
+                const select = card.querySelector('.select-imeis');
                 const imeisText = card.querySelector('.imeis-text');
                 const hiddenInputs = card.querySelector('.hidden-inputs');
+                const buscador = card.querySelector('.buscador-imei');
+                const max = parseInt(select.dataset.cantidad);
+                let i = 0;
 
-                select.addEventListener('change', function() {
-                    const max = parseInt(this.dataset.cantidad);
-                    const selectedOptions = this.selectedOptions;
+                // --- FUNCION GENERAL PARA ACTUALIZAR LA SELECCIÓN ---
+                function actualizarSeleccion() {
+                    const selectedOptions = select.selectedOptions;
 
+                    // Límite de selección
                     if (selectedOptions.length > max) {
                         selectedOptions[selectedOptions.length - 1].selected = false;
                         alert(`Solo puedes seleccionar hasta ${max} IMEI(s) para este producto.`);
                         return;
                     }
 
-                    // Mostrar los seleccionados en el texto
+                    // Actualizar texto
                     const imeis = Array.from(selectedOptions).map(opt => opt.textContent.trim());
                     imeisText.textContent = imeis.length ? imeis.join(', ') : 'Ninguno';
 
+                    // Crear inputs ocultos
                     hiddenInputs.innerHTML = '';
-
+                    i = 0;
                     Array.from(selectedOptions).forEach(opt => {
                         const imei = opt.value;
                         const descripcion = item.descripcion;
-                        const color = item.producto_color;
+                        const productoId = item.producto_id;
+                        const color = opt.text.includes("Color:") ?
+                            opt.text.split("Color:")[1].split("|")[0].trim() :
+                            "";
 
                         hiddenInputs.innerHTML += `
-        <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][codigo]" value="${imei}">
-        <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][descripcion]" value="${descripcion}">
-                <input type="hidden" name="productos[${item.producto_id}][imeis][${i}][color]" value="${color}">
-
-    `;
+                    <input type="hidden" name="productos[${productoId}][imeis][${i}][codigo]" value="${imei}">
+                    <input type="hidden" name="productos[${productoId}][imeis][${i}][descripcion]" value="${descripcion}">
+                    <input type="hidden" name="productos[${productoId}][imeis][${i}][color]" value="${color}">
+                `;
                         i++;
                     });
+                }
 
+                // --- EVENTO: SELECCIÓN MANUAL EN EL SELECT ---
+                select.addEventListener('change', actualizarSeleccion);
 
+                // --- EVENTO: BÚSQUEDA / ESCANEO DESDE INPUT ---
+                buscador.addEventListener('input', function() {
+                    const term = this.value.trim().toLowerCase();
+                    if (term.length < 15) return;
+                    const options = Array.from(select.options);
+                    const match = options.find(opt =>
+                        opt.text.toLowerCase().includes(term) || opt.value.toLowerCase() === term
+                    );
+
+                    if (match) {
+                        const seleccionadas = Array.from(select.selectedOptions);
+                        if (seleccionadas.length >= max && !match.selected) {
+                            alert(`Solo puedes seleccionar hasta ${max} IMEI(s) para este producto.`);
+                            this.value = "";
+                            return;
+                        }
+
+                        match.selected = true;
+                        select.scrollTop = match.offsetTop - select.offsetTop;
+                        actualizarSeleccion();
+                        this.value = ""; // limpia el campo después de escanear
+                    } else {
+                        this.style.borderColor = "red";
+                        setTimeout(() => this.style.borderColor = "", 800);
+                    }
                 });
             });
         }
 
+        $("#btndelete").on("click", function(e) {
+            e.preventDefault(); // Evita envío automático
+
+            if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
+                // Si confirma, enviamos el formulario
+                $(this).closest("form").submit();
+            }
+        });
 
         let productos = [];
 
@@ -1910,6 +1973,27 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
             // Agregarlo al arreglo
             productos.push(item);
         }
+        document.querySelectorAll('.buscador-imei').forEach(input => {
+            input.addEventListener('input', function() {
+                const term = this.value.trim().toLowerCase();
+                const select = this.nextElementSibling; // el <select> que está justo después
+
+                let encontrado = false;
+
+                // Recorre las opciones y busca coincidencia
+                for (const option of select.options) {
+                    if (option.text.toLowerCase().includes(term) || option.value.toLowerCase() === term) {
+                        option.selected = true;
+                        encontrado = true;
+                        select.scrollTop = option.offsetTop - select
+                            .offsetTop; // desplaza hasta la coincidencia
+                    } else if (term === "") {
+                        option.selected = false;
+                    }
+                }
+                select.dispatchEvent(new Event('change'));
+            });
+        });
         document.getElementById('btnConfirmarVenta').addEventListener('click', function(event) {
             const selects = document.querySelectorAll('.select-imeis');
             let validado = true;
@@ -2001,7 +2085,7 @@ Agradecemos su compresión y cooperacióm en este proceso. Si tiene alguna duda 
 
 
         async function actualizarCantidadDetalles(id, ventaId, cantidad) {
-     
+
             try {
                 const campo = ventaId.replace("#", "");
                 const url = `/ventas/actualizar-precios-productoinput/${id}/${campo}/${cantidad}`;

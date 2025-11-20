@@ -39,36 +39,57 @@
 
 
             <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio Unitario</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($detallescompra as $item)
+                <form action="{{ route('compras.updatecolor') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
                             <tr>
-                                <td>{{ $item->producto->marca }} {{ $item->producto->modelo }}
-                                    {{ $item->producto->capacidad }} || {{ $item->imei }} || {{$item->color}}</td>
-                                <td>{{ $item->cantidad }}</td>
-                                <td>{{ $item->precio }}</td>
-                                <td>{{ $item->precio * $item->cantidad }}</td>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Total</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                      
-                        <tr>
-                            <th colspan="3" class="text-right">Total:</th>
-                            <th>S/ {{ $compra->total }}</th>
-                        </tr>
-                    </tfoot>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach ($detallescompra as $item)
+                                <tr>
+                                    <td class="d-flex align-items-center gap-2">
+                                        <input type="hidden" value="{{ $item->id }}" name="id[]">
+                                        <span>{{ $item->producto->marca }} {{ $item->producto->modelo }}
+                                            {{ $item->producto->capacidad }}</span>
+                                        <span>|| {{ $item->imei }} ||</span>
+                                        <input type="text" name="color[]" class="form-control form-control-sm w-auto"
+                                            value="{{ $item->color }}"
+                                            @if (!empty($item->color) && $item->color != '-') readonly @endif>
+                                    </td>
+
+                                    <td class="cantidad">{{ $item->cantidad }}</td>
+                                    <td>
+                                        <input type="text" name="precio[]" class="form-control precio"
+                                            value="{{ number_format($item->precio, 2) }}">
+                                    </td>
+                                    <td class="subtotal">{{ number_format($item->precio * $item->cantidad, 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-right">Total:</th>
+                                <th id="totalFinal">S/ {{ number_format($compra->total, 2) }}</th>
+                            </tr>
+                        </tfoot>
+
+                        
+                    </table>
+                    <div class="text-end mt-3 mb-2">
+                        <button type="submit" class="btn bg-orange">Modificar</button>
+                    </div>
+                </form>
             </div>
 
         </div>
     </div>
+    
 </div>
+

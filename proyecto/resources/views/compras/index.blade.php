@@ -1100,6 +1100,8 @@
                 dataType: 'html',
                 success: function(response) {
                     $('#pagina_div').html(response);
+                    inicializarRecalculoPrecios();
+
                 },
                 error: function(xhr, status, error) {
                     $('#pagina_div').html('<p>Error al cargar el contenido.</p>');
@@ -1332,6 +1334,34 @@
                 }
             }
             return false;
+        }
+
+        function inicializarRecalculoPrecios() {
+            const tabla = document.querySelector('form table');
+            if (!tabla) return;
+
+            const totalCell = document.getElementById("totalFinal");
+
+            const parseNumero = (valor) => parseFloat((valor || "0").replace(/[^\d.]/g, "")) || 0;
+
+            const recalcular = () => {
+                let total = 0;
+                tabla.querySelectorAll("tbody tr").forEach(row => {
+                    const cantidad = parseNumero(row.querySelector(".cantidad")?.textContent);
+                    const precioInput = row.querySelector(".precio");
+                    const precio = parseNumero(precioInput?.value);
+                    const subtotal = cantidad * precio;
+                    row.querySelector(".subtotal").textContent = subtotal.toFixed(2);
+                    total += subtotal;
+                });
+                totalCell.textContent = `S/ ${total.toFixed(2)}`;
+            };
+
+            tabla.addEventListener("input", (e) => {
+                if (e.target.matches(".precio")) recalcular();
+            });
+
+            recalcular();
         }
 
         function llenarParaEditar(boton, event) {
